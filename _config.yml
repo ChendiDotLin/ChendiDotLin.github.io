@@ -69,10 +69,11 @@ footer-link-col: "#404040"
 # If you want to add a new link that isn't here, you'll need to also edit the file _data/SocialNetworks.yml
 social-network-links:
   rss: true
-  email: "someone@example.com"
-  facebook: daattali
-  github: daattali
-  twitter: daattali
+  email: "chendilin92@gmail.com"
+  # facebook: daattali
+  github: "https://chendidotlin.github"
+  500px: "https://500px.com/chandonlin"
+  # twitter: daattali
 #  reddit: yourname
 #  google-plus: +DeanAttali
 #  linkedin: daattali
