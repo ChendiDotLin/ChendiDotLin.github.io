@@ -3,7 +3,7 @@ layout: page
 title: Publication
 
 ---
-- [<span style="font-family:Avenir;font-size:1.2em;">Attitude Control System Complexity Reduction via Tailored Viscoelastic Damping Co-Design</span>](https://www.ideals.illinois.edu/handle/2142/106125)  
+- [<span style="font-family:Times New Roman;font-size:1.2em;">Attitude Control System Complexity Reduction via Tailored Viscoelastic Damping Co-Design</span>](https://www.ideals.illinois.edu/handle/2142/106125)  
 <span style="color:gray;">AAS Rocky Mountain Section (AAS GNC), 2018 (Oral presentation)</span>  
 **Chendi Lin**, Daniel R Herber, Yong Hoon Lee, Alexander Ghosh, Randy H Ewoldt, James T Allison	
 
