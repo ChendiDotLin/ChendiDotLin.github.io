@@ -1,18 +1,12 @@
 ---
-layout: page
+layout: minimal
 title: Publication
 
 ---
 
 
-- @inproceedings{lin2017efficient,
-  title={Efficient optimal surface texture design using linearization},
-  author={Lin, Chendi and Lee, Yong Hoon and Schuh, Jonathon K and Ewoldt, Randy H and Allison, James T},
-  booktitle={World Congress of Structural and Multidisciplinary Optimisation},
-  pages={632--647},
-  year={2017},
-  organization={Springer}
-}
-- I'm extremely loyal to my family
+- ##[Efficient Optimal Surface Texture Design Using Linearization](https://link.springer.com/chapter/10.1007/978-3-319-67988-4_48)
+World Congress of Structural and Multidisciplinary Optimisation (WCSMO), 2017 (Oral presentation)
+**Chendi Lin**, Yong Hoon Lee, Jonathon K. Schuh, Randy H. Ewoldt, James T. Allison
 
 
