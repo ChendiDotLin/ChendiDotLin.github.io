@@ -25,7 +25,7 @@ description: Motion Planning | Robotics | Design | Computational Mechanics | Sim
 navbar-links:
   Home: "https://chendidotlin.github.io/"
   About me: "https://chendidotlin.github.io/aboutme/"
-  Publication:
+  Publication: "https://chendidotlin.github.io/publication/"
 
 # Image to show in the navigation bar - image must be a square (width = height)
 # Remove this parameter if you don't want an image in the navbar
