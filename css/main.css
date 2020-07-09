@@ -87,7 +87,7 @@ img::-moz-selection {
 }
 
 img {
-  max-width: 100%;
+  max-width: 150%;
 }
 
 .disqus-comments {
@@ -175,7 +175,7 @@ img {
   margin-top: -25px;
 }
 .navbar-custom .avatar-container  .avatar-img-border {
-  width: 100%;
+  width: 150%;
   border-radius: 20%;
   margin-left: -50%;
   display: inline-block;
@@ -185,7 +185,7 @@ img {
 }
 .navbar-custom .avatar-container  .avatar-img {
   width: 100%;
-  border-radius: 50%;
+  border-radius: 20%;
   display: block;
 }
 
@@ -476,7 +476,7 @@ footer .theme-by {
   text-shadow: 1px 1px 3px #000;
 }
 .intro-header .page-heading h1 {
-  margin-top: 0;
+  margin-top: 60px;
   font-size: 50px;
 }
 .intro-header .post-heading h1 {
@@ -530,7 +530,7 @@ footer .theme-by {
     padding: 150px 0;
   }
   .intro-header .page-heading h1 {
-    font-size: 60px;
+    font-size: 50px;
   }
   .intro-header .post-heading h1 {
     font-size: 50px;
