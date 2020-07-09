@@ -87,7 +87,7 @@ img::-moz-selection {
 }
 
 img {
-  max-width: 150%;
+  max-width: 100%;
 }
 
 .disqus-comments {
@@ -195,7 +195,7 @@ img {
 
 @media only screen and (min-width: 768px) {
   .navbar-custom .avatar-container {
-    width: 100px;
+    width: 150px;
     margin-top: -50px;
   }
 
@@ -207,7 +207,7 @@ img {
   }
 
   .navbar-custom .avatar-container  .avatar-img {
-    width: 150%;
+    width: 100%;
   }
 }
 
