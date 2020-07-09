@@ -175,7 +175,7 @@ img {
   margin-top: -25px;
 }
 .navbar-custom .avatar-container  .avatar-img-border {
-  width: 150%;
+  width: 100%;
   border-radius: 20%;
   margin-left: -50%;
   display: inline-block;
@@ -207,7 +207,7 @@ img {
   }
 
   .navbar-custom .avatar-container  .avatar-img {
-    width: 100%;
+    width: 150%;
   }
 }
 
