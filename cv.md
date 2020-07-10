@@ -1,6 +1,5 @@
 ---
 layout: page
-title: CV
 ---
 #### Education
 <object data="/resume/Grad_2020_Resume.pdf" type="application/pdf" width="700px" height="700px">
