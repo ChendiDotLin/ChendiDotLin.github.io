@@ -25,17 +25,5 @@ galleries:
 <img src="/Doodles/IMG_8272.jpg" alt="Doodle1" style="zoom:10%;" />
 
 ```
-<article class="example gallery-cols-3">
-    <figure>
-        <img src="/Doodles/IMG_8272.jpg" alt="Image 1">
-        <figcaption>Image 1</figcaption>
-    </figure>
-    <figure>
-       	<img src="/Doodles/IMG_8272.jpg" alt="Image 2">
-        <figcaption>Image 2</figcaption></a>
-    </figure>
-    <figure>
-        <img src="/Doodles/IMG_8272.jpg" alt="">
-    </figure>
-</article>
+<img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> 
 ```
