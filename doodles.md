@@ -23,3 +23,5 @@ galleries:
 ---
 
 <img src="/Doodles/IMG_8272.jpg" width="42%"> <img src="/Doodles/IMG_7684.jpg" width="23%"> <img src="/Doodles/IMG_7686.jpg" width="23%">
+
+<img src="/Doodles/IMG_7692.jpg" width="30%"> <img src="/Doodles/IMG_20180211_220116-01-02-02" width="30%"> <img src="/Doodles/IMG_7694.jpg" width="30%">
