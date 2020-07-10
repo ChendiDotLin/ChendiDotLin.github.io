@@ -22,6 +22,4 @@ galleries:
      - { url: '/Doodles/IMG_7694.jpg', alt: 'alt 5'}
 ---
 
-<img src="/Doodles/IMG_8272.jpg" alt="Doodle1" style="zoom:10%;" />
-
-<img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> 
+<img src="/Doodles/IMG_8272.jpg" width="50%"> <img src="/Doodles/IMG_7684.jpg" width="20%"> <img src="/Doodles/IMG_7686.jpg" width="20%">
