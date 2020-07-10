@@ -2,6 +2,6 @@
 layout: page
 title: About me
 subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...... and Art!
-image:
+show-avatar:false
 ---
 hello
