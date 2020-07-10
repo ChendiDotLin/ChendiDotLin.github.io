@@ -6,7 +6,7 @@ subtitle: Don't even ask why
 
 <img src="/Doodles/IMG_8272.jpg" width="30%"> <img src="/Doodles/IMG_3089.jpg" width="13%"> <img src="/Doodles/IMG_2655.jpg" width="45%">
 
-<img src="/Doodles/IMG_7596.heic" width="40%"> <img src="/Doodles/IMG_7751.heic" width="40%"> 
+<img src="/Doodles/IMG_7596.jpg" width="40%"> <img src="/Doodles/IMG_7751.jpg" width="40%"> 
 
 <img src="/Doodles/IMG_7692.jpg" width="35%"> <img src="/Doodles/IMG_2018.jpg" width="20%"> <img src="/Doodles/IMG_7694.jpg" width="35%">
 
