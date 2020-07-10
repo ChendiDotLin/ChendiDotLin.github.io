@@ -24,6 +24,4 @@ galleries:
 
 <img src="/Doodles/IMG_8272.jpg" alt="Doodle1" style="zoom:10%;" />
 
-```
 <img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> <img src="/Doodles/IMG_8272.jpg" width="33%"></img> 
-```
