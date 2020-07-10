@@ -4,7 +4,7 @@ title: My so random doodles
 subtitle: Don't even ask why
 ---
 
-<img src="/Doodles/IMG_8272.jpg" width="31%"> <img src="/Doodles/IMG_3089.jpg" width="14%"> <img src="/Doodles/IMG_2655.jpg" width="45%">
+<img src="/Doodles/IMG_8272.jpg" width="31%"> <img src="/Doodles/IMG_3089.jpg" width="13%"> <img src="/Doodles/IMG_2655.jpg" width="45%">
 
 <img src="/Doodles/IMG_7684.jpg" width="30%"> <img src="/Doodles/IMG_7686.jpg" width="30%"><img src="/Doodles/IMG_7064.jpg" width="30%">
 
