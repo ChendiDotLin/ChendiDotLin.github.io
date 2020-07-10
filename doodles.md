@@ -22,20 +22,20 @@ galleries:
      - { url: '/Doodles/IMG_7694.jpg', alt: 'alt 5'}
 ---
 
-<img src="/Users/turtle/Workspace/ChendiDotLin.github.io/Doodles/IMG_8272.jpg" alt="Doodle1" style="zoom:10%;" />
+<img src="/Doodles/IMG_8272.jpg" alt="Doodle1" style="zoom:10%;" />
 
 ```
 <article class="example gallery-cols-3">
     <figure>
-        <img src="/Users/turtle/Workspace/ChendiDotLin.github.io/Doodles/IMG_8272.jpg" alt="Image 1">
+        <img src="/Doodles/IMG_8272.jpg" alt="Image 1">
         <figcaption>Image 1</figcaption>
     </figure>
     <figure>
-       	<img src="/Users/turtle/Workspace/ChendiDotLin.github.io/Doodles/IMG_8272.jpg" alt="Image 2">
+       	<img src="/Doodles/IMG_8272.jpg" alt="Image 2">
         <figcaption>Image 2</figcaption></a>
     </figure>
     <figure>
-        <img src="/Users/turtle/Workspace/ChendiDotLin.github.io/Doodles/IMG_8272.jpg" alt="">
+        <img src="/Doodles/IMG_8272.jpg" alt="">
     </figure>
 </article>
 ```
