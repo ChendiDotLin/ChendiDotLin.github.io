@@ -5,7 +5,7 @@ subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...
 ---
 This is the section I am the least willing to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
 
-Right now I am working as a software engineer in MathWorks, specifically in the Simulink Code Inspector team. This product aims to automatically and intelligently examine the auto-generated code from the user-created Simulink models to make sure that it can be deployed to the hardwares like automobiles and airplanes without issue. So overall, big duty. 
+Right now I am working as a software engineer in MathWorks, specifically in the Simulink Code Inspector team. This product aims to automatically and intelligently examine the auto-generated code from the user-created Simulink models to make sure that it can be deployed onto the hardwares like automobiles and airplanes beautifully and safely. So overall, big duty. 
 
 I graduated with the M.S. degree in Robotics from Carnegie Mellon University under the supervision of Prof. Katia Sycara. My research interest was in the motion planning and task allocation of the heterogeneous multi-robot systems. I also listed my thesis work and related publications in this website, so do me a favor and check them out if you are triggered.
 
