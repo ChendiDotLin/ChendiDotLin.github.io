@@ -3,6 +3,14 @@ layout: page
 title: Publication
 
 ---
+- [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
+<span style="color:gray;">Master Thesis, 2020</span>  
+**Chendi Lin**
+
+- [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://drive.google.com/file/d/10ck8D6KAuQcdQ0QPeCYjDaRMXEaTGqEv/view)  
+<span style="color:gray;">Workshop on Heterogeneous Multi-Robot Task Allocation and Coordination, Robotics: Science and Systems (RSS), 2020 (Oral presentation)</span>  
+**Chendi Lin**, Wenhao Luo, Katia Sycara
+
 - [<span style="font-size:1.2em;">Attitude Control System Complexity Reduction via Tailored Viscoelastic Damping Co-Design</span>](https://www.ideals.illinois.edu/handle/2142/106125)  
 <span style="color:gray;">AAS Rocky Mountain Section (AAS GNC), 2018 (Oral presentation)</span>  
 **Chendi Lin**, Daniel R Herber, Yong Hoon Lee, Alexander Ghosh, Randy H Ewoldt, James T Allison	
