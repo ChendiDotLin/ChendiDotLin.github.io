@@ -6,4 +6,4 @@ As Carnegie Mellon University is famous for its top Computer Science College and
 
 For now, I have only finished one 15-minute 1-act play, called "_Death Control_". Please reach out to me if you are interested in taking a sneak.
 
-<img src="/img/playCover.png" width="31%"> 
+<img src="/img/playCover.png" width="100%"> 
