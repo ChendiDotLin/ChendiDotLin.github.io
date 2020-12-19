@@ -3,7 +3,7 @@ layout: page
 title: About me
 subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...... and Art!
 ---
-This is the section I am the most unwilling to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
+This is the section I am the least willing to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
 
 Right now I am working as a software engineer in MathWorks, specifically in the Simulink Code Inspector team. This product aims to automatically and intelligently examine the auto-generated code from the user-created Simulink models to make sure that it can be deployed to the hardwares like automobiles and airplanes without issue. So overall, big duty. 
 
