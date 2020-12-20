@@ -33,11 +33,15 @@ subtitle: Either My Body or My Soul is on the Bed
 <body>
 
 <div class="row">
-  <div class="column2">
+<div class="column3">
+    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
+    <em>Cape Ann, MA, US (Sep 2020)</em>
+  </div>
+  <div class="column3">
     <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
     <em>Niagara Fall, Canada (May, 2019)</em>
   </div>
-  <div class="column2">
+  <div class="column3">
     <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
     <em>Hawaii, US (Dec, 2018)</em>
   </div>
@@ -46,15 +50,15 @@ subtitle: Either My Body or My Soul is on the Bed
 <div class="row">
 <div class="column3">
     <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <em>Iceland (Dec, 2017)</em>
+  </div>
+   <div class="column3">
+    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
     <em>Sweden, Norway, and Denmark (Dec, 2017)</em>
   </div>
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
     <em>Paris, France (Dec, 2017)</em>
-  </div>
-  <div class="column3">
-    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Sweden, Norway, and Denmark (Dec, 2017)</em>
   </div>
 </div>
 
