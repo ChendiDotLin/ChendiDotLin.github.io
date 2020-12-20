@@ -4,7 +4,5 @@ title: My Trips
 subtitle: Either My Body or My Soul is on the Bed
 ---
 
-![paris](/Trips/paris.jpeg "Paris France")
-
-![](/Trips/paris.jpeg =100x20)
+![](/Trips/paris.jpeg){width = 45%}
 *Paris France*
