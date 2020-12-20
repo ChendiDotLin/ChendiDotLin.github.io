@@ -10,9 +10,15 @@ subtitle: Either My Body or My Soul is on the Bed
   box-sizing: border-box;
 }
 
-.column {
+.column1 {
   float: left;
   width: 33.33%;
+  padding: 5px;
+}
+
+.column2 {
+  float: left;
+  width: 49%;
   padding: 5px;
 }
 
@@ -27,17 +33,13 @@ subtitle: Either My Body or My Soul is on the Bed
 <body>
 
 <div class="row">
-  <div class="column">
+  <div class="column2">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
     <em>Paris, France (2018)</em>
   </div>
-  <div class="column">
-    <img src="/Trips/paris.jpeg" alt="Forest" style="width:100%">
-    <em>Paris, France (2018)</em>
-  </div>
-  <div class="column">
-    <img src="/Trips/paris.jpeg" alt="Mountains" style="width:100%">
-    <em>Paris, France (2018)</em>
+  <div class="column2">
+    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:100%">
+    <em>Milwaukee, WI (2016)</em>
   </div>
 </div>
 
@@ -45,6 +47,6 @@ subtitle: Either My Body or My Soul is on the Bed
 </html>
 
 
-![](/Trips/paris.jpeg)
-*Paris, France (2018)*
+![](/Trips/seattle.jpeg)
+*Seattle, WA (2016)*
 
