@@ -13,4 +13,4 @@ I graduated with the Master degree in Robotics (MSR) at Robotics Institute from 
 I received my B.S. degree in Engineering Mechanics, with minors in both Computer Science and Mathematics, from University of Illinois at Urbana-Champaign (UIUC) in 2018. I had the honor to work with Prof. James Allison, Prof. Randy Ewoldt, and Prof. Elif Ertekin on various topics like structural optimization, visco-elastic material design, and shape memory alloy simulation and design. I published two conference papers as the first author during my college years, which are also listed under the _<u>Publication</u>_ tab.
 
 ### My Human Side
-My artsy (yet erratic) side projects are under the _<u>Here and There</u>_ tab. Those works describe my humanity portaion but don't hold a high expection, especially for the quality.
+My artsy (yet erratic) side projects like photography and playwriting are under the _<u>Here and There</u>_ tab. Those works describe my humanity portaion but don't hold a high expection, especially for the quality.
