@@ -35,45 +35,45 @@ subtitle: Either My Body or My Soul is on the Bed
 <div class="row">
 <div class="column3">
     <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
-    <em>Cape Ann, MA, US (Sep 2020)</em>
+    <em>Cape Ann, MA, US</em>
   </div>
   <div class="column3">
     <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
-    <em>Niagara Fall, Canada (May, 2019)</em>
+    <em>Niagara Fall, Canada</em>
   </div>
   <div class="column3">
     <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
-    <em>Hawaii, US (Dec, 2018)</em>
+    <em>Hawaii, US</em>
   </div>
 </div>
 
 <div class="row">
 <div class="column3">
     <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
-    <em>Iceland (Dec, 2017)</em>
+    <em>Iceland</em>
   </div>
    <div class="column3">
     <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Sweden, Norway, and Denmark (Dec, 2017)</em>
+    <em>Sweden, Norway, and Denmark</em>
   </div>
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
-    <em>Paris, France (Dec, 2017)</em>
+    <em>Paris, France</em>
   </div>
 </div>
 
 <div class="row">
 <div class="column3">
     <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
-    <em>Xining, Qinghai, China (Aug, 2017)</em>
+    <em>Xining, Qinghai, China</em>
   </div>
   <div class="column3">
     <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
-    <em>Tibet, China (Aug, 2017)</em>
+    <em>Tibet, China</em>
   </div>
   <div class="column3">
     <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
-    <em>Milwaukee, WI, US (Jul, 2016)</em>
+    <em>Milwaukee, WI, US</em>
   </div>
 </div>
 
@@ -82,5 +82,5 @@ subtitle: Either My Body or My Soul is on the Bed
 
 
 ![](/Trips/seattle.jpg)
-*Seattle, WA (Mar, 2016)*
+*Seattle, WA*
 
