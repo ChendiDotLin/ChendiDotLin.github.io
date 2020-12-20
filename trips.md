@@ -49,7 +49,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Xining, Qinghai, China (2017)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/tibet.jpeg" alt="Forest" style="width:110%">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:110%">
     <em>Lhasa, Tibet, China (2017)</em>
   </div>
 </div>
