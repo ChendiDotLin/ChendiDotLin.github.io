@@ -33,28 +33,43 @@ subtitle: Either My Body or My Soul is on the Bed
 <body>
 
 <div class="row">
+  <div class="column2">
+    <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
+    <em>Niagara Fall, Canada (May, 2019)</em>
+  </div>
+  <div class="column2">
+    <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
+    <em>Hawaii, US (Dec, 2018)</em>
+  </div>
+</div>
+
+<div class="row">
+<div class="column3">
+    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <em>Sweden, Norway, and Denmark (Dec, 2017)</em>
+  </div>
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
     <em>Paris, France (Dec, 2017)</em>
   </div>
   <div class="column3">
     <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Stockholm, Sweden (Dec, 2017)</em>
-  </div>
-  <div class="column3">
-    <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
-    <em>Xining, Qinghai, China (Aug, 2017)</em>
+    <em>Sweden, Norway, and Denmark (Dec, 2017)</em>
   </div>
 </div>
 
 <div class="row">
-  <div class="column2">
+<div class="column3">
+    <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
+    <em>Xining, Qinghai, China (Aug, 2017)</em>
+  </div>
+  <div class="column3">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
+    <em>Tibet, China (Aug, 2017)</em>
+  </div>
+  <div class="column3">
     <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
     <em>Milwaukee, WI, US (Jul, 2016)</em>
-  </div>
-  <div class="column2">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
-    <em>Lhasa, Tibet, China (Aug, 2017)</em>
   </div>
 </div>
 
