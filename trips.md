@@ -34,11 +34,11 @@ subtitle: Either My Body or My Soul is on the Bed
 
 <div class="row">
   <div class="column2">
-    <img src="/Trips/paris.jpeg" alt="Snow" style="width:90%">
+    <img src="/Trips/paris.jpeg" alt="Snow" style="width:93%">
     <em>Paris, France (2018)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:105%">
+    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:108%">
     <em>Milwaukee, WI (2016)</em>
   </div>
 </div>
