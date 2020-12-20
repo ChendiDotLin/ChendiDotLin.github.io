@@ -63,5 +63,5 @@ subtitle: Either My Body or My Soul is on the Bed
 
 
 ![](/Trips/seattle.jpg)
-*Seattle, WA (2016)*
+*Seattle, WA (Mar, 2016)*
 
