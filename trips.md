@@ -4,4 +4,4 @@ title: My Trips
 subtitle: Either My Body or My Soul is on the Bed
 ---
 
-<img src="paris.jpeg"  title="Paris"/>
+<img src="Trips/paris.jpeg"  title="Paris"/>
