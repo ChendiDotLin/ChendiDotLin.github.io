@@ -48,13 +48,3 @@ subtitle: Either My Body or My Soul is on the Bed
 ![](/Trips/paris.jpeg)
 *Paris, France (2018)*
 
-<p>
-    <img src="/Trips/paris.jpeg" alt='missing'  width="45%">
-    <!-- <em>Paris, France (2018)</em> -->
-      <img src="/Trips/paris.jpeg" alt='missing'  width="45%">
-    <em>Paris, France (2018)</em>
-</p>
-
-<p>
-  
-</p>
