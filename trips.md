@@ -38,7 +38,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Paris, France (2018)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:108%">
+    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:110%">
     <em>Milwaukee, WI (2016)</em>
   </div>
 </div>
