@@ -38,7 +38,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Paris, France, US (2018)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:110%">
+    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:115%">
     <em>Milwaukee, WI, US (2016)</em>
   </div>
 </div>
@@ -49,7 +49,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Xining, Qinghai, China (2017)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Forest" style="width:110%">
+    <img src="/Trips/tibet.jpeg" alt="Forest" style="width:110%">
     <em>Lhasa, Tibet, China (2017)</em>
   </div>
 </div>
