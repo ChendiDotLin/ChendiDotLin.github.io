@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Either My Body or My Soul is on the Bed
-subtitle: Don't even ask why
+title: My Trips
+subtitle: Either My Body or My Soul is on the Bed
 ---
 
 <img src="paris.jpeg"  title="Paris"/>
