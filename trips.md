@@ -35,26 +35,26 @@ subtitle: Either My Body or My Soul is on the Bed
 <div class="row">
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
-    <em>Paris, France (2018)</em>
+    <em>Paris, France (Dec, 2017)</em>
   </div>
   <div class="column3">
     <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Stockholm, Sweden (2017)</em>
+    <em>Stockholm, Sweden (Dec, 2017)</em>
   </div>
   <div class="column3">
     <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
-    <em>Xining, Qinghai, China (2017)</em>
+    <em>Xining, Qinghai, China (Aug, 2017)</em>
   </div>
 </div>
 
 <div class="row">
   <div class="column2">
     <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
-    <em>Milwaukee, WI, US (2017)</em>
+    <em>Milwaukee, WI, US (Jul, 2016)</em>
   </div>
   <div class="column2">
     <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
-    <em>Lhasa, Tibet, China (2017)</em>
+    <em>Lhasa, Tibet, China (Aug, 2017)</em>
   </div>
 </div>
 
