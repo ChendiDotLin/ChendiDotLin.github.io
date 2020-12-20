@@ -45,11 +45,11 @@ subtitle: Either My Body or My Soul is on the Bed
 
 <div class="row">
   <div class="column2">
-    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:93%">
+    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
     <em>Stockholm, Sweden (2017)</em>
   </div>
   <div class="column2">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:110%">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
     <em>Lhasa, Tibet, China (2017)</em>
   </div>
 </div>
