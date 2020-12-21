@@ -18,7 +18,7 @@ subtitle: Either My Body or My Soul is on the Bed
 
 .column3small {
   float: left;
-  width: 31%;
+  width: 30%;
   padding: 5px;
 }
 
@@ -29,7 +29,7 @@ subtitle: Either My Body or My Soul is on the Bed
 }
 .column3big {
   float: left;
-  width: 35%;
+  width: 37%;
   padding: 5px;
 }
 
