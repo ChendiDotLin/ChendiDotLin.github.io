@@ -81,8 +81,8 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Niagara Fall, Canada</em>
   </div>
   <div class="column3">
-            <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
-    <em>Milwaukee, WI, US</em>
+    <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
+    <em>Japan</em>
   </div>
 </div>
 
@@ -92,8 +92,8 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Tibet, China</em>
   </div>
   <div class="column2">
-    <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
-    <em>Japan</em>
+    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
+    <em>Milwaukee, WI, US</em>
   </div>
 </div>
 
