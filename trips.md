@@ -29,7 +29,7 @@ subtitle: Either My Body or My Soul is on the Bed
 }
 .column3big {
   float: left;
-  width: 36%;
+  width: 35%;
   padding: 5px;
 }
 
@@ -97,7 +97,7 @@ subtitle: Either My Body or My Soul is on the Bed
   <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
     <em>Niagara Fall, Canada</em>
   </div>
-  <div class="column3large">
+  <div class="column3big">
     <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
     <em>Japan</em>
   </div>
