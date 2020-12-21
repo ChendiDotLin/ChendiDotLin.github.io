@@ -40,10 +40,9 @@ subtitle: Either My Body or My Soul is on the Bed
   <div class="column3">
     <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
     <em>Xining, Qinghai, China</em>
-  </div>
-   <div class="column3">
-    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
-    <em>Milwaukee, WI, US</em>
+  <div class="column3">
+    <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
+    <em>Niagara Fall, Canada</em>
   </div>
 </div>
 
@@ -59,9 +58,10 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 
 <div class="row">
-  <div class="column3">
-    <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
-    <em>Niagara Fall, Canada</em>
+    </div>
+   <div class="column3">
+    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
+    <em>Milwaukee, WI, US</em>
   </div>
   <div class="column3">
     <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
