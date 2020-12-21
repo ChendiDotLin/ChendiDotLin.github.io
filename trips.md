@@ -94,7 +94,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Cape Ann, MA, US</em>
   </div>
    <div class="column3mid">
-  <img src="/Trips/niagara.JPG" alt="Forest" style="width:98%">
+  <img src="/Trips/niagara.JPG" alt="Forest" style="width:96%">
     <em>Niagara Fall, Canada</em>
   </div>
   <div class="column3big">
