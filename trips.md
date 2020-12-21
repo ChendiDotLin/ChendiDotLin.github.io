@@ -33,54 +33,64 @@ subtitle: Either My Body or My Soul is on the Bed
 <body>
 
 <div class="row">
-<div class="column3">
-    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
-    <em>Cape Ann, MA, US</em>
-  </div>
-  <div class="column3">
-    <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
-    <em>Niagara Fall, Canada</em>
-  </div>
-  <div class="column3">
-    <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
-    <em>Hawaii, US</em>
-  </div>
-</div>
-
-<div class="row">
-<div class="column3">
-    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
-    <em>Iceland</em>
-  </div>
-   <div class="column3">
-    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Sweden, Norway, and Denmark</em>
-  </div>
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
     <em>Paris, France</em>
   </div>
-</div>
-
-<div class="row">
-<div class="column3">
+  <div class="column3">
     <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
     <em>Xining, Qinghai, China</em>
   </div>
-  <div class="column3">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
-    <em>Tibet, China</em>
-  </div>
-  <div class="column3">
+   <div class="column3">
     <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
     <em>Milwaukee, WI, US</em>
   </div>
 </div>
 
+<div class="row">
+<div class="column2">
+    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <em>Iceland</em>
+  </div>
+   <div class="column2">
+    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
+    <em>Sweden, Norway, and Denmark</em>
+  </div>
+  </div>
+
+<div class="row">
+  <div class="column3">
+    <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
+    <em>Niagara Fall, Canada</em>
+  </div>
+  <div class="column3">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
+    <em>Tibet, China</em>
+  </div>
+   <div class="column3">
+    <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
+    <em>Tibet, China</em>
+  </div>
+</div>
+
+
+<div class="row">
+<div class="column2">
+    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
+    <em>Cape Ann, MA, US</em>
+  </div>
+
+  <div class="column2">
+    <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
+    <em>Hawaii, US</em>
+  </div>
+</div>
+
+
 </body>
 </html>
 
 
-![](/Trips/seattle.jpg)
-*Seattle, WA*
+<!-- ![](/Trips/seattle.jpg)
+*Seattle, WA* -->
 
