@@ -69,7 +69,7 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
    <div class="column3">
     <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
-    <em>Tibet, China</em>
+    <em>Seattle, WA, US</em>
   </div>
 </div>
 
