@@ -105,11 +105,11 @@ subtitle: Either My Body or My Soul is on the Bed
 
 <div class="row">
   <div class="column2">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:120%">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:110%">
     <em>Tibet, China</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:80%">
+    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:90%">
     <em>Milwaukee, WI, US</em>
   </div>
 </div>
