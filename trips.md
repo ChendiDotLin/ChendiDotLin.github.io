@@ -89,27 +89,27 @@ subtitle: Either My Body or My Soul is on the Bed
 </div>
 
 <div class="row">
-<div class="column3">
-    <img src="/Trips/capeann.JPG" alt="Forest" style="width:83%">
+<div class="column3small">
+    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
     <em>Cape Ann, MA, US</em>
   </div>
-   <div class="column3">
-  <img src="/Trips/niagara.JPG" alt="Forest" style="width:93%">
+   <div class="column3mid">
+  <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
     <em>Niagara Fall, Canada</em>
   </div>
-  <div class="column3">
-    <img src="/Trips/japan.jpg" alt="Forest" style="width:130%">
+  <div class="column3large">
+    <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
     <em>Japan</em>
   </div>
 </div>
 
 <div class="row">
   <div class="column2">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:120%">
     <em>Tibet, China</em>
   </div>
   <div class="column2">
-    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
+    <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:80%">
     <em>Milwaukee, WI, US</em>
   </div>
 </div>
