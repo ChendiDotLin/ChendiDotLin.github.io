@@ -68,8 +68,8 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Tibet, China</em>
   </div>
    <div class="column3">
-    <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
-    <em>Seattle, WA, US</em>
+  <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
+    <em>Niagara Fall, Canada</em>
   </div>
 </div>
 
@@ -90,6 +90,6 @@ subtitle: Either My Body or My Soul is on the Bed
 </html>
 
 
-<!-- ![](/Trips/seattle.jpg)
-*Seattle, WA* -->
+![](/Trips/seattle.jpg)
+*Seattle, WA*
 
