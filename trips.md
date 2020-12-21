@@ -18,18 +18,18 @@ subtitle: Either My Body or My Soul is on the Bed
 
 .column3small {
   float: left;
-  width: 29%;
+  width: 29.5%;
   padding: 5px;
 }
 
 .column3mid {
   float: left;
-  width: 32%;
+  width: 32.5%;
   padding: 5px;
 }
 .column3big {
   float: left;
-  width: 39%;
+  width: 38%;
   padding: 5px;
 }
 
