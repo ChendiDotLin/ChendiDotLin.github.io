@@ -65,27 +65,31 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 
 <div class="row">
-  <div class="column1">
-    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
-    <em>Tibet, China</em>
+<div class="column1">
+    <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
+    <em>Seattle, WA, US</em>
   </div>
 </div>
 
 <div class="row">
-   <div class="column2">
+<div class="column3">
+    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
+    <em>Cape Ann, MA, US</em>
+  </div>
+   <div class="column3">
   <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
     <em>Niagara Fall, Canada</em>
   </div>
-  <div class="column2">
+  <div class="column3">
             <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
     <em>Milwaukee, WI, US</em>
   </div>
 </div>
 
 <div class="row">
-<div class="column2">
-    <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
-    <em>Cape Ann, MA, US</em>
+  <div class="column2">
+    <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
+    <em>Tibet, China</em>
   </div>
   <div class="column2">
     <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
@@ -98,6 +102,6 @@ subtitle: Either My Body or My Soul is on the Bed
 </html>
 
 
-![](/Trips/seattle.jpg)
-*Seattle, WA*
+<!-- ![](/Trips/seattle.jpg)
+*Seattle, WA* -->
 
