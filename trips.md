@@ -22,6 +22,12 @@ subtitle: Either My Body or My Soul is on the Bed
   padding: 5px;
 }
 
+.column1 {
+  float: left;
+  width: 100%;
+  padding: 5px;
+}
+
 /* Clearfix (clear floats) */
 .row::after {
   content: "";
@@ -59,20 +65,22 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 
 <div class="row">
-  <div class="column3">
-            <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
-    <em>Milwaukee, WI, US</em>
-  </div>
-  <div class="column3">
+  <div class="column1">
     <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
     <em>Tibet, China</em>
   </div>
-   <div class="column3">
+</div>
+
+<div class="row">
+   <div class="column2">
   <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
     <em>Niagara Fall, Canada</em>
   </div>
+  <div class="column2">
+            <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
+    <em>Milwaukee, WI, US</em>
+  </div>
 </div>
-
 
 <div class="row">
 <div class="column2">
@@ -80,8 +88,8 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Cape Ann, MA, US</em>
   </div>
   <div class="column2">
-  <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
-    <em>Niagara Fall, Canada</em>
+    <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
+    <em>Japan</em>
   </div>
 </div>
 
