@@ -98,7 +98,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Niagara Fall, Canada</em>
   </div>
   <div class="column3big">
-    <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
+    <img src="/Trips/japan.jpg" alt="Forest" style="width:99%">
     <em>Japan</em>
   </div>
 </div>
