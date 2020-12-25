@@ -33,6 +33,7 @@ subtitle: Either My Body or My Soul is on the Bed
   padding: 5px;
 }
 
+
 .column2 {
   float: left;
   width: 50%;
@@ -83,17 +84,17 @@ subtitle: Either My Body or My Soul is on the Bed
 
 
   <div class="row">
-  <div class="column3">
+  <div class="column3big">
     <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
     <em>Arcadia, ME, US</em>
   </div>
-  <div class="column3">
-    <img src="/Trips/yunnan.JPG" alt="Forest" style="width:100%">
-    <em>Yunnan, China</em>
-  </div>
-   <div class="column3">
+    <div class="column3big">
       <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:100%">
     <em>Pittsburgh, PA, US</em>
+  </div>
+   <div class="column3small">
+    <img src="/Trips/yunnan.JPG" alt="Forest" style="width:100%">
+    <em>Yunnan, China</em>
   </div>
 </div>
 
