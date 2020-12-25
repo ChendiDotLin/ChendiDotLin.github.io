@@ -69,6 +69,17 @@ subtitle: Either My Body or My Soul is on the Bed
 <body>
 
 <div class="row">
+<div class="column2">
+    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <em>Iceland</em>
+  </div>
+   <div class="column2">
+    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
+    <em>Sweden, Norway, and Denmark</em>
+  </div>
+</div>
+
+<div class="row">
   <div class="column3">
     <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
     <em>Paris, France</em>
@@ -83,16 +94,7 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 </div>
 
-<div class="row">
-<div class="column2">
-    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
-    <em>Iceland</em>
-  </div>
-   <div class="column2">
-    <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
-    <em>Sweden, Norway, and Denmark</em>
-  </div>
-  </div>
+
 
 
 <div class="row">
