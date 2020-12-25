@@ -107,14 +107,14 @@ subtitle: Either My Body or My Soul is on the Bed
 </div>
 
   <div class="row">
-  <div class="column2">
-    <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
-    <em>Arcadia, ME, US</em>
-  </div>
+    </div>
     <div class="column2">
       <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:92%">
     <em>Pittsburgh, PA, US</em>
   </div>
+  <div class="column2">
+    <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
+    <em>Arcadia, ME, US</em>
 </div>
 
 <div class="row">
