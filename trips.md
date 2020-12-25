@@ -42,13 +42,13 @@ subtitle: Either My Body or My Soul is on the Bed
 
 .column2big {
   float: left;
-  width: 60%;
+  width: 70%;
   padding: 5px;
 }
 
 .column2small {
   float: left;
-  width: 40%;
+  width: 30%;
   padding: 5px;
 }
 
@@ -95,18 +95,6 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 
 
-  <div class="row">
-  <div class="column2">
-    <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
-    <em>Arcadia, ME, US</em>
-  </div>
-    <div class="column2">
-      <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:90%">
-    <em>Pittsburgh, PA, US</em>
-  </div>
-
-</div>
-
 <div class="row">
 <div class="column2big">
     <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
@@ -115,6 +103,17 @@ subtitle: Either My Body or My Soul is on the Bed
      <div class="column2small">
     <img src="/Trips/yunnan.JPG" alt="Forest" style="width:100%">
     <em>Yunnan, China</em>
+  </div>
+</div>
+
+  <div class="row">
+  <div class="column2">
+    <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
+    <em>Arcadia, ME, US</em>
+  </div>
+    <div class="column2">
+      <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:92%">
+    <em>Pittsburgh, PA, US</em>
   </div>
 </div>
 
