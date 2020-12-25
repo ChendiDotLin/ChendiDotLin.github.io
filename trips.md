@@ -46,7 +46,7 @@ subtitle: Either My Body or My Soul is on the Bed
   padding: 5px;
 }
 
-.column2 {
+.column2small {
   float: left;
   width: 25%;
   padding: 5px;
