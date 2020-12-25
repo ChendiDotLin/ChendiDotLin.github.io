@@ -42,13 +42,13 @@ subtitle: Either My Body or My Soul is on the Bed
 
 .column2big {
   float: left;
-  width: 75%;
+  width: 60%;
   padding: 5px;
 }
 
 .column2small {
   float: left;
-  width: 25%;
+  width: 40%;
   padding: 5px;
 }
 
@@ -101,7 +101,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Arcadia, ME, US</em>
   </div>
     <div class="column2">
-      <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:100%">
+      <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:90%">
     <em>Pittsburgh, PA, US</em>
   </div>
 
