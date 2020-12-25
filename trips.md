@@ -103,7 +103,7 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Yunnan, China</em>
   </div>
   <div class="column2big">
-    <img src="/Trips/seattle.jpg" alt="Forest" style="width:99.5%">
+    <img src="/Trips/seattle.jpg" alt="Forest" style="width:99%">
     <em>Seattle, WA, US</em>
   </div>
 </div>
@@ -111,7 +111,7 @@ subtitle: Either My Body or My Soul is on the Bed
   <div class="row">
     </div>
     <div class="column2">
-      <img src="/Trips/pitt.JPG" alt="Snow" style="width:92%">
+      <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:92%">
     <em>Pittsburgh, PA, US</em>
   </div>
   <div class="column2">
