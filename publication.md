@@ -3,6 +3,10 @@ layout: page
 title: Publication
 
 ---
+- [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Deployment for Multi-robot System</span>](https://arxiv.org/abs/2012.10008)  
+<span style="color:gray;">IEEE International Conference on Robotics and Automation (ICRA), 2021 (Oral presentation)</span>  
+**Chendi Lin**, Wenhao Luo, Katia Sycara
+
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
 <span style="color:gray;">Master Thesis, 2020</span>  
 **Chendi Lin**
