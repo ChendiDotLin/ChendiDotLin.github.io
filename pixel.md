@@ -1,6 +1,6 @@
 ---
 layout: page
-title: 100 Days of Pixel Art
+title: 81 Days of Pixel Art
 subtitle: A new learning process
 ---
 
@@ -15,4 +15,6 @@ subtitle: A new learning process
 <img src="/Pixel/day13.GIF" width="32%"> <img src="/Pixel/day14.PNG" width="32%"> <img src="/Pixel/day15.PNG" width="32%">
 
 <img src="/Pixel/day16.PNG" width="32%"> <img src="/Pixel/day17.GIF" width="32%"> <img src="/Pixel/day18.PNG" width="32%">
+
+<img src="/Pixel/day19.GIF" width="32%"> <img src="/Pixel/day20.PNG" width="32%"> <img src="/Pixel/day21.PNG" width="32%">
 
