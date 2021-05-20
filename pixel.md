@@ -24,3 +24,4 @@ subtitle: A new learning process
 
 <img src="/Pixel/day28.PNG" width="32%"> <img src="/Pixel/day29.PNG" width="32%"> <img src="/Pixel/day30.PNG" width="32%">
 
+<img src="/Pixel/day31.PNG" width="32%"> <img src="/Pixel/day32.PNG" width="32%"> <img src="/Pixel/day33.PNG" width="32%">
