@@ -38,6 +38,6 @@ subtitle: A new learning process
 
 <img src="/Pixel/day49.JPEG" width="32%"> <img src="/Pixel/day50.JPEG" width="32%"> <img src="/Pixel/day51.JPEG" width="32%">
 
-<img src="/Pixel/day52.JPEG" width="32%"> <img src="/Pixel/day53.JPEG" width="32%"> <img src="/Pixel/day54.JPEG" width="32%">
+<img src="/Pixel/day52.JPEG" width="32%"> <img src="/Pixel/day53.PNG" width="32%"> <img src="/Pixel/day54.JPEG" width="32%">
 
 <img src="/Pixel/day55.JPEG" width="32%"> <img src="/Pixel/day56.JPEG" width="32%"> <img src="/Pixel/day57.JPEG" width="32%">
