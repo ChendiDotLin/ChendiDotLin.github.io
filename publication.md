@@ -7,9 +7,11 @@ title: Publication
 <span style="color:gray;">IEEE International Conference on Robotics and Automation (ICRA), 2021 (Oral presentation)</span>  
 **Chendi Lin**, Wenhao Luo, Katia Sycara
 
-<center><video width="320" height="240" controls>
+<!-- <center><video width="320" height="240" controls>
   <source src="publication/icra.mov">
-</video></center>
+</video></center> -->
+<center><iframe id="video" width="560" height="315" src="publication/icra.mov/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe></center>
+<img src="/publication/icra.gif" width="80%">
 
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
 <span style="color:gray;">Master Thesis, 2020</span>  
