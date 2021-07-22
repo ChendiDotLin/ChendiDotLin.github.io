@@ -12,7 +12,7 @@ title: Publication
 </video></center> -->
 <!-- <center><iframe id="video" width="560" height="315" src="publication/icra.mov/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe></center> -->
 <p align="center">
-<img src="/publication/icra.gif" width="20%">
+<img src="/publication/icra.gif" width="30%">
 </p>
 
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
@@ -25,12 +25,16 @@ title: Publication
 
 - [<span style="font-size:1.2em;">Attitude Control System Complexity Reduction via Tailored Viscoelastic Damping Co-Design</span>](https://www.ideals.illinois.edu/handle/2142/106125)  
 <span style="color:gray;">AAS Rocky Mountain Section (AAS GNC), 2018 (Oral presentation)</span>  
-**Chendi Lin**, Daniel R Herber, Yong Hoon Lee, Alexander Ghosh, Randy H Ewoldt, James T Allison	
+**Chendi Lin**, Daniel R Herber, Yong Hoon Lee, Alexander Ghosh, Randy H Ewoldt, James T Allison
+<p align="center">
 <img src="/publication/sasa1.png" width="30%"><img src="/publication/sasa2.png" width="30%">
+</p>
 
 
 - [<span style="font-size:1.2em;">Efficient Optimal Surface Texture Design Using Linearization</span>](https://link.springer.com/chapter/10.1007/978-3-319-67988-4_48)  
 <span style="color:gray;">World Congress of Structural and Multidisciplinary Optimisation (WCSMO), 2017 (Oral presentation)</span>  
 **Chendi Lin**, Yong Hoon Lee, Jonathon K. Schuh, Randy H. Ewoldt, James T. Allison	
+<p align="center">
 <img src="/publication/wcsmo.png" width="50%">
+</p>
 
