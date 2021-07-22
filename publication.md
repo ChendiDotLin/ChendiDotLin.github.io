@@ -18,7 +18,9 @@ title: Publication
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
 <span style="color:gray;">Master Thesis, 2020</span>  
 **Chendi Lin**
-
+<p align="center">
+<img src="/publication/thesis.png" width="30%">
+</p>
 <!-- - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://drive.google.com/file/d/10ck8D6KAuQcdQ0QPeCYjDaRMXEaTGqEv/view)  [<span style="font-size:1.2em;">\[video\]</span>](https://www.youtube.com/watch?v=IAzgKHrBaoE&ab_channel=HarishRavichandar)  
 <span style="color:gray;">Workshop on Heterogeneous Multi-Robot Task Allocation and Coordination, Robotics: Science and Systems (RSS), 2020 (Oral presentation)</span>  
 **Chendi Lin**, Wenhao Luo, Katia Sycara -->
