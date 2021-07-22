@@ -11,7 +11,9 @@ title: Publication
   <source src="publication/icra.mov">
 </video></center> -->
 <!-- <center><iframe id="video" width="560" height="315" src="publication/icra.mov/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe></center> -->
+<p align="center">
 <img src="/publication/icra.gif" width="40%">
+</p>
 
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Distribution for Heterogeneous Multi-Robot Systems</span>](https://www.ri.cmu.edu/wp-content/uploads/2020/05/Master_Thesis_Report_v5.pdf)  
 <span style="color:gray;">Master Thesis, 2020</span>  
@@ -30,5 +32,5 @@ title: Publication
 - [<span style="font-size:1.2em;">Efficient Optimal Surface Texture Design Using Linearization</span>](https://link.springer.com/chapter/10.1007/978-3-319-67988-4_48)  
 <span style="color:gray;">World Congress of Structural and Multidisciplinary Optimisation (WCSMO), 2017 (Oral presentation)</span>  
 **Chendi Lin**, Yong Hoon Lee, Jonathon K. Schuh, Randy H. Ewoldt, James T. Allison	
-<img src="/publication/wcsmo.png" width="80%">
+<img src="/publication/wcsmo.png" width="70%">
 
