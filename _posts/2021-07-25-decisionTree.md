@@ -33,8 +33,8 @@ $$P(Y= a) = P(Y = b)$$
 
 then we have
 
-$$\begin{eqnarray}
+$$\begin{align}
 H(Y) &= -P(Y= a)\log_2P(Y = a) - P(Y= b)\log_2P(Y = b)\\
     &= -0.5*(-1) - 0.5 * (-1) = 1
-\end{eqnarray}$$
+\end{align}$$
 
