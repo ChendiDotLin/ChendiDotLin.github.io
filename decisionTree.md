@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: post
 title: Decision Tree (DT)
 subtitle: Knowledge Sharing
 ---
