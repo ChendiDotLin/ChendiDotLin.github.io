@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: minimal
 title: MATLAB Tricks
 subtitle: Knowledge Sharing
 comments: true
