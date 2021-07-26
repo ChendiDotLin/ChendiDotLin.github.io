@@ -7,9 +7,9 @@ subtitle: Knowledge Sharing
 You can treat decision tree as a function approximator, which takes in an input with `n` attributes **`x`**`∈ ℝ^n`, and outputs a result `y`.  For example, 
 <p align="center">
 <img src="/knowledge/decisionTree/DTexample.png" width="60%">
-
 <p align="center">
-<center>*taken from CMU 10601 lecture note*</center>
+
+*<center>taken from CMU 10601 lecture note</center>*
 
 In the dataset shown above, if the weather is sunny and the temperature is hot, the tennis event is always canceled. Thus, if we are given a new input in the future with sunny weather and hot temperature, these two attributes should inform our trained decision tree that, the tennis is unlikely to happen today either.
 
