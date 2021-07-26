@@ -1,5 +1,5 @@
 ---
-layout: minimal
+layout: post
 title: Decision Tree (DT)
 subtitle: Knowledge Sharing
 comments: true
