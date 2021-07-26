@@ -2,6 +2,7 @@
 layout: post
 title: Decision Tree (DT)
 subtitle: Knowledge Sharing
+comments: true
 ---
 ## What is Decision Tree and Why Do We Want to Use It?
 You can treat decision tree as a function approximator, which takes in an input with `n` attributes **`x`**`∈ ℝ^n`, and outputs a result `y`.  For example, 
