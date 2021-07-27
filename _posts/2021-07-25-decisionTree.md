@@ -38,3 +38,11 @@ H(Y) &= -P(Y= a)\log_2P(Y = a) - P(Y= b)\log_2P(Y = b)\\
     &= -0.5*(-1) - 0.5 * (-1) = 1
 \end{align}$$
 
+So the entropy is maximized and the distribution is pretty uniform. However, if $Y = a$ throughout the whole dataset, then the entropy becomes
+
+$$\begin{align}
+H(Y) &= -P(Y= a)\log_2P(Y = a) - P(Y= b)\log_2P(Y = b)\\
+    &= -1*(0) - 0 = 0
+\end{align}$$
+
+which means the data is pretty polarized.
