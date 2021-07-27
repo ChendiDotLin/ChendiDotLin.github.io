@@ -29,7 +29,7 @@ Notice that, when $P(Y = i) = 0$, $\log_2P(Y = i)$ is not defined. In this case,
 
 My interpretation of entropy is that this term describes how well the data is uniformly distributed in the dataset. For example, if $Y$ can only either be $a$ or $b$, and their appearance frequencies are the same, i.e., 
 
-$$P(Y= a) = P(Y = b)$$
+$$P(Y= a) = P(Y = b) = 0.5$$
 
 then we have
 
@@ -46,3 +46,16 @@ H(Y) &= -P(Y= a)\log_2P(Y = a) - P(Y= b)\log_2P(Y = b)\\
 \end{align}$$
 
 which means the data is pretty polarized.
+
+### Conditional Entropy
+Specific conditional entropy and conditional entropy are relatively easy to understand after the concept of Entropy is comprehended. They are calculated as
+
+$$H(Y | X = v) = -\sum_{i=1}^nP(Y= i | X = v)\log_2P(Y = i | X = v)$$
+
+$$H(Y | X) = -\sum_{v \in values(x)}P(X = v)H(Y|X= v)$$
+
+They simply represent the entropy of $Y$ given the probability of $X$ as a premise.
+
+### Mutual Information
+Based on the definition of entropy, we can calculate the mutual information as
+
