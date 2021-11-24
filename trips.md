@@ -68,6 +68,8 @@ subtitle: Either My Body or My Soul is on the Bed
 </head>
 <body>
 
+
+
 <div class="row">
 <div class="column2">
     <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
@@ -105,6 +107,12 @@ subtitle: Either My Body or My Soul is on the Bed
   <div class="column2big">
     <img src="/Trips/seattle.jpg" alt="Forest" style="width:99%">
     <em>Seattle, WA, US</em>
+  </div>
+</div>
+<div class="row">
+<div class="column1">
+    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <em>Martha's Vineyard, MA, US</em>
   </div>
 </div>
 
@@ -150,6 +158,5 @@ subtitle: Either My Body or My Soul is on the Bed
 </html>
 
 
-<!-- ![](/Trips/seattle.jpg)
 *Seattle, WA* -->
 
