@@ -111,7 +111,7 @@ subtitle: Either My Body or My Soul is on the Bed
 </div>
 <div class="row">
 <div class="column1">
-    <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:100%">
     <em>Martha's Vineyard, MA, US</em>
   </div>
 </div>
