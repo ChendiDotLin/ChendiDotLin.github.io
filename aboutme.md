@@ -4,14 +4,12 @@ title: About me
 subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...... and Art!
 ---
 ### My Robot Side
-This is the section I am the least willing to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
+Describing myself formally has always been awkward for me, so I'll keep it simple.
+I currently work as a software engineer in the behavior planning team at Waymo, an autonomous driving company based in the Bay Area. Previously, I worked at MathWorks in the Simulink Code Inspector team, where I helped ensure that user-generated Simulink models could be deployed on hardware like automobiles and airplanes safely and efficiently.
 
-Right now I am working as a software engineer at Waymo, the autonomous driving company based in Bay Area, in the behavior planning team. Before that, I was working at MathWorks, specifically in the Simulink Code Inspector team. This product aims to automatically and intelligently examine the auto-generated code from the user-created Simulink models to make sure that it can be deployed onto the hardwares like automobiles and airplanes beautifully and safely. So overall, big duty. 
-
-I graduated with the Master degree in Robotics (MSR) at Robotics Institute from Carnegie Mellon University under the supervision of Prof. Katia Sycara. My research interest was in the motion planning and task allocation of the heterogeneous multi-robot systems. During the summer break, I had an internship with Uber ATG in the motion planing team working on trajectory optimization. I also listed my thesis work and related publications in this website, so do me a favor and check them out if you are triggered.
+I hold a Master's degree in Robotics from the Robotics Institute at Carnegie Mellon University, where I conducted research on motion planning and task allocation for heterogeneous multi-robot systems under the supervision of Prof. Katia Sycara. During a summer break, I interned with Uber ATG's motion planning team, focusing on trajectory optimization. You can find details about my thesis work and related publications on this website.
 
 I received my B.S. degree in Engineering Mechanics, with minors in both Computer Science and Mathematics, from University of Illinois at Urbana-Champaign (UIUC) in 2018. I had the honor to work with Prof. James Allison, Prof. Randy Ewoldt, and Prof. Elif Ertekin on various topics like structural optimization, visco-elastic material design, and shape memory alloy simulation and design. I published two conference papers as the first author during my college years, which are also listed under the _Publication_ tab.
 
 ### My Human Side
-My artsy (yet erratic) side projects like photography, pixel art, and playwriting are under the _Here and There_ tab. Those works describe my humanity portaion so definietely take a peek, but don't hold a high expection, especially for the quality. I also include 
-some technical blogs under the _Tech_ section of this tab. 
+When I'm not working on robotics and optimization, I indulge in my artsy side projects like photography, pixel art, and playwriting. You can find them under the _Here and There_ tab. I also occasionally post technical blogs under the _Tech_ section of this tab.
