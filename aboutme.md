@@ -4,7 +4,8 @@ title: About me
 subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...... and Art!
 ---
 ### My Robot Side
-Describing myself formally has always been awkward for me, so I'll keep it simple.
+This is the section I am the least willing to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
+
 I currently work as a software engineer in the behavior planning team at Waymo, an autonomous driving company based in the Bay Area. Previously, I worked at MathWorks in the Simulink Code Inspector team, where I helped ensure that user-generated Simulink models could be deployed on hardware like automobiles and airplanes safely and efficiently.
 
 I hold a Master's degree in Robotics from the Robotics Institute at Carnegie Mellon University, where I conducted research on motion planning and task allocation for heterogeneous multi-robot systems under the supervision of Prof. Katia Sycara. During a summer break, I interned with Uber ATG's motion planning team, focusing on trajectory optimization. You can find details about my thesis work and related publications on this website.
