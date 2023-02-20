@@ -110,25 +110,25 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 </div>
 <div class="row">
-<div class="column1">
+<div class="column2big">
     <img src="/Trips/vineyard.JPG" alt="Snow" style="width:100%">
     <em>Martha's Vineyard, MA, US</em>
   </div>
+  <div class="column2small">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
+    <em>Miami, , US</em>
+</div>
 </div>
 
   <div class="row">
     </div>
-    <div class="column3">
+    <div class="column2">
       <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:92%">
     <em>Pittsburgh, PA, US</em>
   </div>
-  <div class="column3">
+  <div class="column2">
     <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
     <em>Arcadia, ME, US</em>
-</div>
-  <div class="column3">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
-    <em>Miami, FL, US</em>
 </div>
 
 <div class="row">
