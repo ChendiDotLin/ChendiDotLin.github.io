@@ -54,13 +54,13 @@ padding: 5px;
 
 .column2big2 {
 float: left;
-width: 65%;
+width: 68%;
 padding: 5px;
 }
 
 .column2small2 {
 float: left;
-width: 35%;
+width: 32%;
 padding: 5px;
 }
 
@@ -124,7 +124,7 @@ display: table;
   </div>
   <div class="column2small2">
     <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
-    <em>Miami, , US</em>
+    <em>Miami, FL, US</em>
 </div>
 </div>
 
