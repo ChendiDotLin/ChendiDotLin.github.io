@@ -54,13 +54,13 @@ padding: 5px;
 
 .column2big2 {
 float: left;
-width: 68%;
+width: 65%;
 padding: 5px;
 }
 
 .column2small2 {
 float: left;
-width: 32%;
+width: 35%;
 padding: 5px;
 }
 
@@ -123,7 +123,7 @@ display: table;
     <em>Martha's Vineyard, MA, US</em>
   </div>
   <div class="column2small2">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:90%">
     <em>Miami, FL, US</em>
 </div>
 </div>
