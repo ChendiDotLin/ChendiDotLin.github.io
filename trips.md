@@ -111,7 +111,7 @@ display: table;
     <em>Martha's Vineyard, MA, US</em>
   </div>
   <div class="column2small">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:110%">
     <em>Miami, , US</em>
 </div>
 </div>
