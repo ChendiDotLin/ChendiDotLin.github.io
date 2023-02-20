@@ -3,12 +3,12 @@ layout: page
 ---
 
 
-<!-- <style>
+<style>
     .pdf-container {
         position: relative;
         width: 100%;
         padding-bottom: 56.25%; /* 16:9 aspect ratio */
-        margin-bottom: 20px;
+        /* margin-bottom: 20px; */
     }
     .pdf-container object {
         position: absolute;
@@ -17,7 +17,7 @@ layout: page
         width: 100%;
         height: 100%;
     }
-</style> -->
+</style>
 
 <div class="pdf-container">
     <object data="/resume/2023_Resume_for_SDE.pdf" type="application/pdf">
