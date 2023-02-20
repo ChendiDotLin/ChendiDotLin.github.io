@@ -3,7 +3,7 @@ layout: page
 ---
 
 
-<style>
+<!-- <style>
     .pdf-container {
         position: relative;
         width: 100%;
@@ -17,7 +17,7 @@ layout: page
         width: 100%;
         height: 100%;
     }
-</style>
+</style> -->
 
 <div class="pdf-container">
     <object data="/resume/2023_Resume_for_SDE.pdf" type="application/pdf">
