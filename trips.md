@@ -54,13 +54,13 @@ padding: 5px;
 
 .column2big2 {
 float: left;
-width: 75%;
+width: 73%;
 padding: 5px;
 }
 
 .column2small2 {
 float: left;
-width: 25%;
+width: 27%;
 padding: 5px;
 }
 
