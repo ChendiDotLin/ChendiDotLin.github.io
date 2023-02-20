@@ -107,7 +107,7 @@ display: table;
 </div>
 <div class="row">
 <div class="column2big">
-    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:100%">
+    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:98%">
     <em>Martha's Vineyard, MA, US</em>
   </div>
   <div class="column2small">
