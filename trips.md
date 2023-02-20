@@ -107,11 +107,11 @@ display: table;
 </div>
 <div class="row">
 <div class="column2big">
-    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:95%">
+    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:95%; height: 75px;">
     <em>Martha's Vineyard, MA, US</em>
   </div>
   <div class="column2small">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:180%">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:180%; height: 75px;">
     <em>Miami, , US</em>
 </div>
 </div>
