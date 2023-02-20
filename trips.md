@@ -123,7 +123,7 @@ display: table;
     <em>Martha's Vineyard, MA, US</em>
   </div>
   <div class="column2small2">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:90%">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:95%">
     <em>Miami, FL, US</em>
 </div>
 </div>
