@@ -3,6 +3,7 @@ layout: page
 title: My Trips
 subtitle: Either My Body or My Soul is on the Bed
 ---
+
 <!-- <html>
 <head>
 <style>
@@ -11,64 +12,62 @@ subtitle: Either My Body or My Soul is on the Bed
 }
 
 .column3 {
-  float: left;
-  width: 33.33%;
-  padding: 5px;
+float: left;
+width: 33.33%;
+padding: 5px;
 }
 
 .column3small {
-  float: left;
-  width: 29.5%;
-  padding: 5px;
+float: left;
+width: 29.5%;
+padding: 5px;
 }
 
 .column3mid {
-  float: left;
-  width: 32.5%;
-  padding: 5px;
+float: left;
+width: 32.5%;
+padding: 5px;
 }
 .column3big {
-  float: left;
-  width: 38%;
-  padding: 5px;
+float: left;
+width: 38%;
+padding: 5px;
 }
 
-
 .column2 {
-  float: left;
-  width: 50%;
-  padding: 5px;
+float: left;
+width: 50%;
+padding: 5px;
 }
 
 .column2big {
-  float: left;
-  width: 70%;
-  padding: 5px;
+float: left;
+width: 70%;
+padding: 5px;
 }
 
 .column2small {
-  float: left;
-  width: 30%;
-  padding: 5px;
+float: left;
+width: 30%;
+padding: 5px;
 }
 
 .column1 {
-  float: left;
-  width: 100%;
-  padding: 5px;
+float: left;
+width: 100%;
+padding: 5px;
 }
 
-/* Clearfix (clear floats) */
+/_ Clearfix (clear floats) _/
 .row::after {
-  content: "";
-  clear: both;
-  display: table;
+content: "";
+clear: both;
+display: table;
 }
 </style>
+
 </head>
 <body>
-
-
 
 <div class="row">
 <div class="column2">
@@ -95,9 +94,6 @@ subtitle: Either My Body or My Soul is on the Bed
     <em>Hawaii, US</em>
   </div>
 </div>
-
-
-
 
 <div class="row">
      <div class="column2small">
@@ -157,108 +153,103 @@ subtitle: Either My Body or My Soul is on the Bed
   </div>
 </div>
 
-
 </body>
-</html>
+</html> -->
 
-
- -->
 <html>
-<head>
-<style>
-.container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(6, auto);
-  gap: 10px;
-}
-
-.item {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.item img {
-  width: 100%;
-  height: auto;
-}
-
-.item em {
-  margin-top: 10px;
-}
-</style>
-</head>
-<body>
-
-<div class="container">
-  <div class="item">
-    <img src="/Trips/iceland.JPG" alt="Snow">
-    <em>Iceland</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/stockholm.jpeg" alt="Snow">
-    <em>Sweden, Norway, and Denmark</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/paris.jpeg" alt="Snow">
-    <em>Paris, France</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/xining.jpeg" alt="Forest">
-    <em>Xining, Qinghai, China</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/hawaii.JPG" alt="Snow">
-    <em>Hawaii, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/yunnan.JPG" alt="Forest">
-    <em>Yunnan, China</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/seattle.jpg" alt="Forest">
-    <em>Seattle, WA, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/vineyard.JPG" alt="Snow">
-    <em>Martha's Vineyard, MA, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/miami.jpeg" alt="Snow">
-    <em>Miami, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/pittsburgh.JPG" alt="Snow">
-    <em>Pittsburgh, PA, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/arcadia.JPG" alt="Snow">
-    <em>Arcadia, ME, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/capeann.JPG" alt="Forest">
-    <em>Cape Ann, MA, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/niagara.JPG" alt="Forest">
-    <em>Niagara Fall, Canada</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/japan.jpg" alt="Forest">
-    <em>Japan</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/milwaukee.jpeg" alt="Snow">
-    <em>Milwaukee, WI, US</em>
-  </div>
-  <div class="item">
-    <img src="/Trips/tibet.jpg" alt="Forest">
-    <em>Tibet, China</em>
-  </div>
-</div>
-
-</body>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      .row::after {
+        content: "";
+        clear: both;
+        display: table;
+      }
+      .column {
+        float: left;
+        width: 100%;
+        padding: 5px;
+      }
+      @media only screen and (min-width: 600px) {
+        .column {
+          width: 50%;
+        }
+      }
+      @media only screen and (min-width: 900px) {
+        .column {
+          width: 33.33%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="column">
+        <img src="/Trips/iceland.JPG" alt="Snow" style="width:100%">
+        <em>Iceland</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/stockholm.jpeg" alt="Snow" style="width:100%">
+        <em>Sweden, Norway, and Denmark</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/paris.jpeg" alt="Snow" style="width:100%">
+        <em>Paris, France</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/xining.jpeg" alt="Forest" style="width:100%">
+        <em>Xining, Qinghai, China</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/hawaii.JPG" alt="Snow" style="width:100%">
+        <em>Hawaii, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/yunnan.JPG" alt="Forest" style="width:100%">
+        <em>Yunnan, China</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/seattle.jpg" alt="Forest" style="width:100%">
+        <em>Seattle, WA, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/vineyard.JPG" alt="Snow" style="width:100%">
+        <em>Martha's Vineyard, MA, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
+        <em>Miami, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/pittsburgh.JPG" alt="Snow" style="width:100%">
+        <em>Pittsburgh, PA, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/arcadia.JPG" alt="Snow" style="width:100%">
+        <em>Arcadia, ME, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/capeann.JPG" alt="Forest" style="width:100%">
+        <em>Cape Ann, MA, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/niagara.JPG" alt="Forest" style="width:100%">
+        <em>Niagara Fall, Canada 
+      <div class="column">
+        <img src="/Trips/japan.jpg" alt="Forest" style="width:100%">
+        <em>Japan</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/milwaukee.jpeg" alt="Snow" style="width:100%">
+        <em>Milwaukee, WI, US</em>
+      </div>
+      <div class="column">
+        <img src="/Trips/tibet.jpg" alt="Forest" style="width:100%">
+        <em>Tibet, China</em>
+      </div>
+    </div>
+    </body>
 </html>
