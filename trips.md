@@ -3,7 +3,7 @@ layout: page
 title: My Trips
 subtitle: Either My Body or My Soul is on the Bed
 ---
-<html>
+<!-- <html>
 <head>
 <style>
 * {
@@ -162,4 +162,81 @@ subtitle: Either My Body or My Soul is on the Bed
 </html>
 
 
+ -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Trips</title>
+    <style>
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+      }
+
+      .grid-item {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <ul class="grid">
+      <li class="grid-item">
+        <img src="/Trips/iceland.JPG" alt="Iceland">
+        <em>Iceland</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/stockholm.jpeg" alt="Sweden, Norway, and Denmark">
+        <em>Sweden, Norway, and Denmark</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/paris.jpeg" alt="Paris, France">
+        <em>Paris, France</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/xining.jpeg" alt="Xining, Qinghai, China">
+        <em>Xining, Qinghai, China</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/hawaii.JPG" alt="Hawaii, US">
+        <em>Hawaii, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/yunnan.JPG" alt="Yunnan, China">
+        <em>Yunnan, China</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/seattle.jpg" alt="Seattle, WA, US">
+        <em>Seattle, WA, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/vineyard.JPG" alt="Martha's Vineyard, MA, US">
+        <em>Martha's Vineyard, MA, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/miami.jpeg" alt="Miami, US">
+        <em>Miami, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/pittsburgh.JPG" alt="Pittsburgh, PA, US">
+        <em>Pittsburgh, PA, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/arcadia.JPG" alt="Arcadia, ME, US">
+        <em>Arcadia, ME, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/capeann.JPG" alt="Cape Ann, MA, US">
+        <em>Cape Ann, MA, US</em>
+      </li>
+      <li class="grid-item">
+        <img src="/Trips/niagara.JPG" alt="Niagara Fall, Canada">
+        <em>Niagara Fall, Canada</em>
+      </li>
+      <li class="grid 
 
