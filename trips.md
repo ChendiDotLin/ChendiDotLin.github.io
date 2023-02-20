@@ -1,4 +1,4 @@
----
+<!-- ---
 layout: page
 title: My Trips
 subtitle: Either My Body or My Soul is on the Bed
@@ -163,7 +163,7 @@ subtitle: Either My Body or My Soul is on the Bed
 
 
  -->
-
+<!-- 
 <!DOCTYPE html>
 <html>
   <head>
@@ -239,4 +239,113 @@ subtitle: Either My Body or My Soul is on the Bed
         <em>Niagara Fall, Canada</em>
       </li>
       <li class="grid 
+ --> -->
 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Trips</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f2f2f2;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            margin: -10px;
+        }
+
+        .item {
+            flex: 1 1 300px;
+            margin: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .item img {
+            display: block;
+            height: auto;
+            max-width: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .item:hover img {
+            transform: scale(1.1);
+        }
+
+        .item .overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            bottom: 0;
+            color: #fff;
+            left: 0;
+            padding: 20px;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .item:hover .overlay {
+            opacity: 1;
+        }
+
+        .item h3 {
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+
+        .item p {
+            font-size: 18px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="item">
+            <img src="/Trips/iceland.JPG" alt="Iceland">
+            <div class="overlay">
+                <h3>Iceland</h3>
+                <p>Exploring glaciers and hot springs</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="/Trips/stockholm.jpeg" alt="Sweden, Norway, and Denmark">
+            <div class="overlay">
+                <h3>Sweden, Norway, and Denmark</h3>
+                <p>Discovering Nordic culture and cuisine</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="/Trips/paris.jpeg" alt="Paris">
+            <div class="overlay">
+                <h3>Paris, France</h3>
+                <p>Visiting iconic landmarks and art museums</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="/Trips/xining.jpeg" alt="Xining, Qinghai, China">
+            <div class="overlay">
+                <h3>Xining, Qinghai, China</h3>
+                <p>Exploring Tibetan culture and high-altitude landscapes</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="/Trips/hawaii.JPG" alt="Hawaii">
+            <div class="overlay">
+                <h3>Hawaii, US</h3>
+                <p>Relaxing on beaches and hiking in rainforests</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="/Trips/yunnan.JPG" alt="Yunnan, China">
+             
