@@ -52,6 +52,18 @@ width: 30%;
 padding: 5px;
 }
 
+.column2big2 {
+float: left;
+width: 60%;
+padding: 5px;
+}
+
+.column2small2 {
+float: left;
+width: 40%;
+padding: 5px;
+}
+
 .column1 {
 float: left;
 width: 100%;
@@ -106,12 +118,12 @@ display: table;
   </div>
 </div>
 <div class="row">
-<div class="column2big">
-    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:90%">
+<div class="column2big2">
+    <img src="/Trips/vineyard.JPG" alt="Snow" style="width:100%">
     <em>Martha's Vineyard, MA, US</em>
   </div>
-  <div class="column2small">
-    <img src="/Trips/miami.jpeg" alt="Snow" style="width:180%">
+  <div class="column2small2">
+    <img src="/Trips/miami.jpeg" alt="Snow" style="width:100%">
     <em>Miami, , US</em>
 </div>
 </div>
