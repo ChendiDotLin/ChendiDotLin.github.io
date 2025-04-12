@@ -7,30 +7,15 @@ use-site-title: true
 ---
 
 <style>
-  .top-left-header {
+  .sticky-avatar {
     position: fixed;
     top: 10px;
     left: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 1001;
-  }
-
-  .site-name {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #333;
-    background-color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-  }
-
-  .sticky-avatar {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     transition: width 0.3s ease, height 0.3s ease;
+    z-index: 1001;
   }
 
   .sticky-avatar.shrink {
@@ -51,11 +36,6 @@ use-site-title: true
 <p style="font-size:1.0em">Check out <i>About Me</i> and <i>CV</i> tabs for my detailed academic and industrial experiences. 
   My life outside of work is briefly introduced in <i>Here and There</i>.
 </p>
-
-<div class="top-left-header">
-  <img src="/img/profile2.PNG" class="sticky-avatar" alt="Avatar">
-  <span class="site-name">Hi I'm Chendi Lin</span>
-</div>
 
 <blockquote style="font-size:1.0em"> Carpe diem. </blockquote>
 <!-- <div class="posts-list">
