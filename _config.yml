@@ -14,8 +14,8 @@ baseurl: ""
 # Of course don't forget to change the username and projectname to YOUR username and project
 
 # Name of website
-# title: Chendi Lin
-title-img: "/img/profile2.PNG"
+title: Chendi Lin
+# title-img: "/img/profile2.PNG"
 
 # Short description of your site
 description: A Reseacher, An Engineer, Wish to be a...
