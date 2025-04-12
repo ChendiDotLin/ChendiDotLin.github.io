@@ -15,12 +15,32 @@ use-site-title: true
     height: 40px;
     border-radius: 50%;
     transition: width 0.3s ease, height 0.3s ease;
-    z-index: 0;
+    z-index: 10010;
   }
 
   .sticky-avatar.shrink {
     width: 30px;
     height: 30px;
+  }
+  /* Responsive adjustments for smaller screens */
+  @media screen and (max-width: 600px) {
+    .sticky-avatar {
+      top: 5px;
+      left: 5px;
+      width: 30px;
+      height: 30px;
+    }
+  }
+  /* Default header styling */
+  .site-header {
+    padding-left: 60px; /* Adjust based on avatar size */
+  }
+
+  /* Responsive adjustments for smaller screens */
+  @media screen and (max-width: 600px) {
+    .site-header {
+      padding-left: 40px; /* Adjust based on smaller avatar size */
+    }
   }
 </style>
 
