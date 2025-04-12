@@ -3,6 +3,28 @@ layout: page
 title: Publication
 
 ---
+<p align="center">
+<img src="/publication/objaverseplusplus_rubric" width="30%">
+</p>
+
+[![Paper](https://badgen.net/badge/icon/arXiv?icon=awesome&label&color=red)](https://arxiv.org/abs/2504.07334)
+[![Repo](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/TCXX/ObjaversePlusPlus)
+[![Hugging Face](https://img.shields.io/badge/HuggingFace-yellow?logo=huggingface&logoColor=white)](https://huggingface.co/datasets/cindyxl/ObjaversePlusPlus)
+
+- [<span style="font-size:1.2em;">Objaverse++: Curated 3D Object Dataset with Quality Annotations</span>](https://arxiv.org/abs/2504.07334)  
+<span style="color:gray;">Efficient Large Vision Models (eLVM) CVPR Workshop (2nd Edition), 2025</span>  
+**Chendi Lin**, Heshan Liu, Qunshu Lin, Zachary Bright, Shitao Tang, Yihui He, Minghao Liu,Ling Zhu,Cindy Le
+
+
+<!-- <center><video width="320" height="240" controls>
+  <source src="publication/icra.mov">
+</video></center> -->
+<!-- <center><iframe id="video" width="560" height="315" src="publication/icra.mov/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe></center> -->
+<p align="center">
+<img src="/publication/icra.gif" width="30%">
+</p>
+
+---
 - [<span style="font-size:1.2em;">Online Connectivity-aware Dynamic Deployment for Heterogeneous Multi-robot Systems</span>](https://arxiv.org/abs/2012.10008)  
 <span style="color:gray;">IEEE International Conference on Robotics and Automation (ICRA), 2021 (Oral presentation)</span>  
 **Chendi Lin**, Wenhao Luo, Katia Sycara
