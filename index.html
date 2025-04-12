@@ -6,44 +6,6 @@ subtitle: A Reseacher, An Engineer, and Wish to be a Writer
 use-site-title: true
 ---
 
-<style>
-  .sticky-avatar {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    transition: width 0.3s ease, height 0.3s ease;
-    z-index: 10010;
-  }
-
-  .sticky-avatar.shrink {
-    width: 30px;
-    height: 30px;
-  }
-  /* Responsive adjustments for smaller screens */
-  @media screen and (max-width: 600px) {
-    .sticky-avatar {
-      top: 5px;
-      left: 5px;
-      width: 30px;
-      height: 30px;
-    }
-  }
-  /* Default header styling */
-  .site-header {
-    padding-left: 60px; /* Adjust based on avatar size */
-  }
-
-  /* Responsive adjustments for smaller screens */
-  @media screen and (max-width: 600px) {
-    .site-header {
-      padding-left: 40px; /* Adjust based on smaller avatar size */
-    }
-  }
-</style>
-
 <p style="font-size:1.0em">Welcome to my personal website! My name is Chendi Lin (林晨笛) 
   and currently I am leading Trajectory Selection component at AutoX. 
   Previously I worked at Waymo in the behavior planning of trucking team as a Software Engineer. 
@@ -124,14 +86,3 @@ use-site-title: true
   {% endif %}
 </ul>
 {% endif %}
-
-<script>
-  window.addEventListener('scroll', function () {
-    const avatar = document.querySelector('.sticky-avatar');
-    if (window.scrollY > 50) {
-      avatar.classList.add('shrink');
-    } else {
-      avatar.classList.remove('shrink');
-    }
-  });
-</script>
