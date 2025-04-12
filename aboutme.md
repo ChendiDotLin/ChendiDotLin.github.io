@@ -6,7 +6,7 @@ subtitle: Motion Planning | Robotics | Optimization | Computational Mechanics...
 ### My Robot Side
 This is the section I am the least willing to write, so I purposely left it blank since I created my personal website. Describing myself formally is always awkward and I don't have the flowery language to make it vivid and poetic. But here we are, despite of the reluctance, because that is what life is about.
 
-I am currently leading Trajectory Selection Component at AutoX, an autonomous driving startup based in the Bay Area. Previously I work as a software engineer at Waymo, also an self driving company backed by Alphabet. I also worked at MathWorks in the Simulink Code Inspector team, where I helped ensure that user-generated Simulink models could be deployed on hardware like automobiles and airplanes safely and efficiently.
+I am currently leading Trajectory Selection component at AutoX, an autonomous driving startup based in the Bay Area. Previously I work as a software engineer at Waymo, also an self driving company backed by Alphabet. I also worked at MathWorks in the Simulink Code Inspector team, where I helped ensure that user-generated Simulink models could be deployed on hardware like automobiles and airplanes safely and efficiently.
 
 I hold a Master's degree in Robotics from the Robotics Institute at Carnegie Mellon University, where I conducted research on motion planning and task allocation for heterogeneous multi-robot systems under the supervision of Prof. Katia Sycara. During a summer break, I interned with Uber ATG's motion planning team, focusing on trajectory optimization. You can find details about my thesis work and related publications on this website.
 
