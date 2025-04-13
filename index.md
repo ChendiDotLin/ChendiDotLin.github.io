@@ -1,7 +1,7 @@
 ---
 layout: page
 show-avatar: true
-title: Hi I'm Chendi Lin
+title: Chendi Lin
 subtitle: A Reseacher, An Engineer, and Wish to be a Writer
 use-site-title: true
 ---
@@ -70,10 +70,10 @@ use-site-title: true
    </article>
   {% endfor %}
 </div> -->
-<p style="font:large">Research
-</p>
 
 ---
+### Research
+
 - [<span style="font-size:1.2em;">Objaverse++: Curated 3D Object Dataset with Quality Annotations</span>](https://arxiv.org/abs/2504.07334)  
 <span style="color:gray;">Efficient Large Vision Models (eLVM) CVPR Workshop (2nd Edition), 2025 (Oral presentation)</span>  
 **Chendi Lin**, Heshan Liu, Qunshu Lin, Zachary Bright, Shitao Tang, Yihui He, Minghao Liu,Ling Zhu,Cindy Le 

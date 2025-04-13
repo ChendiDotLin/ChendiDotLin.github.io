@@ -24,10 +24,10 @@ description: A Reseacher, An Engineer, Wish to be a...
 
 # List of links in the navigation bar
 navbar-links:
-  Home: "https://chendidotlin.github.io/"
+  # Home: "https://chendidotlin.github.io/"
   About me: "https://chendidotlin.github.io/aboutme/"
   CV: "https://chendidotlin.github.io/cv/"
-  Publication: "https://chendidotlin.github.io/publication/"
+  # Publication: "https://chendidotlin.github.io/publication/"
   Here and There: 
     - Trips: "https://chendidotlin.github.io/trips/"
     - Playwriting: "https://chendidotlin.github.io/playwriting/"
