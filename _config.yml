@@ -77,7 +77,9 @@ author:
 # You can reorder the items to define the link order.
 # If you want to add a new link that isn't here, you'll need to also edit the file _data/SocialNetworks.yml
 social-network-links:
-  rss: true
+  # rss: true
+  google-scholar: "citations?user=GBHR6kwAAAAJ&hl=en"
+  linkedin: chendi-lin
   email: "chendilin92@gmail.com"
   # facebook: daattali
   github: "ChendiDotLin"
@@ -85,7 +87,6 @@ social-network-links:
   # twitter: daattali
 #  reddit: yourname
 #  google-plus: +DeanAttali
-  linkedin: chendi-lin
 #  xing: yourname
 #  stackoverflow: "3943160/daattali"
 #  snapchat: deanat78

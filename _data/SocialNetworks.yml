@@ -100,3 +100,8 @@ yelp:
   name: "500px"
   baseURL: "https://500px.com/"
   icon: "fa-500px"
+
+google-scholar:
+  name: "google-scholar"
+  baseURL: "https://scholar.google.com/"
+  icon: "fa-graduation-cap"
