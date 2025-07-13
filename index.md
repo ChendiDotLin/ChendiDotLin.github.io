@@ -75,7 +75,8 @@ use-site-title: true
 ### Research
 
 - [<span style="font-size:1.2em;">Objaverse++: Curated 3D Object Dataset with Quality Annotations</span>](https://arxiv.org/abs/2504.07334)  
-<span style="color:gray;">Efficient Large Vision Models (eLVM) CVPR Workshop (2nd Edition), 2025 (Oral presentation)</span>  
+<span style="color:gray;">1st Workshop on Curated Data for Efficient Learning
+ (CDEL) ICCV Workshop, 2025 (Oral presentation)</span>  
 **Chendi Lin**, Heshan Liu, Qunshu Lin, Zachary Bright, Shitao Tang, Yihui He, Minghao Liu,Ling Zhu,Cindy Le 
 [![Paper](https://badgen.net/badge/icon/arXiv?icon=awesome&label&color=red)](https://arxiv.org/abs/2504.07334)
 [![Repo](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/TCXX/ObjaversePlusPlus)
