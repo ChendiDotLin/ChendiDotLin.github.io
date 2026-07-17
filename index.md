@@ -7,8 +7,9 @@ use-site-title: true
 ---
 
 <p style="font-size:1.0em">Welcome to my personal website! My name is Chendi Lin (林晨笛) 
-  and currently I am leading Trajectory Selection component at AutoX. 
-  Previously I worked at Waymo in the behavior planning of trucking team as a Software Engineer. 
+  and I currently work as a Sr. Autonomous Vehicles Behavior Planning Engineer at NVIDIA. 
+  Previously, I led the Trajectory Selection component at AutoX and worked on behavior planning 
+  for Waymo's trucking team as a Software Engineer. 
   I graduated as a Master student in Robotics at Carnagie Mellon University, and I obtained my 
   Bachalor degree in Engineering Mechanics at University of Illinois, Urbana-Champaign. 
   Traveling, sports, and writing are the activities that take up most of my free time. 
@@ -144,5 +145,4 @@ use-site-title: true
   {% endif %}
 </ul>
 {% endif %}
-
 
