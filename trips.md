@@ -1,9 +1,11 @@
 ---
 layout: page
 title: My Trips
-subtitle: Either My Body or My Soul is on the Bed
+subtitle: A visual journal of places I want to remember
 full-width: true
 ---
+
+<p class="gallery-intro">A collection of photographs from places I have visited, gathered here as a personal travel journal.</p>
 
 <div class="visual-gallery travel-gallery" aria-label="Travel photography">
   <figure><img src="/Trips/iceland.JPG" alt="Snow-covered landscape in Iceland" loading="lazy"><figcaption>Iceland</figcaption></figure>

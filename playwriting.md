@@ -1,9 +1,10 @@
 ---
 layout: page
-title: My PlayWright Career
+title: Playwriting
+subtitle: Learning to write for the stage
 ---
-As Carnegie Mellon University is famous for its top Computer Science College and Drama School, I am also trying to persue a career towards Emmy Award (not really).
+Carnegie Mellon is known for both computer science and drama. I studied in one world, but I have always been curious about the other, so I have begun learning to write for the stage.
 
-For now, I have only finished one 15-minute 1-act play, called "_Death Control_". Please reach out to me if you are interested in taking a sneak.
+So far, I have completed _Death Control_, a 15-minute one-act play. If you are interested in reading it, feel free to reach out.
 
-<img src="/assets/img/playCover.png" width="100%">
+<img src="/assets/img/playCover.png" alt="Cover artwork for Death Control" width="100%" loading="lazy">

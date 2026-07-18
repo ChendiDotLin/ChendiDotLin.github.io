@@ -1,9 +1,11 @@
 ---
 layout: page
 title: My Random Doodles
-subtitle: Don't even ask why
+subtitle: Small drawings and stray ideas
 full-width: true
 ---
+
+<p class="gallery-intro">Sketches, experiments, and images made without much of a plan.</p>
 
 <div class="visual-gallery doodle-gallery" aria-label="Doodle gallery">
   <figure><img src="/Doodles/IMG_8272.jpg" alt="Doodle 1" loading="lazy"></figure>

@@ -1,12 +1,11 @@
 ---
 layout: page
+title: CV
+subtitle: Experience, education, and selected research
 ---
 
+<p class="cv-download"><a href="/resume/2025_Resume.pdf">Download the résumé as a PDF</a></p>
 
-
-<object data="/resume/2025_Resume.pdf" type="application/pdf" width="900px" height="700px" position ="center 300px">
-    <embed src="/resume/2025_Resume.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="/resume/2025_Resume.pdf">Download PDF</a>.</p>
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="/resume/2025_Resume.pdf">Download PDF</a>.</p>
-    </embed>
+<object data="/resume/2025_Resume.pdf" type="application/pdf" width="100%" height="760px">
+    <p>This browser does not support embedded PDFs. <a href="/resume/2025_Resume.pdf">Download the résumé instead</a>.</p>
 </object>

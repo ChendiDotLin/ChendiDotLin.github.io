@@ -1,9 +1,11 @@
 ---
 layout: page
 title: 60 Days of Pixel Art
-subtitle: A New Learning Process
+subtitle: Sixty days of learning by making
 full-width: true
 ---
+
+<p class="gallery-intro">A sixty-day exercise in learning a new visual language, one small piece at a time.</p>
 
 <div class="pixel-gallery" aria-label="Sixty days of pixel art">
   <img src="/Pixel/day1.PNG" alt="Pixel art, day 1" title="Day 1" loading="lazy">
