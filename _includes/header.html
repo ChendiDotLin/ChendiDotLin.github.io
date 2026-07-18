@@ -45,10 +45,10 @@
   <span class='img-desc'></span>
 </div>
 {% endif %}
-<div class="intro-header no-img">
+<div class="intro-header no-img{% if page.url == '/' %} home-hero{% endif %}">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <div class="row{% if page.url == '/' %} home-hero-row{% endif %}">
+      <div class="{% if page.url == '/' %}home-hero-copy col-lg-7 col-md-7{% else %}col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1{% endif %}">
         <div class="{{ include.type }}-heading">
           <h1>{% if page.title %}{{ page.title }}{% else %}<br/>{% endif %}</h1>
 		  {% if page.subtitle %}
@@ -65,6 +65,13 @@
 		  {% endif %}
         </div>
       </div>
+      {% if page.url == '/' and site.avatar %}
+      <div class="home-hero-visual col-lg-4 col-lg-offset-1 col-md-5" aria-hidden="true">
+        <div class="home-portrait-frame">
+          <img src="{{ site.avatar | prepend: site.baseurl | replace: '//', '/' }}" alt="" />
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

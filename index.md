@@ -6,6 +6,8 @@ subtitle: A Reseacher, An Engineer, and Wish to be a Writer
 use-site-title: true
 ---
 
+<section class="home-intro-copy">
+<div class="home-intro-main">
 <p style="font-size:1.0em">Welcome to my personal website! My name is Chendi Lin (林晨笛) 
   and I currently work as a Sr. Autonomous Vehicles Behavior Planning Engineer at NVIDIA. 
   Previously, I led the Trajectory Selection component at AutoX and worked on behavior planning 
@@ -15,12 +17,16 @@ use-site-title: true
   Traveling, sports, and writing are the activities that take up most of my free time. 
   I am also on my way to an amateur playwright. 
 </p>
+</div>
 
+<div class="home-intro-aside">
 <p style="font-size:1.0em">Check out <i>About Me</i> and <i>CV</i> tabs for my detailed academic and industrial experiences. 
   My life outside of work is briefly introduced in <i>Here and There</i>.
 </p>
 
 <blockquote style="font-size:1.0em"> Carpe diem. </blockquote>
+</div>
+</section>
 <!-- <div class="posts-list">
   {% for post in paginator.posts %}
   <article class="post-preview">
@@ -145,4 +151,3 @@ use-site-title: true
   {% endif %}
 </ul>
 {% endif %}
-

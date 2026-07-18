@@ -1,3 +1,19 @@
+# Chendi Lin — personal website
+
+## Local preview
+
+The site uses Jekyll and the GitHub Pages gem. To build and preview it locally:
+
+```sh
+gem install bundler -v 2.4.22
+bundle install
+bundle exec jekyll serve --livereload
+```
+
+Then open `http://127.0.0.1:4000`.
+
+---
+
 # Beautiful Jekyll
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/daattali/20)

@@ -798,8 +798,10 @@ td.gutter {
   --hairline: rgba(38, 55, 68, 0.12);
   --surface: #ffffff;
   --soft-surface: #f1f4f2;
-  --display-font: 'Lora', Georgia, 'Times New Roman', serif;
-  --body-font: -apple-system, BlinkMacSystemFont, 'Avenir Next', 'Segoe UI', sans-serif;
+  --warm-accent: #d58a52;
+  --display-font: 'Manrope', 'Avenir Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --body-font: 'Manrope', 'Avenir Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --serif-font: 'Lora', Georgia, 'Times New Roman', serif;
 }
 
 html {
@@ -823,9 +825,9 @@ p {
 h1, h2, h3, h4, h5, h6 {
   color: var(--ink);
   font-family: var(--display-font);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
 }
 
 .page-content h2,
@@ -871,7 +873,7 @@ blockquote {
   border-left: 3px solid var(--accent);
   border-radius: 0 10px 10px 0;
   color: #52636b;
-  font-family: var(--display-font);
+  font-family: var(--serif-font);
   margin: 2em 0;
   padding: 0.8em 1.15em;
 }
@@ -894,9 +896,19 @@ blockquote {
 
 .navbar-custom .navbar-brand {
   font-family: var(--display-font);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.navbar-custom .navbar-brand:after {
+  background: var(--warm-accent);
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: 6px;
+  margin-left: 5px;
+  width: 6px;
 }
 
 .navbar-custom .nav li a {
@@ -1002,8 +1014,8 @@ blockquote {
 .intro-header .post-heading h1 {
   color: var(--ink);
   font-size: clamp(38px, 5vw, 54px);
-  font-weight: 700;
-  letter-spacing: -0.045em;
+  font-weight: 800;
+  letter-spacing: -0.06em;
   margin-bottom: 0;
 }
 
@@ -1040,6 +1052,154 @@ hr.small {
   line-height: 1.75;
 }
 
+/* Home hero and introduction */
+
+.home-page .navbar-custom .avatar-container {
+  display: none !important;
+}
+
+.home-page .intro-header.home-hero {
+  margin: 76px 0 64px;
+  overflow: hidden;
+  padding: 68px 0 54px;
+  position: relative;
+}
+
+.home-page .intro-header.home-hero:before {
+  background:
+    radial-gradient(circle at 76% 28%, rgba(20, 125, 146, 0.11), transparent 32%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.72), rgba(241, 244, 242, 0.5));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.home-hero-row {
+  align-items: center;
+  display: flex;
+  min-height: 410px;
+  position: relative;
+}
+
+.home-hero-copy .page-heading {
+  text-align: left;
+}
+
+.home-hero-copy .page-heading h1 {
+  font-size: clamp(58px, 7.2vw, 92px);
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 650px;
+}
+
+.home-hero-copy .page-heading hr.small {
+  border-color: var(--warm-accent);
+  margin: 30px 0 22px;
+  max-width: 62px;
+}
+
+.home-hero-copy .page-heading .page-subheading {
+  color: #4d626b;
+  font-size: clamp(18px, 2vw, 23px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.45;
+  max-width: 560px;
+}
+
+.home-hero-visual {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.home-portrait-frame {
+  aspect-ratio: 4 / 5;
+  background: var(--surface);
+  border: 8px solid var(--surface);
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(38, 55, 68, 0.2);
+  max-width: 330px;
+  position: relative;
+  transform: rotate(1.5deg);
+  width: 100%;
+}
+
+.home-portrait-frame:before {
+  background: var(--warm-accent);
+  border-radius: 16px;
+  content: "";
+  height: 72%;
+  left: -22px;
+  position: absolute;
+  top: -22px;
+  width: 72%;
+  z-index: -1;
+}
+
+.home-portrait-frame img {
+  border-radius: 11px;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+}
+
+.home-intro-copy {
+  border-bottom: 1px solid var(--hairline);
+  display: grid;
+  gap: 70px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(250px, 0.8fr);
+  margin-bottom: 54px;
+  padding-bottom: 50px;
+}
+
+.home-intro-main p {
+  font-size: 19px !important;
+  line-height: 1.76;
+}
+
+.home-intro-aside {
+  border-left: 1px solid var(--hairline);
+  padding-left: 30px;
+}
+
+.home-intro-aside p {
+  color: var(--muted-ink);
+  font-size: 15px !important;
+}
+
+.home-intro-aside blockquote {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  border-radius: 0;
+  color: var(--ink);
+  font-size: 18px !important;
+  margin: 28px 0 0;
+  padding: 22px 0 0;
+}
+
+.home-page .page-content > hr:first-of-type {
+  display: none;
+}
+
+.home-page .page-content > h3 {
+  align-items: center;
+  display: flex;
+  font-size: 34px;
+  gap: 18px;
+  margin-bottom: 1.1em;
+}
+
+.home-page .page-content > h3:after {
+  background: var(--hairline);
+  content: "";
+  flex: 1;
+  height: 1px;
+}
+
 .home-page .page-content > ul {
   list-style: none;
   padding-left: 0;
@@ -1048,7 +1208,7 @@ hr.small {
 .home-page .page-content > ul > li > a:first-child,
 .page-content > ul > li > a:first-child {
   font-family: var(--display-font);
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1.35;
 }
 
@@ -1183,12 +1343,85 @@ footer .theme-by {
   }
 
   .site-page.home-page .intro-header {
-    margin-top: 118px;
+    margin-top: 51px;
   }
 
   .intro-header .page-heading h1,
   .intro-header .post-heading h1 {
     font-size: 38px;
+  }
+
+  .home-page .intro-header.home-hero {
+    margin-bottom: 38px;
+    padding: 48px 0 42px;
+  }
+
+  .home-hero-row {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .home-hero-copy {
+    order: 2;
+    width: 100%;
+  }
+
+  .home-hero-copy .page-heading {
+    text-align: center;
+  }
+
+  .home-hero-copy .page-heading h1 {
+    font-size: 52px;
+    margin-top: 26px;
+  }
+
+  .home-hero-copy .page-heading hr.small {
+    margin: 20px auto 16px;
+  }
+
+  .home-hero-copy .page-heading .page-subheading {
+    font-size: 17px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-hero-visual {
+    justify-content: center;
+    order: 1;
+    width: 100%;
+  }
+
+  .home-portrait-frame {
+    border-width: 6px;
+    max-width: 190px;
+  }
+
+  .home-portrait-frame:before {
+    left: -12px;
+    top: -12px;
+  }
+
+  .home-intro-copy {
+    display: block;
+    margin-bottom: 42px;
+    padding-bottom: 40px;
+  }
+
+  .home-intro-main p {
+    font-size: 17px !important;
+  }
+
+  .home-intro-aside {
+    border-left: 0;
+    border-top: 1px solid var(--hairline);
+    margin-top: 30px;
+    padding-left: 0;
+    padding-top: 26px;
+  }
+
+  .home-page .page-content > h3 {
+    font-size: 28px;
   }
 
   .page-content h3 {
