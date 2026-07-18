@@ -199,16 +199,19 @@ blockquote p:last-child {
   border-bottom: 1px solid rgba(38, 55, 68, 0.06);
   margin: 57px 0 34px;
   overflow: hidden;
-  padding: 44px 0 38px;
+  padding: 30px 0 28px;
 }
 
 .home-hero-container {
-  max-width: 1120px;
+  max-width: 1140px;
 }
 
 .home-hero-row {
   align-items: center;
-  min-height: 306px;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 268px;
+  width: 83.333333%;
 }
 
 .home-hero-copy .page-heading {
@@ -241,7 +244,7 @@ blockquote p:last-child {
   border: 7px solid var(--surface);
   border-radius: 17px;
   box-shadow: 0 18px 46px rgba(38, 55, 68, 0.17);
-  max-width: 252px;
+  max-width: 214px;
   position: relative;
   transform: rotate(1.25deg);
   width: 100%;
@@ -562,15 +565,16 @@ footer .theme-by {
 
 @media (max-width: 991px) {
   .home-page .intro-header {
-    padding: 38px 0 34px;
+    padding: 30px 0 28px;
   }
 
   .home-hero-row {
-    min-height: 270px;
+    min-height: 245px;
+    width: 100%;
   }
 
   .home-portrait-frame {
-    max-width: 225px;
+    max-width: 196px;
   }
 
   .home-intro-copy {
@@ -617,7 +621,7 @@ footer .theme-by {
 
   .home-page .intro-header {
     margin-top: 57px;
-    padding: 34px 0 30px;
+    padding: 26px 0 24px;
   }
 
   .home-hero-row {
@@ -634,8 +638,8 @@ footer .theme-by {
   }
 
   .home-hero-copy .page-heading h1 {
-    font-size: 46px;
-    margin-top: 20px;
+    font-size: 44px;
+    margin-top: 16px;
   }
 
   .home-hero-copy .page-heading hr.small {
@@ -649,7 +653,7 @@ footer .theme-by {
 
   .home-portrait-frame {
     border-width: 6px;
-    max-width: 160px;
+    max-width: 144px;
   }
 
   .home-portrait-frame::before {
