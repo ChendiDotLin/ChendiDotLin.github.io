@@ -194,11 +194,12 @@ blockquote p:last-child {
 
 .home-page .intro-header {
   background:
-    radial-gradient(circle at 78% 28%, rgba(20, 125, 146, 0.11), transparent 30%),
-    linear-gradient(115deg, rgba(255, 255, 255, 0.72), rgba(241, 244, 242, 0.48));
-  margin: 57px 0 46px;
+    radial-gradient(circle at 80% 22%, rgba(20, 125, 146, 0.1), transparent 28%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.82), rgba(241, 244, 242, 0.52));
+  border-bottom: 1px solid rgba(38, 55, 68, 0.06);
+  margin: 57px 0 34px;
   overflow: hidden;
-  padding: 66px 0 56px;
+  padding: 44px 0 38px;
 }
 
 .home-hero-container {
@@ -207,7 +208,7 @@ blockquote p:last-child {
 
 .home-hero-row {
   align-items: center;
-  min-height: 390px;
+  min-height: 306px;
 }
 
 .home-hero-copy .page-heading {
@@ -215,7 +216,7 @@ blockquote p:last-child {
 }
 
 .home-hero-copy .page-heading h1 {
-  font-size: clamp(58px, 7.1vw, 90px);
+  font-size: clamp(56px, 6.2vw, 78px);
   letter-spacing: -0.078em;
   line-height: 0.98;
 }
@@ -225,7 +226,8 @@ blockquote p:last-child {
 }
 
 .home-hero-copy .page-heading .page-subheading {
-  max-width: 570px;
+  font-size: clamp(17px, 1.7vw, 21px);
+  max-width: 540px;
 }
 
 .home-hero-visual {
@@ -237,9 +239,9 @@ blockquote p:last-child {
   aspect-ratio: 4 / 5;
   background: var(--surface);
   border: 7px solid var(--surface);
-  border-radius: 18px;
-  box-shadow: 0 22px 58px rgba(38, 55, 68, 0.19);
-  max-width: 315px;
+  border-radius: 17px;
+  box-shadow: 0 18px 46px rgba(38, 55, 68, 0.17);
+  max-width: 252px;
   position: relative;
   transform: rotate(1.25deg);
   width: 100%;
@@ -250,9 +252,9 @@ blockquote p:last-child {
   border-radius: 15px;
   content: "";
   height: 72%;
-  left: -20px;
+  left: -17px;
   position: absolute;
-  top: -20px;
+  top: -17px;
   width: 72%;
   z-index: -1;
 }
@@ -265,26 +267,49 @@ blockquote p:last-child {
 }
 
 .home-intro-copy {
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(38, 55, 68, 0.055);
   display: grid;
-  gap: 56px;
-  grid-template-columns: minmax(0, 1.65fr) minmax(230px, 0.75fr);
-  margin-bottom: 46px;
-  padding-bottom: 42px;
+  gap: 38px;
+  grid-template-columns: minmax(0, 1.75fr) minmax(240px, 0.75fr);
+  margin-bottom: 50px;
+  padding: 30px 32px;
 }
 
 .home-intro-main p {
-  font-size: 18px !important;
+  font-size: 17px;
+  line-height: 1.72;
+  margin: 0;
 }
 
 .home-intro-aside {
   border-left: 1px solid var(--hairline);
-  padding-left: 28px;
+  padding-left: 30px;
+}
+
+.home-intro-label,
+.section-eyebrow,
+.research-meta {
+  color: var(--accent-dark);
+  display: block;
+  font-family: var(--display-font);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-intro-label {
+  margin-bottom: 10px;
 }
 
 .home-intro-aside p {
   color: var(--muted-ink);
-  font-size: 14px !important;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 0;
 }
 
 .home-intro-aside blockquote {
@@ -293,63 +318,144 @@ blockquote p:last-child {
   border-radius: 0;
   border-top: 1px solid var(--hairline);
   color: var(--ink);
-  font-size: 17px !important;
-  margin: 24px 0 0;
-  padding: 20px 0 0;
+  font-size: 16px;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
 }
 
-.home-page .page-content > hr:first-of-type {
-  display: none;
-}
-
-.home-page .page-content > h3 {
-  align-items: center;
-  display: flex;
-  font-size: 30px;
-  gap: 18px;
-  margin: 0 0 24px;
-}
-
-.home-page .page-content > h3::after {
-  background: var(--hairline);
-  content: "";
-  flex: 1;
-  height: 1px;
-}
-
-.home-page .page-content > ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.home-page .page-content > ul > li {
+.section-heading {
+  align-items: flex-end;
   border-bottom: 1px solid var(--hairline);
-  padding: 0 0 34px;
-  margin: 0 0 34px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
 }
 
-.home-page .page-content > ul > li:last-child {
-  border-bottom: 0;
-  margin-bottom: 0;
+.section-heading h2 {
+  font-size: 32px;
+  margin: 0;
 }
 
-.home-page .page-content > ul > li > a:first-child {
-  font-family: var(--display-font);
-  font-weight: 750;
-  line-height: 1.35;
+.section-eyebrow {
+  order: 2;
+  padding-bottom: 3px;
 }
 
-.home-page .page-content p[align="center"] {
-  margin: 22px 0 0;
+.research-list {
+  display: grid;
+  gap: 16px;
 }
 
-.home-page .page-content p[align="center"] img {
-  background: var(--surface);
+.research-card {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(38, 55, 68, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 26px rgba(38, 55, 68, 0.045);
+  display: grid;
+  gap: 32px;
+  grid-template-areas: "copy visual";
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  overflow: hidden;
+  padding: 28px 30px;
+}
+
+.research-card:nth-child(even) {
+  grid-template-areas: "visual copy";
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+}
+
+.research-card-copy {
+  grid-area: copy;
+}
+
+.research-meta {
+  margin: 0 0 9px;
+}
+
+.research-card h3 {
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.25;
+  margin: 0 0 9px;
+}
+
+.research-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.research-card h3 a:hover,
+.research-card h3 a:focus {
+  color: var(--accent-dark);
+}
+
+.research-venue,
+.research-authors {
+  color: var(--muted-ink);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0 0 7px;
+}
+
+.research-authors strong {
+  color: var(--ink);
+}
+
+.research-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.research-links a {
+  background: rgba(20, 125, 146, 0.075);
+  border: 1px solid rgba(20, 125, 146, 0.16);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.065em;
+  padding: 5px 9px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.research-links a:hover,
+.research-links a:focus {
+  background: var(--accent);
+  color: #fff;
+}
+
+.research-visual {
+  grid-area: visual;
+  margin: 0;
+  text-align: center;
+}
+
+.research-visual img {
+  background: #fff;
   border-radius: 10px;
-  box-shadow: 0 10px 28px rgba(38, 55, 68, 0.08);
+  box-shadow: 0 8px 22px rgba(38, 55, 68, 0.08);
   height: auto;
   max-width: 100%;
+}
+
+.research-visual-compact img {
+  max-height: 230px;
+  max-width: 250px;
+  object-fit: contain;
+}
+
+.research-visual-wide img {
+  width: 100%;
+}
+
+.research-visual-pair {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
 }
 
 /* Shared gallery language */
@@ -456,19 +562,20 @@ footer .theme-by {
 
 @media (max-width: 991px) {
   .home-page .intro-header {
-    padding: 52px 0 48px;
+    padding: 38px 0 34px;
   }
 
   .home-hero-row {
-    min-height: 330px;
+    min-height: 270px;
   }
 
   .home-portrait-frame {
-    max-width: 260px;
+    max-width: 225px;
   }
 
   .home-intro-copy {
-    gap: 36px;
+    gap: 26px;
+    padding: 26px;
   }
 
   .travel-gallery,
@@ -510,7 +617,7 @@ footer .theme-by {
 
   .home-page .intro-header {
     margin-top: 57px;
-    padding: 44px 0 40px;
+    padding: 34px 0 30px;
   }
 
   .home-hero-row {
@@ -527,8 +634,8 @@ footer .theme-by {
   }
 
   .home-hero-copy .page-heading h1 {
-    font-size: 50px;
-    margin-top: 24px;
+    font-size: 46px;
+    margin-top: 20px;
   }
 
   .home-hero-copy .page-heading hr.small {
@@ -542,7 +649,7 @@ footer .theme-by {
 
   .home-portrait-frame {
     border-width: 6px;
-    max-width: 180px;
+    max-width: 160px;
   }
 
   .home-portrait-frame::before {
@@ -552,20 +659,38 @@ footer .theme-by {
 
   .home-intro-copy {
     display: block;
-    margin-bottom: 38px;
-    padding-bottom: 34px;
+    margin-bottom: 36px;
+    padding: 22px;
   }
 
   .home-intro-aside {
     border-left: 0;
     border-top: 1px solid var(--hairline);
-    margin-top: 26px;
+    margin-top: 20px;
     padding-left: 0;
-    padding-top: 24px;
+    padding-top: 18px;
   }
 
-  .home-page .page-content > h3 {
-    font-size: 26px;
+  .section-heading h2 {
+    font-size: 27px;
+  }
+
+  .research-card,
+  .research-card:nth-child(even) {
+    gap: 20px;
+    grid-template-areas:
+      "copy"
+      "visual";
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .research-card h3 {
+    font-size: 19px;
+  }
+
+  .research-visual-compact img {
+    max-height: 210px;
   }
 
   .travel-gallery,
