@@ -7,8 +7,9 @@
   --hairline: rgba(38, 55, 68, 0.12);
   --surface: #fff;
   --soft-surface: #f1f4f2;
-  --display-font: "Manrope", "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --serif-font: "Lora", Georgia, serif;
+  --body-font: "DM Sans", "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display-font: "Newsreader", Georgia, "Times New Roman", serif;
+  --serif-font: "Newsreader", Georgia, "Times New Roman", serif;
 }
 
 html {
@@ -18,7 +19,7 @@ html {
 body {
   background: #fafaf7;
   color: var(--ink);
-  font-family: var(--display-font);
+  font-family: var(--body-font);
   font-size: 17px;
   letter-spacing: -0.012em;
 }
@@ -36,8 +37,8 @@ h5,
 h6 {
   color: var(--ink);
   font-family: var(--display-font);
-  font-weight: 800;
-  letter-spacing: -0.045em;
+  font-weight: 700;
+  letter-spacing: -0.026em;
 }
 
 h2 {
@@ -82,8 +83,8 @@ blockquote p:last-child {
 .navbar-custom .navbar-brand {
   font-family: var(--display-font);
   font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.045em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   padding-bottom: 16px;
   padding-top: 16px;
 }
@@ -99,6 +100,7 @@ blockquote p:last-child {
 }
 
 .navbar-custom .navbar-nav .nav-item {
+  font-family: var(--body-font);
   font-size: 12px;
   letter-spacing: 0.11em;
 }
@@ -155,7 +157,7 @@ blockquote p:last-child {
 .intro-header .post-heading h1 {
   color: var(--ink);
   font-size: clamp(42px, 5.4vw, 68px);
-  letter-spacing: -0.065em;
+  letter-spacing: -0.042em;
   line-height: 1;
   margin: 0;
 }
@@ -163,7 +165,7 @@ blockquote p:last-child {
 .intro-header .page-heading .page-subheading,
 .intro-header .post-heading .post-subheading {
   color: var(--muted-ink);
-  font-family: var(--display-font);
+  font-family: var(--body-font);
   font-size: clamp(17px, 2vw, 21px);
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -220,7 +222,7 @@ blockquote p:last-child {
 
 .home-hero-copy .page-heading h1 {
   font-size: clamp(56px, 6.2vw, 78px);
-  letter-spacing: -0.078em;
+  letter-spacing: -0.052em;
   line-height: 0.98;
 }
 
@@ -297,9 +299,9 @@ blockquote p:last-child {
 .research-meta {
   color: var(--accent-dark);
   display: block;
-  font-family: var(--display-font);
+  font-family: var(--body-font);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -357,16 +359,16 @@ blockquote p:last-child {
   border-radius: 16px;
   box-shadow: 0 8px 26px rgba(38, 55, 68, 0.045);
   display: grid;
-  gap: 32px;
+  gap: 28px;
   grid-template-areas: "copy visual";
-  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.95fr);
   overflow: hidden;
   padding: 28px 30px;
 }
 
 .research-card:nth-child(even) {
   grid-template-areas: "visual copy";
-  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(330px, 0.95fr) minmax(0, 1.05fr);
 }
 
 .research-card-copy {
@@ -446,9 +448,10 @@ blockquote p:last-child {
 }
 
 .research-visual-compact img {
-  max-height: 230px;
-  max-width: 250px;
+  max-height: 310px;
+  max-width: 330px;
   object-fit: contain;
+  width: 100%;
 }
 
 .research-visual-wide img {
@@ -559,7 +562,7 @@ footer .footer-links a {
 
 footer .copyright,
 footer .theme-by {
-  font-family: var(--display-font);
+  font-family: var(--body-font);
   font-size: 12px;
 }
 
@@ -694,7 +697,8 @@ footer .theme-by {
   }
 
   .research-visual-compact img {
-    max-height: 210px;
+    max-height: none;
+    max-width: 100%;
   }
 
   .travel-gallery,
