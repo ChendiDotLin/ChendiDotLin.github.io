@@ -32,9 +32,15 @@ use-site-title: true
         <p class="research-venue">1st Workshop on Curated Data for Efficient Learning (CDEL)</p>
         <p class="research-authors"><strong>Chendi Lin</strong>, Heshan Liu, Qunshu Lin, Zachary Bright, Shitao Tang, Yihui He, Minghao Liu, Ling Zhu, Cindy Le</p>
         <nav class="research-links" aria-label="Objaverse++ resources">
-          <a href="https://arxiv.org/abs/2504.07334">Paper</a>
-          <a href="https://github.com/TCXX/ObjaversePlusPlus">Repository</a>
-          <a href="https://huggingface.co/datasets/cindyxl/ObjaversePlusPlus">Dataset</a>
+          <a href="https://arxiv.org/abs/2504.07334" aria-label="Read Objaverse++ on arXiv" data-label="arXiv">
+            <img src="/assets/img/arxiv.svg" alt="" aria-hidden="true">
+          </a>
+          <a href="https://github.com/TCXX/ObjaversePlusPlus" aria-label="View the Objaverse++ GitHub repository" data-label="GitHub">
+            <img src="/assets/img/github.svg" alt="" aria-hidden="true">
+          </a>
+          <a href="https://huggingface.co/datasets/cindyxl/ObjaversePlusPlus" aria-label="View the Objaverse++ dataset on Hugging Face" data-label="Hugging Face">
+            <img src="/assets/img/huggingface.svg" alt="" aria-hidden="true">
+          </a>
         </nav>
       </div>
       <figure class="research-visual">
