@@ -161,9 +161,10 @@
   <link rel="stylesheet" href="{{ "/assets/css/staticman.css" | relative_url }}">
   {% endif %}
 
+  {% assign icon_version = site.time | date: '%s' %}
   {% assign favicon_exists = site.static_files | where: "path", "/favicon.ico" | size %}
   {% if favicon_exists == 1 %}
-  <link rel="icon" href="{{ '/favicon.ico' | relative_url }}" />
+  <link rel="icon" href="{{ '/favicon.ico' | relative_url }}?v={{ icon_version }}" sizes="32x32" />
   {% endif %}
 
   {% if page.head-extra %}
@@ -171,9 +172,8 @@
       {% include {{ file }} %}
     {% endfor %}
   {% endif %}
-<link rel="icon" type="image/png" href="{{ '/assets/img/profile2.PNG' | relative_url }}">
-<!-- Android Chrome -->
-<link rel="icon" type="image/png" sizes="192x192" href="{{ '/assets/img/profile2.PNG' | relative_url }}">
-<!-- iOS Safari -->
-<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/img/profile2.PNG' | relative_url }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/img/site-icon-32.png' | relative_url }}?v={{ icon_version }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ '/assets/img/site-icon-192.png' | relative_url }}?v={{ icon_version }}">
+<link rel="icon" type="image/png" sizes="512x512" href="{{ '/assets/img/site-icon.png' | relative_url }}?v={{ icon_version }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/img/apple-touch-icon.png' | relative_url }}?v={{ icon_version }}">
 </head>
