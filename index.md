@@ -8,7 +8,7 @@ use-site-title: true
 
 <section class="home-intro-copy" aria-label="Introduction">
   <div class="home-intro-main">
-    <p>Hi, I'm Chendi Lin (林晨笛), a senior behavior-planning engineer for autonomous vehicles at NVIDIA. My work spans motion planning, trajectory selection, and multi-robot systems, informed by earlier roles at AutoX and Waymo and an M.S. in Robotics from Carnegie Mellon. Outside engineering, I travel, play sports, write, and am learning the craft of playwriting.</p>
+    <p>Hi, I'm Chendi Lin (林晨笛), a behavior-planning engineer for autonomous vehicles at NVIDIA. My work spans motion planning, trajectory selection, and multi-robot systems, informed by earlier roles at AutoX and Waymo and an M.S. in Robotics from Carnegie Mellon. Outside engineering, I travel, play sports, write, and am learning the craft of playwriting.</p>
   </div>
 
   <aside class="home-intro-aside">

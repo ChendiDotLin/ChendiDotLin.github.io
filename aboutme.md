@@ -4,7 +4,7 @@ title: About me
 subtitle: Motion Planning · Autonomous Systems · Optimization · Writing · Visual Work
 ---
 ### My Robot Side
-I'm a robotics engineer whose work focuses on behavior planning for autonomous vehicles. I currently work at NVIDIA as a Senior Autonomous Vehicles Behavior Planning Engineer. Previously, I led the Trajectory Selection component at AutoX, worked on behavior planning for Waymo's trucking team, and contributed to model verification for safety-critical systems in MathWorks' Simulink Code Inspector.
+I'm a robotics engineer whose work focuses on behavior planning for autonomous vehicles. I currently work at NVIDIA as an Autonomous Vehicles Behavior Planning Engineer. Previously, I led the Trajectory Selection component at AutoX, worked on behavior planning for Waymo's trucking team, and contributed to model verification for safety-critical systems in MathWorks' Simulink Code Inspector.
 
 I earned an M.S. in Robotics from Carnegie Mellon University's Robotics Institute, where I researched motion planning and task allocation for heterogeneous multi-robot systems under the supervision of Prof. Katia Sycara. I also interned with Uber ATG's motion-planning team, focusing on trajectory optimization.
 
