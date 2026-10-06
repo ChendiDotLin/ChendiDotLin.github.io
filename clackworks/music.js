@@ -8,34 +8,44 @@
   // A 2:1 eighth-note swing for bass and ride only. Leads use straight timing.
   const SWING = STEP * 2 / 3;
   const LOOP_STEPS = 512;
-  // [sixteenth, MIDI note, duration in steps, touch]. A call and an answer,
-  // then two bars of melodic rest. Four phrases return with new endings.
+  // [sixteenth, MIDI note, duration in steps, touch]. One composed keyboard
+  // theme: repeated anchor, falling third, neighbor-note turn, chord-tone close.
+  // Guitar answers after the completed sentence; the last bar can breathe.
   const phrase = (keys, guitar) => new Map([
     ...keys.map(([at, ...note]) => [at, ['keys', ...note]]),
     ...guitar.map(([at, ...note]) => [at, ['guitar', ...note]])
   ]);
   const PHRASES = [
-    // Dm: the familiar F–A–G hook, answered down to D by the guitar.
-    phrase([[0,65,3.8,.9], [4,69,3.8,1], [8,67,7.5,.8]],
-      [[16,65,3.5,.9], [20,64,3.5,.72], [24,62,7.5,.88]]),
-    // Bb: the guitar asks a rising question; keys answer from the major 7th.
-    phrase([[16,69,7.5,.86], [24,65,3.8,.78], [28,62,3.8,.9]],
-      [[0,62,3.5,.85], [4,65,3.5,1], [8,67,7,.78]]),
-    // F: a brighter leap, then a short ascending guitar reply.
-    phrase([[0,69,7.5,.9], [8,72,3.8,1], [12,69,1.7,.76], [14,67,1.7,.7]],
-      [[16,65,3.5,.85], [20,67,3.5,.78], [24,69,7.5,.9]]),
-    // C: guitar turn, keyboard descent. Space before the next section.
-    phrase([[16,64,3.8,.86], [20,62,3.8,.74], [24,60,7.5,.9]],
-      [[0,64,3.5,.84], [4,67,3.5,1], [8,69,3.5,.78], [12,67,3,.72]]),
-    // Second chorus: longer holds and changed replies, still anchored on beats.
-    phrase([[0,65,7.5,.86], [8,69,3.8,1], [12,67,3.8,.8]],
-      [[16,69,3.5,.86], [20,67,3.5,.76], [24,65,3.5,.72], [28,62,3.5,.9]]),
-    phrase([[16,67,3.8,.88], [20,65,3.8,.78], [24,62,7.5,.86]],
-      [[0,65,3.5,.9], [4,62,3.5,.8], [8,65,3.5,.86], [12,69,3,1]]),
-    phrase([[0,69,3.8,.9], [4,67,3.8,.8], [8,65,7.5,.76]],
-      [[16,67,3.5,.85], [20,69,3.5,.9], [24,72,5.5,1], [30,69,1.8,.76]]),
-    phrase([[16,64,1.8,.8], [20,67,1.8,.92], [24,60,7.5,.88]],
-      [[0,67,7,.92], [8,64,3.5,.82], [12,62,3.5,.74]])
+    // Dm: A–A–G–F / E–F–D. The short neighbor turn leads home to D.
+    phrase([[0,69,7.5,.86], [8,69,3.8,.73], [12,67,3.8,.76], [16,65,7.5,.82],
+      [24,64,1.8,.65], [26,65,1.8,.72], [28,62,7.5,.8]],
+      [[40,57,3.5,.64], [44,62,3.5,.7]]),
+    // Bb: same rhythm and contour, landing on the third before a tonic reply.
+    phrase([[0,65,7.5,.84], [8,65,3.8,.72], [12,64,3.8,.7], [16,62,7.5,.82],
+      [24,60,3.8,.67], [28,62,7.5,.78]],
+      [[40,60,3.5,.62], [44,58,3.5,.7]]),
+    // F: the theme opens upward to its only high point, then returns to F.
+    phrase([[0,72,7.5,.88], [8,72,3.8,.75], [12,70,3.8,.76], [16,69,7.5,.84],
+      [24,67,3.8,.7], [28,65,7.5,.8]],
+      [[40,64,3.5,.62], [44,65,3.5,.7]]),
+    // C: a falling answer with a clear C cadence, not an unrelated new riff.
+    phrase([[0,67,7.5,.84], [8,67,3.8,.72], [12,65,3.8,.73], [16,64,7.5,.8],
+      [24,62,3.8,.68], [28,60,7.5,.78]],
+      [[40,59,3.5,.6], [44,60,3.5,.68]]),
+    // Second chorus keeps the hook. Small changes in note length and the final
+    // answer develop it without replacing the melody every four bars.
+    phrase([[0,69,3.8,.85], [4,69,3.8,.72], [8,67,7.5,.78], [16,65,7.5,.82],
+      [24,64,3.8,.66], [28,62,7.5,.79]],
+      [[40,64,3.5,.63], [44,65,3.5,.7]]),
+    phrase([[0,65,7.5,.84], [8,65,3.8,.72], [12,64,3.8,.7], [16,62,7.5,.8],
+      [24,65,3.8,.77], [28,62,7.5,.78]],
+      [[40,60,3.5,.62], [44,58,3.5,.7]]),
+    phrase([[0,72,7.5,.88], [8,72,3.8,.75], [12,70,3.8,.76], [16,69,7.5,.83],
+      [24,67,1.8,.68], [26,69,1.8,.74], [28,65,7.5,.8]],
+      [[40,67,3.5,.63], [44,65,3.5,.69]]),
+    phrase([[0,67,3.8,.83], [4,67,3.8,.71], [8,65,7.5,.76], [16,64,7.5,.8],
+      [24,62,3.8,.67], [28,60,7.5,.77]],
+      [[40,59,3.5,.6], [44,60,3.5,.67]])
   ];
   const hz = note => 440 * 2 ** ((note - 69) / 12);
   class WorkshopMusic {
@@ -140,7 +150,7 @@
       if (beat === 0) {
         chord.slice(1).forEach(note => this.tone(note, time, STEP * 15, .04, 'sine', { attack: .18, cutoff: 1100 }));
       }
-      // Three plucks under the lead; walk in quarters only during its rests.
+      // Sparse first two bars; a quarter-note walk under the cadence and reply.
       // The last note approaches the next chord from a semitone below.
       const bassBeats = phraseBar < 2 ? [0, 6, 12] : [0, 4, 8, 12];
       const bassNotes = phraseBar < 2 ? [rootNote, rootNote + 7, rootNote + (phraseBar ? THIRDS[chordIndex] : 12)]

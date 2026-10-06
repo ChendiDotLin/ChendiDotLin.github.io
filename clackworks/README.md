@@ -124,16 +124,16 @@ reproduce the original game's private generation algorithm.
 ## Original music
 
 The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 32-bar,
-96 BPM score in `music.js` (80 seconds per loop). Electric keys and a synthesized
-plucked guitar trade two-bar calls and answers, then leave two bars for the bass.
-Four related phrases return with changed replies and new endings in a second
-chorus. Leads land mainly on quarter-note beats, with just two straight eighth-note
-offbeat touches across the loop. Keys mix short articulations with sustained one- and
-two-beat notes; only the bass and ride use swing timing.
+96 BPM score in `music.js` (80 seconds per loop). A keyboard theme follows a
+repeated anchor note, a falling line and a chord-tone cadence. The same contour
+moves through D minor, Bb, F and C; the second chorus changes just a few endings
+and note lengths. Each complete keyboard sentence has a sparse two-note guitar
+reply, then a bar of melodic rest. Leads land on quarter-note beats, apart from
+two brief neighbor-note turns across the loop. Keys mix short articulations with
+sustained one- and two-beat notes; only bass and ride use swing timing.
 The guitar uses cached, tuned string partials with faster upper-harmonic decay;
-the keyboard has a rounded, sustained tone and a short tine attack. Warm plucked bass plays
-sparsely under the theme and walks
-in quarter notes during its rests, with chromatic approaches into chord changes.
+the keyboard has a rounded, sustained tone and a short tine attack. Warm plucked bass alternates
+sparse plucks and quarter-note walking lines, with chromatic approaches into chord changes.
 A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
 leave space for gameplay sounds. Stages and chains increase drum strength without
 adding melody, arpeggios, octave doubles or delay echoes. First Play also enables effects unless the player explicitly muted them;
