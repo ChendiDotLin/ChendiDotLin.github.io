@@ -4,6 +4,9 @@
   'use strict';
   const STEP = 60 / 96 / 4;
   const CHORDS = [[50,65,69], [46,62,65], [53,60,65], [48,64,67]];
+  const THIRDS = [3, 4, 4, 4];
+  // A 2:1 eighth-note swing; quarter notes and the lead stay on the grid.
+  const SWING = STEP * 2 / 3;
   // F–A–G / F–D: one two-bar phrase, then two bars of breathing room.
   // The closing phrase resolves to C; intensity never adds competing melodies.
   const THEME = new Map([[0,[65,3]], [4,[69,3]], [8,[67,6]], [16,[65,3]], [20,[62,8]]]);
@@ -29,6 +32,7 @@
       this.effectBus = ctx.createGain(); this.effectBus.gain.value = this.effectsVolume * .65;
       this.effectBus.connect(this.compressor);
       this.leadWave = ctx.createPeriodicWave(new Float32Array(5), new Float32Array([0,1,.12,.03,0]));
+      this.bassWave = ctx.createPeriodicWave(new Float32Array(6), new Float32Array([0,1,.42,.18,.065,.02]));
       this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = this.noiseBuffer.getChannelData(0); let seed = 719;
       for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; data[i] = (seed >>> 0) / 2147483648 - 1; }
@@ -52,6 +56,7 @@
     tone(note, time, length, strength, type = 'triangle', options = {}) {
       const source = this.context.createOscillator(); source.type = type;
       if (options.theme) source.setPeriodicWave(this.leadWave);
+      if (options.bass) source.setPeriodicWave(this.bassWave);
       source.frequency.setValueAtTime(hz(note), time);
       if (options.endNote !== undefined) source.frequency.exponentialRampToValueAtTime(hz(options.endNote), time + length * .8);
       if (options.detune) source.detune.value = options.detune;
@@ -67,14 +72,33 @@
     }
     renderStep(step, time, energy = this.scene) {
       const beat = step % 16, bar = Math.floor(step / 16) % 16;
-      const chord = CHORDS[Math.floor(bar / 4)];
+      const chordIndex = Math.floor(bar / 4), chord = CHORDS[chordIndex];
+      const phraseBar = bar % 4, rootNote = chord[0] - 12;
+      const swungTime = time + (beat % 4 === 2 ? SWING : 0);
       if (beat === 0) {
         chord.slice(1).forEach(note => this.tone(note, time, STEP * 15, .04, 'sine', { attack: .18, cutoff: 1100 }));
-        this.tone(chord[0] - 12, time, STEP * 9, .2, 'triangle', { attack: .025, cutoff: 450 });
       }
-      if (beat === 0 || beat === 8) this.kick(time, .12 + energy * .055);
-      if (beat === 4 || beat === 12) this.noise(time, .025, .035 + energy * .012, 1250, { q: .6 });
-      if (beat === 14 && bar % 2 === 1) this.noise(time, .035, .018, 3000, { q: .5 });
+      // Three plucks under the lead; walk in quarters only during its rests.
+      // The last note approaches the next chord from a semitone below.
+      const bassBeats = phraseBar < 2 ? [0, 6, 12] : [0, 4, 8, 12];
+      const bassNotes = phraseBar < 2 ? [rootNote, rootNote + 7, rootNote + (phraseBar ? THIRDS[chordIndex] : 12)]
+        : phraseBar === 2 ? [rootNote, rootNote + THIRDS[chordIndex], rootNote + 7, rootNote + (chordIndex === 1 || chordIndex === 2 ? 11 : 10)]
+        : [rootNote + 12, rootNote + 7, rootNote + THIRDS[chordIndex], CHORDS[(chordIndex + 1) % 4][0] - 13];
+      const bassIndex = bassBeats.indexOf(beat);
+      if (bassIndex !== -1) this.tone(bassNotes[bassIndex], swungTime, STEP * (phraseBar < 2 ? 3.2 : 2.8),
+        beat === 0 ? .32 : .28, 'sine', { bass: true, attack: .012, hold: .07, cutoff: 1100 });
+
+      // Quiet jazz ride: ding, ding-da, ding, ding-da. Brushes on 2 and 4.
+      // Intensity changes touch, never the density of the arrangement.
+      if (beat % 4 === 0 || beat === 6 || beat === 14) {
+        const offbeat = beat % 4 === 2;
+        this.noise(swungTime, offbeat ? .10 : .18, (offbeat ? .017 : .026) + energy * .006, 6400, { q: .8, attack: .008 });
+      }
+      if (beat === 0 || beat === 8) this.kick(time, .075 + energy * .025);
+      if (beat === 4 || beat === 12) {
+        this.noise(time, .16, .037 + energy * .012, 1800, { q: .5, attack: .018 });
+        this.noise(time, .04, .021, 4200, { q: .6 });
+      }
       const phraseStep = (bar % 4) * 16 + beat, theme = THEME.get(phraseStep);
       if (theme) {
         const [note, duration] = theme, length = duration * STEP;

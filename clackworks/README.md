@@ -125,8 +125,10 @@ reproduce the original game's private generation algorithm.
 
 The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 16-bar,
 96 BPM score in `music.js`. A five-note theme plays for two bars, followed by two
-bars of melodic rest. Soft bass, two-note harmony and restrained percussion leave
-space for gameplay sounds. Stages and chains increase drum strength without
+bars of melodic rest. Warm plucked bass plays sparsely under the theme and walks
+in quarter notes during its rests, with chromatic approaches into chord changes.
+A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
+leave space for gameplay sounds. Stages and chains increase drum strength without
 adding melody, arpeggios, octave doubles or delay echoes. First Play also enables effects unless the player explicitly muted them;
 volume and mute are independent. Nothing autoplays on page load.
 
