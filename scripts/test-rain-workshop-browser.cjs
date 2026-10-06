@@ -20,11 +20,14 @@ const assert = require('node:assert/strict');
     await page.locator('[data-reward=feather]').click();
     assert.equal(await page.evaluate(() => !!window.testAudio), false, 'music never autoplays');
     const assets = await page.evaluate(async () => {
-      const paths = [...RainMatch.ITEMS, ...Object.values(RainExpedition.RELICS)].map(item => `assets/toon/${item.icon}.webp`);
+      const paths = [...RainMatch.ITEMS, ...Object.values(RainExpedition.RELICS)].map(item => `assets/flat/${item.icon}.webp`);
       for (const src of paths) { const image = new Image(); image.src = src; await image.decode(); if (!image.naturalWidth) throw Error(src); }
       return paths;
     });
     assert.equal(new Set(assets).size, 21);
+    assert.ok(assets.some(path => path.endsWith('/part-measure.webp')));
+    assert.ok(assets.some(path => path.endsWith('/part-battery.webp')));
+    assert.ok(!assets.some(path => /part-(glove|bulb)\.webp/.test(path)));
     await page.locator('#board button:enabled').first().click();
     const saved = await page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY)));
     assert.equal(saved.game.relics.feather, 1);
@@ -68,10 +71,10 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#music-toggle').getAttribute('aria-pressed'), 'false', 'reopening is silent');
     await page.locator('#music-close').click();
     await page.locator('#credits').click();
-    assert.match(await page.locator('#modal-content').innerText(), /original workshop characters/);
+    assert.match(await page.locator('#modal-content').innerText(), /original workshop objects/);
     await page.locator('#close-modal').click();
     assert.ok(!requests.some(url => /bandcamp|assets\/[^/]+\.webp(?:\?|$)/.test(url)));
-    assert.ok(!requests.some(url => /assets\/(?:characters|flat)\/|assets\/(?:part|module)-[^/]+\.svg/.test(url)), 'No superseded artwork requested');
+    assert.ok(!requests.some(url => /assets\/(?:characters|toon)\/|assets\/(?:part|module)-[^/]+\.svg/.test(url)), 'No character artwork requested');
     await page.setViewportSize({ width: 390, height: 1000 }); await page.evaluate(() => scrollTo(0,0));
     await page.screenshot({ path: '/tmp/rain-workshop-phone.png', fullPage: true });
     await page.setViewportSize({ width: 1366, height: 1100 }); await page.evaluate(() => scrollTo(0,0));

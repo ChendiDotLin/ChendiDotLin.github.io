@@ -25,11 +25,11 @@ The optional shared leaderboard requires the public Supabase configuration below
 ## Workshop presentation
 
 The workshop edition replaces the former third-party item pictures and soundtrack
-with 12 original part characters, nine original machine characters and an
+with 12 original part icons, nine original machine icons and an
 original browser-synthesized music loop. See `assets/README.md` for the asset map.
 Names, descriptions, effects labels, home-page promotion and credits are bilingual.
-The artwork restores the original workshop characters as AI-assisted 2D cartoon
-illustrations, preserving their faces, poses and palettes with simpler shading.
+The artwork uses the original faceless flat workshop objects. The former glove
+and bulb are replaced by a pocket tape measure and a mini battery in the same style.
 Production images retain transparent backgrounds and are compressed as WebP;
 full prompts are recorded in the assets.
 

@@ -86,7 +86,7 @@
     el.style.setProperty('--rarity', item.color); el.title = itemName(tile.type);
     el.setAttribute('aria-label', itemName(tile.type));
     const img = document.createElement('img');
-    img.src = `assets/toon/${item.icon}.webp`; img.alt = ''; img.draggable = false;
+    img.src = `assets/flat/${item.icon}.webp`; img.alt = ''; img.draggable = false;
     img.addEventListener('error', () => { el.textContent = itemName(tile.type); el.style.fontSize = '9px'; });
     el.append(img); return el;
   }
@@ -474,7 +474,7 @@
   }
   function relicIcon(id) {
     const relic = RainExpedition.RELICS[id];
-    return `<span class="relic-portrait" data-rarity="${relic.rarity}" aria-hidden="true"><img src="assets/toon/${relic.icon}.webp" alt=""></span>`;
+    return `<span class="relic-portrait" data-rarity="${relic.rarity}" aria-hidden="true"><img src="assets/flat/${relic.icon}.webp" alt=""></span>`;
   }
   function loadoutMarkup() {
     return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${t('relic_' + id)} ${level}`).join(' / ')}</p>`;
@@ -549,7 +549,7 @@
     $('radar-preview').replaceChildren(...game.previewIds().map(id => {
       const tile = game.tiles[id], label = document.createElement('span');
       label.className = 'radar-preview-tile'; label.title = t(tile.pile) + ' · ' + itemName(tile.type);
-      const img = document.createElement('img'); img.src = `assets/toon/${ITEMS[tile.type].icon}.webp`; img.alt = label.title;
+      const img = document.createElement('img'); img.src = `assets/flat/${ITEMS[tile.type].icon}.webp`; img.alt = label.title;
       label.append(img); return label;
     }));
   }

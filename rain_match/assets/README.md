@@ -1,25 +1,25 @@
 # Rain Match workshop artwork
 
-The current artwork restores the 21 original workshop character designs from
-`characters/`, redrawn as 2D cartoon illustrations. The same silhouettes,
-expressions, poses, colors and small limbs are retained. Clean colored outlines,
-simplified color areas and cel shading replace realistic clay materials.
-There are 12 part characters and nine machine characters.
+The game uses the original faceless flat workshop set: 12 part icons and nine
+machine icons. Rounded silhouettes, dark-teal outlines and warm color blocks
+provide character without eyes, mouths or limbs. The glove and bulb have been
+replaced with a pocket tape measure and a mini battery in the same style.
 
-Generated using the built-in image_gen tool, one character at a time. Each
-original character is its own edit target, and the new 2D Overload Boiler serves
-as a shared rendering-style reference. `toon/prompts.json` records the prompts.
-No third-party game artwork was supplied as a reference.
+Production assets live in `flat/`: 512px transparent WebP images, plus
+`favicon-battery.png`. Artwork was generated with the built-in image_gen tool.
+The flat Overload Boiler was the style reference for the two new objects;
+`flat/replacements.prompts.json` records their prompts and `flat/prompts.json`
+records the earlier set. No third-party game artwork was used as a reference.
+Delivery encoding preserves the generated composition and alpha.
 
-Production assets live in `toon/`: 512px transparent WebP images and a 96px PNG
-bulb favicon. Delivery encoding preserves the generated composition and alpha.
-The earlier `characters/` (clay), `flat/` (inanimate objects) and SVG sets remain
-for design history; the game and homepage load only the current cartoon set.
-Covered-card contrast, names, rarity tiers, rules and save IDs remain unchanged.
+The unused glove/bulb, `characters/` (clay), `toon/` (characters) and SVG files
+remain as design history. Gameplay, homepage, animations and the favicon use
+only the active flat assets. Recent animation recovery and rarity frames remain
+in place. Item type indices and internal IDs stay stable for existing saves.
 
 ## Stable equipment IDs → new presentation
 
-| Save/API ID | English | 中文 | Asset (in toon/) |
+| Save/API ID | English | 中文 | Asset (in flat/) |
 | --- | --- | --- | --- |
 | feather | Telescopic Grabber | 伸缩抓手 | module-grabber.webp |
 | shield | Safety Cushion | 应急缓冲垫 | module-cushion.webp |
@@ -39,5 +39,3 @@ ordinary tile IDs/type indices to their new part names and asset filenames.
 locally with oscillators, without audio samples. Existing sound effects are also
 synthesized. This provenance records the implementation; it does not claim that
 project names or artwork have undergone legal or trademark clearance.
-
-The current first tile is Pocket Tape Measure (`toon/part-measure.webp`), replacing the glove while retaining its saved type index and internal ID. Generated with built-in image_gen using the 2D boiler as the style reference; prompt: `toon/part-measure.prompt.json`. The unused glove is retained as design history.
