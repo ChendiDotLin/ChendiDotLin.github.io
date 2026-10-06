@@ -65,7 +65,11 @@
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     $('brand-name').textContent = t('brand'); document.querySelector('.brand').setAttribute('aria-label', t('home'));
     const labels = { sound: $('music-panel').hidden ? 'musicOpen' : 'musicClose', help: 'help', restart: 'restart', timer: 'time', board: 'board', rack: 'inventory', 'close-modal': 'close' };
-    for (const [id, key] of Object.entries(labels)) { $(id).setAttribute('aria-label', t(key)); $(id).title = t(key); }
+    for (const [id, key] of Object.entries(labels)) {
+      $(id).setAttribute('aria-label', t(key));
+      if (id === 'board') $(id).removeAttribute('title');
+      else $(id).title = t(key);
+    }
     for (const id of ['language', 'modal-language']) {
       $(id).textContent = language === 'zh' ? 'EN' : '中文'; $(id).setAttribute('aria-label', t('language')); $(id).title = t('language');
     }

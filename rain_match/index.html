@@ -8,13 +8,13 @@
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=ff0aa83">
-  <script defer src="core.js?v=ff0aa83"></script>
-  <script defer src="i18n.js?v=ff0aa83"></script>
-  <script defer src="config.js?v=ff0aa83"></script>
-  <script defer src="leaderboard.js?v=ff0aa83"></script>
-  <script defer src="effects.js?v=ff0aa83"></script>
-  <script defer src="game.js?v=ff0aa83"></script>
+  <link rel="stylesheet" href="style.css?v=2200e82-feedback">
+  <script defer src="core.js?v=2200e82-feedback"></script>
+  <script defer src="i18n.js?v=2200e82-feedback"></script>
+  <script defer src="config.js?v=2200e82-feedback"></script>
+  <script defer src="leaderboard.js?v=2200e82-feedback"></script>
+  <script defer src="effects.js?v=2200e82-feedback"></script>
+  <script defer src="game.js?v=2200e82-feedback"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -46,12 +46,11 @@
         <div class="board-area">
           <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
           <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>
-          <div id="combo" aria-live="polite"></div>
         </div>
         <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
         <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
         <div class="inventory-area">
-          <div class="inventory-label"><span data-i18n="inventory">七格背包</span><strong id="capacity">0 <span>/ 7</span></strong></div>
+          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><strong id="capacity">0 <span>/ 7</span></strong></div>
           <div class="rack" id="rack" aria-label="七格背包"></div>
           <p id="status" class="status" role="status">先找第三张，再捡第一张。</p>
         </div>

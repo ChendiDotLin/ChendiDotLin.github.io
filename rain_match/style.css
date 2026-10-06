@@ -54,12 +54,14 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 .supply-labels { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14%; color: #8e9eaf; font-size: 9px; letter-spacing: 1px; pointer-events: none; }
 .supply-labels span { width: 90px; text-align: center; }
 .board-caption { display: flex; justify-content: space-between; margin: 18px 8px 11px; color: #8697aa; font-size: 9px; }
-#combo { position: absolute; bottom: 45%; left: 50%; transform: translateX(-50%); color: #ede9fb; background: #34354fee; border: 1px solid #ae9bdb66; border-radius: 25px; padding: 10px 20px; font-size: 12px; pointer-events: none; opacity: 0; white-space: nowrap; z-index: 100; }
+#combo { color: #d4c6ef; font-size: 9px; min-width: 0; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0; white-space: nowrap; }
 #combo.show { animation: combo 1.8s ease both; }
 
 /* The seven-slot tray and three square props stay in the same visual column. */
 .inventory-label { display: flex; align-items: center; justify-content: space-between; padding: 0 9px 7px; font-size: 10px; color: #bdc9d3; }
-.inventory-label strong { font-size: 10px; color: #d5cbee; font-weight: 500; }
+.inventory-copy { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 10px; }
+.inventory-copy > [data-i18n] { flex-shrink: 0; }
+.inventory-label strong { flex-shrink: 0; font-size: 10px; color: #d5cbee; font-weight: 500; }
 .inventory-label strong span { color: #8b9bad; }
 .rack { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 8px; border: 2px solid #161f2c; border-top-color: #677988; border-radius: 9px; background: #718291; box-shadow: 0 5px 0 #111b29, inset 0 1px 0 #c8d1d54d; }
 .slot { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 4px; background: #303e51; box-shadow: inset 0 2px 3px #1119257a, 0 1px 0 #c5d3db36; }
@@ -105,7 +107,7 @@ dialog a { color: var(--purple); text-decoration: underline; }
 .keyboard-note { font-size: 11px !important; }
 .noscript { padding: 40px; text-align: center; }
 @keyframes tile-in { from { opacity: 0; transform: translateY(-5px) scale(.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes combo { 0% { opacity: 0; transform: translate(-50%, 12px); } 20%,65% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -16px); } }
+@keyframes combo { 0% { opacity: 0; } 20%,65% { opacity: 1; } 100% { opacity: 0; } }
 @media (min-width: 501px) {
   .game-shell { width: clamp(350px, 47svh, 472px); padding-top: 12px; }
 }
