@@ -5,7 +5,7 @@
   const STEP = 60 / 96 / 4;
   const CHORDS = [[50,65,69], [46,62,65], [53,60,65], [48,64,67]];
   const THIRDS = [3, 4, 4, 4];
-  // A 2:1 eighth-note swing shared by bass, ride and melodic offbeats.
+  // A 2:1 eighth-note swing for bass and ride only. Leads use straight timing.
   const SWING = STEP * 2 / 3;
   const LOOP_STEPS = 512;
   // [sixteenth, MIDI note, duration in steps, touch]. A call and an answer,
@@ -16,26 +16,26 @@
   ]);
   const PHRASES = [
     // Dm: the familiar F–A–G hook, answered down to D by the guitar.
-    phrase([[0,65,3,.9], [6,69,2,1], [10,67,4,.8]],
-      [[18,65,2,.9], [22,64,2,.72], [26,62,5,.88]]),
+    phrase([[0,65,3.8,.9], [4,69,3.8,1], [8,67,7.5,.8]],
+      [[16,65,3.5,.9], [20,64,3.5,.72], [24,62,7.5,.88]]),
     // Bb: the guitar asks a rising question; keys answer from the major 7th.
-    phrase([[18,69,2,.86], [22,65,2,.78], [26,62,5,.9]],
-      [[2,62,2,.85], [6,65,3,1], [12,67,3,.78]]),
+    phrase([[16,69,7.5,.86], [24,65,3.8,.78], [28,62,3.8,.9]],
+      [[0,62,3.5,.85], [4,65,3.5,1], [8,67,7,.78]]),
     // F: a brighter leap, then a short ascending guitar reply.
-    phrase([[0,69,3,.9], [6,72,2,1], [10,69,2,.76], [14,67,2,.7]],
-      [[20,65,3,.85], [24,67,3,.78], [30,69,2,.9]]),
+    phrase([[0,69,7.5,.9], [8,72,3.8,1], [12,69,1.7,.76], [14,67,1.7,.7]],
+      [[16,65,3.5,.85], [20,67,3.5,.78], [24,69,7.5,.9]]),
     // C: guitar turn, keyboard descent. Space before the next section.
-    phrase([[18,64,2,.86], [22,62,2,.74], [26,60,5,.9]],
-      [[2,64,2,.84], [6,67,2,1], [10,69,2,.78], [14,67,2,.72]]),
-    // Second chorus: displaced hook and a longer falling guitar answer.
-    phrase([[2,65,2,.86], [6,69,4,1], [12,67,3,.8]],
-      [[18,69,2,.86], [22,67,2,.76], [26,65,2,.72], [30,62,2,.9]]),
-    phrase([[20,67,3,.88], [24,65,3,.78], [28,62,3,.86]],
-      [[0,65,3,.9], [6,62,2,.8], [10,65,2,.86], [14,69,2,1]]),
-    phrase([[2,69,2,.9], [6,67,4,.8], [12,65,3,.76]],
-      [[18,67,2,.85], [22,69,2,.9], [26,72,2,1], [30,69,2,.76]]),
-    phrase([[18,64,2,.8], [22,67,2,.92], [26,64,2,.76], [30,60,2,.88]],
-      [[0,67,3,.92], [6,64,4,.82], [12,62,3,.74]])
+    phrase([[16,64,3.8,.86], [20,62,3.8,.74], [24,60,7.5,.9]],
+      [[0,64,3.5,.84], [4,67,3.5,1], [8,69,3.5,.78], [12,67,3,.72]]),
+    // Second chorus: longer holds and changed replies, still anchored on beats.
+    phrase([[0,65,7.5,.86], [8,69,3.8,1], [12,67,3.8,.8]],
+      [[16,69,3.5,.86], [20,67,3.5,.76], [24,65,3.5,.72], [28,62,3.5,.9]]),
+    phrase([[16,67,3.8,.88], [20,65,3.8,.78], [24,62,7.5,.86]],
+      [[0,65,3.5,.9], [4,62,3.5,.8], [8,65,3.5,.86], [12,69,3,1]]),
+    phrase([[0,69,3.8,.9], [4,67,3.8,.8], [8,65,7.5,.76]],
+      [[16,67,3.5,.85], [20,69,3.5,.9], [24,72,5.5,1], [30,69,1.8,.76]]),
+    phrase([[16,64,1.8,.8], [20,67,1.8,.92], [24,60,7.5,.88]],
+      [[0,67,7,.92], [8,64,3.5,.82], [12,62,3.5,.74]])
   ];
   const hz = note => 440 * 2 ** ((note - 69) / 12);
   class WorkshopMusic {
@@ -128,7 +128,7 @@
       } else {
         // A rounded electric-key attack with a very quiet, short tine overtone.
         this.tone(note, time, length, .15 * touch, 'sine',
-          { theme: true, attack: .009, hold: length * .4, cutoff: 2100 });
+          { theme: true, attack: .009, hold: length * .7, cutoff: 2100 });
         this.tone(note + 19, time, Math.min(.12, length), .009 * touch, 'sine', { attack: .003, cutoff: 3200 });
       }
     }
@@ -164,7 +164,7 @@
       const melody = PHRASES[Math.floor(step / 64) % PHRASES.length].get(step % 64);
       if (melody) {
         const [instrument, note, duration, touch] = melody;
-        this.melody(instrument, note, swungTime, duration, touch);
+        this.melody(instrument, note, time, duration, touch);
       }
     }
     schedule() {

@@ -71,11 +71,21 @@ const fs = require('node:fs');
    ['pick','match','behemoth','ukulele','blackhole','win'].forEach((kind, i) => loud.effectAt(kind, .02 + i * .18));
    const loudBuffer = await loudContext.startRendering(); let loudPeak = 0;
    for (const sample of loudBuffer.getChannelData(0)) loudPeak = Math.max(loudPeak, Math.abs(sample));
-   return { peak, loudPeak, rms: Math.sqrt(sum / left.length), wav: btoa(binary), fingerprints, guitarPitches: mix.guitarBuffers.size };
+   // A long key must sustain audibly, not merely have a long silent tail.
+   const heldContext = new OfflineAudioContext(1, Math.ceil(rate * 1.4), rate), held = new RainMusic(heldContext);
+   held.ensure(); held.melody('keys', 65, .01, 7.5, .9);
+   const heldSamples = (await heldContext.startRendering()).getChannelData(0);
+   const windowEnergy = start => {
+    let total = 0; for (let i = Math.floor(start * rate); i < Math.floor((start + .2) * rate); i++) total += heldSamples[i] ** 2;
+    return total;
+   };
+   const sustainRatio = windowEnergy(.65) / windowEnergy(.1);
+   return { peak, loudPeak, sustainRatio, rms: Math.sqrt(sum / left.length), wav: btoa(binary), fingerprints, guitarPitches: mix.guitarBuffers.size };
   });
   assert.ok(rendered.peak > .05 && rendered.peak < .95, 'non-silent mix with headroom');
   assert.ok(rendered.rms > .005 && rendered.rms < .35);
   assert.ok(rendered.loudPeak > .05 && rendered.loudPeak < .95, 'full-volume music and effects have headroom');
+  assert.ok(rendered.sustainRatio > .5, 'long keys retain audible body beyond the first beat');
   assert.equal(new Set(rendered.fingerprints.slice(0,5).map(f => f.crossings)).size, 5, 'five different sound signatures');
   const [keys, guitar] = rendered.fingerprints.slice(5);
   assert.ok(keys.energy > .001 && guitar.energy > .001, 'both lead instruments are audible');
