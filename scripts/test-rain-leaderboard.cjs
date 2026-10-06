@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Leaderboard, validId, normalizeId, compare } = require('../yang/leaderboard.js');
-const { messages } = require('../yang/i18n.js');
+const { Leaderboard, validId, normalizeId, compare } = require('../rain_match/leaderboard.js');
+const { messages } = require('../rain_match/i18n.js');
 (async () => {
  assert.deepEqual(Object.keys(messages.zh).sort(), Object.keys(messages.en).sort());
  for (const id of ['幸存者_1', 'Player-42', 'a']) assert.ok(validId(id));

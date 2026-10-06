@@ -1,7 +1,7 @@
 'use strict';
 // A visible-card greedy player, not an estimate of human win rates.
 // Optional argument: path to a previous core.js for the same comparison.
-const { Game } = require(process.argv[2] || '../yang/core.js');
+const { Game } = require(process.argv[2] || '../rain_match/core.js');
 function random(seed) { return () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }; }
 for (const mode of ['drizzle', 'rain', 'monsoon']) {
   let wins = 0, recovered = 0;

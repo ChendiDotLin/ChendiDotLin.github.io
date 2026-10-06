@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Game, MODES } = require('../yang/core.js');
+const { Game, MODES } = require('../rain_match/core.js');
 function random(seed) { return () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }; }
 function counts(game) {
   return game.tiles.reduce((all, t) => { all[t.type] = (all[t.type] || 0) + 1; return all; }, {});

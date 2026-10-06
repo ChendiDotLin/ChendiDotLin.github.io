@@ -1,71 +1,13 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#171c2a">
-  <meta name="description" content="羊了个羊玩法 × Risk of Rain 2 道具。免费三消叠牌小游戏，三个道具每局各用一次。">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
   <title>Rain Match</title>
-  <link rel="canonical" href="https://chendilin.com/yang/">
-  <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=ff0aa83">
-  <script defer src="core.js?v=ff0aa83"></script>
-  <script defer src="i18n.js?v=ff0aa83"></script>
-  <script defer src="config.js?v=ff0aa83"></script>
-  <script defer src="leaderboard.js?v=ff0aa83"></script>
-  <script defer src="effects.js?v=ff0aa83"></script>
-  <script defer src="game.js?v=ff0aa83"></script>
+  <link rel="canonical" href="https://chendilin.com/rain_match/">
+  <script>location.replace('/rain_match/' + location.search + location.hash);</script>
+  <noscript><meta http-equiv="refresh" content="0; url=/rain_match/"></noscript>
 </head>
-<body>
-  <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
-  <div class="landscape" aria-hidden="true"><div class="planet"></div><div class="mountain back"></div><div class="mountain front"></div></div>
-  <div class="game-shell">
-    <header class="site-header">
-      <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>
-      <a class="brand" href="./" aria-label="Rain Match 首页"><span id="brand-name">Rain Match</span><small>RISK OF RAIN 2</small></a>
-      <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button><button class="icon-button" id="restart" aria-label="重新开局" title="重新开局">↻</button></div>
-    </header>
-    <section id="music-panel" class="music-panel" hidden aria-label="Risk of Rain 2 soundtrack">
-      <div class="music-heading"><span>RoR2 · Chris Christodoulou</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
-      <div id="music-player"></div>
-      <div class="music-actions"><button id="effects" class="text-button" aria-pressed="false">开启音效</button><a href="https://chrischristodoulou.bandcamp.com/album/risk-of-rain-2-4" target="_blank" rel="noopener noreferrer" data-i18n="musicAlbum">原声专辑 ↗</a></div>
-      <p data-i18n="musicHint">点击播放器里的 ▶ 开始音乐，可以边听边玩。</p>
-    </section>
-    <main class="app-layout">
-      <div class="play-menu">
-      <div class="difficulty-options" role="group" aria-label="游戏难度">
-        <button data-mode="drizzle" aria-pressed="false" title="细雨热身 · 36 张">细雨</button>
-        <button data-mode="rain" class="selected" aria-pressed="true" title="暴雨挑战 · 108 张">暴雨</button>
-        <button data-mode="monsoon" aria-pressed="false" title="季风试炼 · 144 张">季风</button>
-      </div>
-      <div class="menu-actions"><button id="rankings" class="text-button" data-i18n="rankings">排行榜</button><button id="language" class="language-button" aria-label="Switch to English">EN</button></div>
-      </div>
-      <section class="game-panel" aria-label="三消游戏">
-        <div class="game-topbar"><h1 id="mode-title">暴雨挑战</h1><div class="run-stats"><span><span id="cleared">0</span><span id="total"> / 108</span></span><span id="timer" aria-label="探索时间">00:00</span></div></div>
-        <div class="progress-track" role="progressbar" aria-label="消除进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress"></div></div>
-        <div class="board-area">
-          <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
-          <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>
-          <div id="combo" aria-live="polite"></div>
-        </div>
-        <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
-        <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
-        <div class="inventory-area">
-          <div class="inventory-label"><span data-i18n="inventory">七格背包</span><strong id="capacity">0 <span>/ 7</span></strong></div>
-          <div class="rack" id="rack" aria-label="七格背包"></div>
-          <p id="status" class="status" role="status">先找第三张，再捡第一张。</p>
-        </div>
-        <div class="tools">
-          <button class="tool" id="remove" title="将背包前面最多三张移入临时补给区"><span class="tool-icon">⇥</span><b data-i18n="remove">移出三张</b><span class="charge">免费 ×1</span></button>
-          <button class="tool" id="undo" title="撤销上一次拾取及该次产生的消除"><span class="tool-icon">↶</span><b data-i18n="undo">撤回一步</b><span class="charge">免费 ×1</span></button>
-          <button class="tool" id="shuffle" title="打乱主牌区及两侧补给堆的剩余图案"><span class="tool-icon">⤨</span><b data-i18n="shuffle">重新洗牌</b><span class="charge">免费 ×1</span></button>
-        </div>
-        <button id="result-button" class="text-button result-button" data-i18n="result" hidden>本局成绩</button>
-        <p class="free-note" data-i18n="freeNote">每局各免费一次 · 重新开局全部恢复</p>
-      </section>
-    </main>
-    <footer><span><a href="/" data-i18n="siteHome">← 主页</a> · <span data-i18n="wins">累计通关</span> <strong id="wins">00</strong></span><span><span data-i18n="fan">RoR2 非官方同人小游戏</span> <button id="credits" data-i18n="credits">素材致谢</button> <a href="admin/" data-i18n="admin">管理</a></span></footer>
-  </div>
-  <dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-button" id="close-modal" aria-label="关闭弹窗">×</button><button id="modal-language" class="language-button" aria-label="Switch to English">EN</button><div id="modal-content"></div></dialog>
-</body>
+<body><p>Rain Match has moved. <a href="/rain_match/">Continue to Rain Match / 前往游戏</a></p></body>
 </html>

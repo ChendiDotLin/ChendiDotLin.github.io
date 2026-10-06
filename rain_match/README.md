@@ -2,7 +2,7 @@
 
 Standalone, mobile-friendly match-three tile game with Risk of Rain 2 item art.
 Open `index.html` directly, or serve this directory from any static web host.
-In this GitHub Pages repository the game lives at `/yang/`.
+In this GitHub Pages repository the game lives at `/rain_match/`.
 No build step, external JavaScript, ads, or paid actions are required to play.
 The optional shared leaderboard requires the public Supabase configuration below.
 
@@ -48,7 +48,7 @@ local win counter. Scores are not silently saved to a local-only leaderboard.
 4. Fill `supabaseUrl` and `supabasePublishableKey` in `config.js`.
    Use a key beginning with `sb_publishable_`. Never use a Secret key,
    `service_role` key, database password, or connection string in browser code.
-5. Reload `/yang/`, finish a round, and submit a test ID. Open the leaderboard
+5. Reload `/rain_match/`, finish a round, and submit a test ID. Open the leaderboard
    in another browser to verify that the score is shared.
 
 Without configuration, the game and language switching work normally. The
@@ -121,7 +121,7 @@ Music files are not copied, downloaded or bundled in this repository.
 
 ## Developer administration
 
-Open `/yang/admin/` (also linked from the game footer). Sign in with your Supabase
+Open `/rain_match/admin/` (also linked from the game footer). Sign in with your Supabase
 Auth email and password. The static page uses only the project's publishable key;
 all management RPCs verify `auth.uid()` against a private administrator whitelist.
 Creating another Auth account does not grant management access.
@@ -132,7 +132,7 @@ Creating another Auth account does not grant management access.
    base migration and the supplied developer UUID
    `cf51ed16-ab31-41a7-8134-154688dfca14`. For a different installation, replace
    that UUID with the intended administrator's Auth user ID before running.
-3. Sign in at `/yang/admin/`. Inspect mode counts and scores; remove one ID from a
+3. Sign in at `/rain_match/admin/`. Inspect mode counts and scores; remove one ID from a
    selected mode, reset one mode, or reset all three. Each deletion requires typing
    the displayed confirmation. Running the setup script does not delete scores.
 
@@ -179,3 +179,7 @@ and victory extraction 2.8 s. Restarting, replaying, or changing difficulty uses
 an approximately 1.6 s transition: the old board contracts into a portal and the
 new tiles descend into place. Input and the play clock resume after landing;
 repeated restarts cancel the earlier transition. Reduced-motion mode skips it.
+
+The former `/yang/` and `/yang/admin/` URLs redirect to `/rain_match/` and
+`/rain_match/admin/`, preserving query parameters and fragments when JavaScript
+is enabled. Origin-based preferences and the Supabase leaderboard stay intact.
