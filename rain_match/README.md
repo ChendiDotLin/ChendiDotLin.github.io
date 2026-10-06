@@ -58,7 +58,7 @@ The configured client requires HTTPS Supabase project URLs ending in
 
 ### Ranking and submission rules
 
-- Separate boards for Drizzle, Rainstorm, and Monsoon; top 100 displayed.
+- Separate boards for Drizzle, Rainstorm, and Monsoon; top 10 displayed.
 - Recovered tiles descending, then active play time ascending, to the millisecond.
   Exact ties use record time and then player ID for a stable display order.
 - Each case-sensitive ID keeps its best result per mode. IDs support 1–20

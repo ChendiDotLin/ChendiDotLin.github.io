@@ -261,7 +261,7 @@
     content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t('score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
       : `<div class="ranking-empty"><span aria-hidden="true">♧</span><p class="empty-ranking" role="status">${t('noScores')}</p></div>`;
     const ownId = receipt?.playerId || readPreference('rain-match-player');
-    entries.forEach((entry, index) => {
+    entries.slice(0, 10).forEach((entry, index) => {
       const row = document.createElement('tr');
       if (ownId === entry.playerId) row.className = 'own-score';
       for (const value of [index + 1, entry.playerId, entry.cleared, formatTime(entry.elapsedMs, true)]) {
