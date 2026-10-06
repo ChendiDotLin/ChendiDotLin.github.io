@@ -30,6 +30,7 @@ navbar-links:
     - Playwriting: "playwriting"
     - Doodles: "doodles"
     - 60 Days of Pixel Art: "pixel"
+    - Rain Match · 羊了个雨: "yang/"
 
 ################
 # --- Logo --- #
@@ -298,6 +299,8 @@ exclude:
   - README.md
   - screenshot.png
   - docs/
+  - scripts/
+  - yang/README.md
 
 plugins:
   - jekyll-paginate

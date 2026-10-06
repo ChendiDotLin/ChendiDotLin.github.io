@@ -1,0 +1,30 @@
+.admin-shell { width: min(100% - 32px, 760px); margin: 0 auto; padding: 24px 0 60px; }
+.admin-header, .admin-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.admin-header { font-size: 12px; color: var(--muted); }
+.admin-eyebrow { margin: 40px 0 10px; color: var(--purple); letter-spacing: 3px; font-size: 10px; }
+.admin-shell h1 { font-size: 28px; font-weight: 700; color: var(--text); }
+.admin-shell h2 { margin: 0 0 16px; font-size: 16px; }
+.admin-intro, #notice { font-size: 13px; line-height: 1.7; }
+#notice:empty { display: none; }
+#notice { padding: 12px; background: #bdb2f112; border-radius: 8px; }
+.admin-card { margin-top: 20px; padding: 22px; background: #ffffff04; border: 1px solid var(--line); border-radius: 14px; }
+#login-panel { max-width: 430px; }
+.admin-shell label, #confirm-dialog label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--muted); }
+.admin-shell input, .admin-shell select, #confirm-dialog input { width: 100%; padding: 12px; background: #121a28; color: var(--text); border: 1px solid #77899f55; border-radius: 8px; font: inherit; font-size: 16px; }
+.admin-shell input:focus, #confirm-dialog input:focus { outline: 2px solid var(--purple); }
+.admin-shell .primary-button { margin-top: 20px; }
+.admin-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+.admin-counts div { padding: 18px 10px; border-radius: 10px; text-align: center; background: #bdb2f10b; font-size: 12px; }
+.admin-counts strong { display: block; margin-top: 8px; font-size: 26px; }
+.admin-buttons { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.admin-buttons > button { flex: 1; min-width: 120px; margin: 0; }
+.danger-button { border: 1px solid #efaaa65c; border-radius: 8px; background: #a4454825; color: #efb4b0; padding: 12px; font-size: 12px; }
+.danger-button:disabled { opacity: .4; }
+.danger-card { border-color: #efaaa62e; }
+#identity { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+#audit { padding: 0; list-style: none; }
+#audit li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+#confirm-dialog { width: min(440px, calc(100% - 32px)); padding: 24px; }
+#confirm-error { color: #efb4b0; font-size: 12px; }
+.ranking-table td { max-width: 200px; overflow-wrap: anywhere; white-space: normal; }
+.ranking-table { margin-top: 16px; }

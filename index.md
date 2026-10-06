@@ -18,6 +18,21 @@ use-site-title: true
   </aside>
 </section>
 
+<section class="home-game" aria-labelledby="rain-match-heading">
+  <div class="home-game-art" aria-hidden="true">
+    <span class="home-game-orbit"></span>
+    <span class="home-game-tile"><img src="{{ '/yang/assets/feather.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/yang/assets/clover.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/yang/assets/blackhole.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+  </div>
+  <div class="home-game-copy">
+    <span class="section-eyebrow">Made for fun · Browser game</span>
+    <h2 id="rain-match-heading">Rain Match <span lang="zh-CN">羊了个雨</span></h2>
+    <p>A tile-matching fan game with Risk of Rain 2 loot. Three difficulties, free powers, and a shared leaderboard. Play in English or 中文.</p>
+    <a class="home-game-play" href="{{ '/yang/' | relative_url }}">Play a round <span lang="zh-CN">开始游戏</span> <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
 <section class="research-section" aria-labelledby="research-heading">
   <header class="section-heading">
     <span class="section-eyebrow">Selected work</span>

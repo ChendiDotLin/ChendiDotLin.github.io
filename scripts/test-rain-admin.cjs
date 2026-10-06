@@ -1,0 +1,53 @@
+'use strict';
+const { PGlite } = require(process.argv[2] || '@electric-sql/pglite');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const { randomUUID } = require('node:crypto');
+const assert = require('node:assert/strict');
+(async () => {
+  const db = new PGlite(), admin = 'cf51ed16-ab31-41a7-8134-154688dfca14', other = randomUUID();
+  await db.exec(`create role anon; create role authenticated;
+    create schema auth; create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;`);
+  await db.query('insert into auth.users values ($1), ($2)', [admin, other]);
+  const migration = readFileSync(join(__dirname, 'rain-admin.sql'), 'utf8');
+  await db.exec(migration); await db.exec(migration);
+  const as = async (role, id = '') => {
+    await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub', $1, false)", [id]); await db.exec('set role ' + role);
+  };
+  const status = async () => (await db.query('select public.rain_admin_status() result')).rows[0].result;
+  const remove = async (action, mode, id, confirmation) => (await db.query('select public.rain_admin_delete($1,$2,$3,$4) result', [action, mode, id, confirmation])).rows[0].result;
+  const submit = async (id, mode, run = randomUUID()) => (await db.query('select public.rain_submit_score($1,$2,$3,3,1000) result', [run, id, mode])).rows[0].result;
+  await as('anon');
+  await assert.rejects(status, /permission denied/);
+  await assert.rejects(() => remove('all', null, null, 'CLEAR ALL'), /permission denied/);
+  await as('authenticated', other);
+  await assert.rejects(status, /Administrator access required/);
+  await assert.rejects(() => remove('all', null, null, 'CLEAR ALL'), /Administrator access required/);
+  await assert.rejects(() => db.query('insert into rain_private.admins values ($1)', [other]), /permission denied/);
+  await as('anon');
+  const run = randomUUID();
+  await submit('tester', 'rain', run); await submit('keep', 'rain'); await submit('tester', 'drizzle'); await submit('keep', 'monsoon');
+  await as('authenticated', admin);
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 2, monsoon: 1 });
+  for (const args of [['all',null,null,'wrong'],['player','rain','tester',null],['mode','bad',null,'CLEAR bad']])
+    await assert.rejects(() => remove(...args), /Confirmation does not match|Invalid mode/);
+  assert.equal((await remove('player','rain','tester','DELETE tester')).deleted, 1);
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 1, monsoon: 1 });
+  await as('anon');
+  await assert.rejects(() => submit('tester', 'rain', run), /Run removed by administrator/);
+  await submit('tester', 'rain'); // New rounds remain allowed.
+  await as('authenticated', admin);
+  assert.equal((await remove('mode','rain',null,'CLEAR rain')).deleted, 2);
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 0, monsoon: 1 });
+  assert.equal((await remove('all',null,null,'CLEAR ALL')).deleted, 2);
+  assert.deepEqual((await status()).counts, { drizzle: 0, rain: 0, monsoon: 0 });
+  assert.equal((await status()).audit.length, 3);
+  await assert.rejects(() => db.query('select * from rain_private.admin_audit'), /permission denied/);
+  await db.exec('reset role');
+  const archived = (await db.query('select archived_scores from rain_private.admin_audit order by id')).rows;
+  assert.equal(archived[0].archived_scores[0].player_id, 'tester');
+  assert.equal(archived.reduce((n, row) => n + row.archived_scores.length, 0), 5);
+  console.log('PASS: admin migration reruns, anonymous/non-admin denial, whitelist protection, typed confirmation, scoped deletes, audit archives, no deleted-run resurrection, and new-run submission.');
+  await db.close();
+})().catch(error => { console.error(error); process.exit(1); });

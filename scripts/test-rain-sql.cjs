@@ -1,0 +1,33 @@
+'use strict';
+// Optional: node scripts/test-rain-sql.cjs /path/to/@electric-sql/pglite/dist/index.cjs
+const { PGlite } = require(process.argv[2] || '@electric-sql/pglite');
+const { readFileSync } = require('node:fs');
+const { randomUUID } = require('node:crypto');
+const assert = require('node:assert/strict');
+(async()=>{
+ const db=new PGlite();
+ await db.exec('create role anon; create role authenticated;');
+ const schema=readFileSync(require('node:path').join(__dirname,'rain-leaderboard.sql'),'utf8');
+ await db.exec(schema); await db.exec(schema);
+ await db.exec('set role anon;');
+ const submit=async(id,mode,score,time,run=randomUUID())=>(await db.query('select public.rain_submit_score($1,$2,$3,$4,$5) as result',[run,id,mode,score,time])).rows[0].result;
+ const list=async(mode)=>(await db.query('select public.rain_leaderboard($1) as result',[mode])).rows[0].result;
+ await submit('slow','rain',108,9000);await submit('fast','rain',108,5000);await submit('partial','rain',105,1000);
+ await submit('小雨玩家','drizzle',36,3500);await submit('fast','monsoon',144,8000);
+ assert.deepEqual((await list('rain')).entries.map(e=>e.playerId),['fast','slow','partial']);
+ assert.equal((await list('drizzle')).entries[0].playerId,'小雨玩家');
+ assert.equal((await list('monsoon')).entries.length,1);
+ assert.equal((await submit('fast','rain',105,1)).improved,false);
+ assert.equal((await submit('fast','rain',108,4999)).improved,true);
+ const run=randomUUID(); const once=await submit('retry','rain',108,1000,run);
+ assert.deepEqual(await submit('retry','rain',108,1000,run),once);
+ assert.equal((await list('rain')).total,4);
+ await assert.rejects(()=>submit('changed','rain',108,1000,run),/Run already submitted/);
+ for(const args of [['x','no-mode',3,1],['x','drizzle',39,1],['x','rain',4,1],['<script>','rain',3,1],['x','rain',3,-1],['x','rain',3,604800001]])await assert.rejects(()=>submit(...args),/Invalid score/);
+ await assert.rejects(()=>db.query('select * from rain_private.scores'),/permission denied/);
+ await assert.rejects(()=>db.query("delete from rain_private.scores where player_id='fast'"),/permission denied/);
+ await db.exec('reset role;');
+ assert.equal((await db.query("select count(*)::int as n from rain_private.runs where run_id=$1",[run])).rows[0].n,1);
+ console.log('PASS: SQL migration + repeat migration, Chinese IDs, mode separation, sorting, best-only updates, idempotent retries, validation, and denied direct table access.');
+ await db.close();
+})().catch(e=>{console.error(e);process.exit(1)});
