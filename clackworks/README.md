@@ -132,7 +132,10 @@ reply, then a bar of melodic rest. Leads land on quarter-note beats, apart from
 two brief neighbor-note turns across the loop. Keys mix short articulations with
 sustained one- and two-beat notes; only bass and ride use swing timing.
 The guitar uses cached, tuned string partials with faster upper-harmonic decay;
-the keyboard has a rounded, sustained tone and a short tine attack. Warm plucked bass alternates
+the electric piano uses touch-sensitive FM tines: a brighter struck attack settles
+into a warm sustained body, followed by damping. A quiet 240 ms stereo room is
+confined to the piano; all modulation oscillators stop with playback. The room
+impulse is synthesized locally, with no recorded samples. Warm plucked bass alternates
 sparse plucks and quarter-note walking lines, with chromatic approaches into chord changes.
 A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
 leave space for gameplay sounds. Stages and chains increase drum strength without

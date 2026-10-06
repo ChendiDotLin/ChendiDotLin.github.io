@@ -68,12 +68,37 @@
       this.master.connect(this.compressor);
       this.effectBus = ctx.createGain(); this.effectBus.gain.value = this.effectsVolume * .65;
       this.effectBus.connect(this.compressor);
-      this.leadWave = ctx.createPeriodicWave(new Float32Array(6), new Float32Array([0,1,.2,.035,.055,.009]));
+      this.keysWave = ctx.createPeriodicWave(new Float32Array(5), new Float32Array([0,1,.18,.035,.012]));
       this.bassWave = ctx.createPeriodicWave(new Float32Array(6), new Float32Array([0,1,.42,.18,.065,.02]));
+      // A small, dark room belongs only to the electric piano, not to the mix.
+      this.keysBus = ctx.createGain();
+      this.keysLowCut = ctx.createBiquadFilter(); this.keysLowCut.type = 'highpass';
+      this.keysLowCut.frequency.value = 90; this.keysLowCut.Q.value = .5;
+      this.keysBus.connect(this.keysLowCut); this.keysLowCut.connect(this.master);
+      this.keysRoom = ctx.createConvolver(); this.keysRoom.normalize = false;
+      this.keysRoom.buffer = this.keysRoomImpulse();
+      this.keysWet = ctx.createGain(); this.keysWet.gain.value = .1;
+      this.keysLowCut.connect(this.keysRoom); this.keysRoom.connect(this.keysWet); this.keysWet.connect(this.master);
       this.guitarBuffers = new Map();
       this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = this.noiseBuffer.getChannelData(0); let seed = 719;
       for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; data[i] = (seed >>> 0) / 2147483648 - 1; }
+    }
+    keysRoomImpulse() {
+      const ctx = this.context, rate = ctx.sampleRate;
+      const buffer = ctx.createBuffer(2, Math.ceil(rate * .24), rate);
+      for (let channel = 0; channel < 2; channel++) {
+        const samples = buffer.getChannelData(channel); let seed = 319 + channel * 701, low = 0;
+        // Deterministic, low-passed reflections; no rhythmic delay or long wash.
+        const smoothing = 1 - Math.exp(-2 * Math.PI * 2200 / rate);
+        const level = Math.sqrt(44100 / rate) * .085;
+        for (let i = Math.floor(rate * .009); i < samples.length; i++) {
+          seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+          low += smoothing * ((seed >>> 0) / 2147483648 - 1 - low);
+          samples[i] = low * level * Math.exp(-i / (rate * .041));
+        }
+      }
+      return buffer;
     }
     voice(source, time, length, strength, options = {}) {
       const ctx = this.context, set = options.effect ? this.effectVoices : this.voices;
@@ -84,16 +109,20 @@
       const attack = Math.min(options.attack || .003, length / 3);
       envelope.gain.setValueAtTime(.0001, time);
       envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, strength), time + attack);
-      if (options.hold) envelope.gain.linearRampToValueAtTime(Math.max(.0002, strength * .85), time + Math.min(length * .7, options.hold));
+      if (options.keys) {
+        // A struck tine settles into its body, then damps at note-off. Long
+        // notes keep their body instead of becoming either a beep or a click.
+        envelope.gain.exponentialRampToValueAtTime(strength * .8, time + Math.min(.16, length * .3));
+        envelope.gain.exponentialRampToValueAtTime(strength * .67, time + length * .78);
+      } else if (options.hold) envelope.gain.linearRampToValueAtTime(Math.max(.0002, strength * .85), time + Math.min(length * .7, options.hold));
       envelope.gain.exponentialRampToValueAtTime(.0001, time + length);
-      source.connect(filter); filter.connect(envelope); envelope.connect(options.effect ? this.effectBus : this.master);
+      source.connect(filter); filter.connect(envelope); envelope.connect(options.keys ? this.keysBus : options.effect ? this.effectBus : this.master);
       set.add(source);
       source.onended = () => { source.disconnect(); filter.disconnect(); envelope.disconnect(); set.delete(source); };
       source.start(time); source.stop(time + length + .025);
     }
     tone(note, time, length, strength, type = 'triangle', options = {}) {
       const source = this.context.createOscillator(); source.type = type;
-      if (options.theme) source.setPeriodicWave(this.leadWave);
       if (options.bass) source.setPeriodicWave(this.bassWave);
       source.frequency.setValueAtTime(hz(note), time);
       if (options.endNote !== undefined) source.frequency.exponentialRampToValueAtTime(hz(options.endNote), time + length * .8);
@@ -129,6 +158,25 @@
       this.guitarBuffers.set(note, buffer);
       return buffer;
     }
+    electricPiano(note, time, length, touch) {
+      // Two-operator FM: touch changes tine brightness, which decays faster
+      // than the body. Both oscillators are owned by the music lifecycle.
+      const ctx = this.context;
+      if (!ctx.startRendering && this.voices.size > 125) return;
+      const frequency = hz(note), velocity = Math.max(.1, Math.min(1, touch));
+      const carrier = ctx.createOscillator(), tine = ctx.createOscillator(), depth = ctx.createGain();
+      carrier.setPeriodicWave(this.keysWave); carrier.frequency.setValueAtTime(frequency, time);
+      tine.type = 'sine'; tine.frequency.setValueAtTime(frequency, time);
+      depth.gain.setValueAtTime(frequency * (.7 + velocity * velocity * .65), time);
+      depth.gain.exponentialRampToValueAtTime(frequency * .24, time + Math.min(.23, length * .4));
+      depth.gain.exponentialRampToValueAtTime(frequency * .09, time + length);
+      tine.connect(depth); depth.connect(carrier.frequency);
+      this.voices.add(tine);
+      tine.onended = () => { tine.disconnect(); depth.disconnect(); this.voices.delete(tine); };
+      tine.start(time); tine.stop(time + length + .025);
+      this.voice(carrier, time, length, .17 * velocity,
+        { keys: true, attack: .004, cutoff: 2400 + velocity * 900 });
+    }
     melody(instrument, note, time, duration, touch) {
       const length = duration * STEP;
       if (instrument === 'guitar') {
@@ -136,10 +184,7 @@
         this.voice(source, time, length, .23 * touch,
           { attack: .004, hold: length * .65, cutoff: 3200 });
       } else {
-        // A rounded electric-key attack with a very quiet, short tine overtone.
-        this.tone(note, time, length, .15 * touch, 'sine',
-          { theme: true, attack: .009, hold: length * .7, cutoff: 2100 });
-        this.tone(note + 19, time, Math.min(.12, length), .009 * touch, 'sine', { attack: .003, cutoff: 3200 });
+        this.electricPiano(note, time, length, touch);
       }
     }
     renderStep(step, time, energy = this.scene) {
