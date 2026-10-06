@@ -49,7 +49,8 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 .tile img { width: 86%; height: 86%; object-fit: contain; border-radius: 4px; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 2px #0004); }
 .tile:not(:disabled):hover { border-color: #e3d5ff; box-shadow: 0 4px 0 #0b1420, 0 0 10px #c0b0ef50; transform: translateY(-2px); }
 .tile:not(:disabled):active { transform: translateY(2px); }
-.tile.blocked { filter: brightness(.72); border-color: #344354; background: #192535; box-shadow: 0 3px 0 #101827; }
+.tile.blocked { filter: brightness(.55) saturate(.18); border-color: #263342; background: #192535; box-shadow: 0 3px 0 #101827; }
+.tile.blocked::after { opacity: .35; }
 .tile.fresh { animation: tile-in .55s ease both; }
 .supply-labels { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14%; color: #8e9eaf; font-size: 9px; letter-spacing: 1px; pointer-events: none; }
 .supply-labels span { width: 90px; text-align: center; }
@@ -373,6 +374,11 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .reward-choice img, .reward-choice .shield-glyph { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
 .reward-choice b { display: block; font-size: 14px; margin: 3px 0; }
 .reward-choice small { color: #c2aedf; font-size: 10px; }
+.reward-choice[data-rarity="common"] small { color: #ccd5e3; }
+.reward-choice[data-rarity="uncommon"] small { color: #9be2a4; }
+.reward-choice[data-rarity="equipment"] small { color: #efc077; }
+.reward-choice[data-rarity="legendary"] { border-color: #f298a47a; background: linear-gradient(110deg, #ad39461c, #c5b4fa0a); }
+.reward-choice[data-rarity="legendary"] small, .reward-choice[data-rarity="legendary"] b { color: #ffafb7; }
 .reward-choice span:not(.shield-glyph):not(.gasoline-glyph) { display: block; color: #adbbce; font-size: 11px; line-height: 1.65; }
 .relic-large img, .relic-large .shield-glyph { width: 64px; height: 64px; object-fit: contain; }
 .build-summary { font-size: 11px !important; line-height: 1.7 !important; overflow-wrap: anywhere; }

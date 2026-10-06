@@ -5,16 +5,22 @@
   const VERSION = 3;
   const PASSIVE_SLOTS = 6;
   const RELICS = {
-    feather: { kind: 'passive', icon: 'feather', symbol: '↟' },
-    shield: { kind: 'passive', icon: 'shield', symbol: '◈' },
-    ukulele: { kind: 'passive', icon: 'ukulele', symbol: 'ϟ' },
-    cell: { kind: 'passive', icon: 'cell', symbol: '▥' },
-    gasoline: { kind: 'passive', icon: 'gasoline', symbol: '♨' },
-    behemoth: { kind: 'passive', icon: 'behemoth', symbol: '✹' },
-    clover: { kind: 'passive', icon: 'clover', symbol: '♧' },
-    blackhole: { kind: 'active', icon: 'blackhole', symbol: '◎' },
-    radar: { kind: 'active', icon: 'radar', symbol: '⌖' }
+    feather: { kind: 'passive', icon: 'feather', symbol: '↟', rarity: 'uncommon', weight: 60 },
+    shield: { kind: 'passive', icon: 'shield', symbol: '◈', rarity: 'void', weight: 35 },
+    ukulele: { kind: 'passive', icon: 'ukulele', symbol: 'ϟ', rarity: 'uncommon', weight: 60 },
+    cell: { kind: 'passive', icon: 'cell', symbol: '▥', rarity: 'uncommon', weight: 60 },
+    gasoline: { kind: 'passive', icon: 'gasoline', symbol: '♨', rarity: 'common', weight: 100 },
+    behemoth: { kind: 'passive', icon: 'behemoth', symbol: '✹', rarity: 'legendary', weight: 60 },
+    clover: { kind: 'passive', icon: 'clover', symbol: '♧', rarity: 'legendary', weight: 40 },
+    blackhole: { kind: 'active', icon: 'blackhole', symbol: '◎', rarity: 'equipment', weight: 45 },
+    radar: { kind: 'active', icon: 'radar', symbol: '⌖', rarity: 'equipment', weight: 45 }
   };
+  function weightedChoice(pool, random) {
+    const weight = id => RELICS[id]?.weight ?? 50;
+    let roll = random() * pool.reduce((total, id) => total + weight(id), 0);
+    for (const id of pool) { roll -= weight(id); if (roll < 0) return id; }
+    return pool[pool.length - 1];
+  }
   function stageSpec(stage) {
     if (stage === 1) return { mode: 'rain', layers: [6, 6], pileSize: 6, kinds: 6, target: 4, count: 36, theme: 'landing' };
     const fog = stage >= 5 && stage % 3 === 2;
@@ -60,6 +66,7 @@
     get featherRecharge() { return 9 - (this.relics.feather || 1); }
     get radarActive() { return this.radarUntil > this.moves; }
     get rewardTarget() { return this.stage === 1 ? 3 : Math.min(12, 4 + this.stage); }
+    get legendaryChance() { return this.stage >= 11 ? .25 : .18; }
     get levelCap() { return this.stage < 3 ? 1 : this.stage < 6 ? 2 : 3; }
     get evolved() { return Object.keys(this.relics).find(id => this.relics[id] === 3) || null; }
     snapshot() {
@@ -257,10 +264,15 @@
       const pool = Object.keys(RELICS).filter(id => (this.relics[id] || 0) < this.levelCap && (id !== 'cell' || this.equipment));
       if (this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
       const choices = [];
+      // Roll the red slot separately so capped common gear cannot force red drops.
+      // The same rarity roll applies to obtaining and upgrading legendary items.
+      const legendary = pool.filter(id => RELICS[id]?.rarity === 'legendary');
+      if (legendary.length && this.random() < this.legendaryChance) choices.push(weightedChoice(legendary, this.random));
       if (!this.equipment) choices.push('blackhole', 'radar');
-      while (choices.length < 3 && pool.some(id => !choices.includes(id))) {
-        const available = pool.filter(id => !choices.includes(id));
-        choices.push(available[Math.floor(this.random() * available.length)]);
+      const ordinary = pool.filter(id => RELICS[id]?.rarity !== 'legendary');
+      while (choices.length < 3 && ordinary.some(id => !choices.includes(id))) {
+        const available = ordinary.filter(id => !choices.includes(id));
+        choices.push(weightedChoice(available, this.random));
       }
       if (choices.length < 3) choices.push('recharge');
       this.pendingReward = choices; this.previous = null;

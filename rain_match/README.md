@@ -310,3 +310,16 @@ flames, and Ukulele arcs. Large chains stagger over a 1.6-second launch window
 and finish within about three seconds, with sampled particles to limit rendering
 cost. A recovery count appears beside the tray; effects never receive pointer
 input. Reduced motion skips the overlays and all effects are cancelled on reset.
+
+Supply rarity: each ordinary supply rolls a separate legendary slot (18% through
+stage 10, 25% from stage 11), capped at one red item. When both are eligible,
+Behemoth takes 60% of that slot and Clover 40%. The same roll applies to upgrades;
+max-level items are excluded. Lower-tier gear uses weighted draws without
+replacement (Gasoline 100, green passives 60, Void Shield 35, active equipment 45,
+emergency refills 50). Capped lower tiers cannot force a legendary roll to succeed;
+a short offer falls back to recharge. Starter choices and Boss recovery are
+unchanged. Existing equipment and already saved offers are retained.
+
+`node scripts/test-rain-reward-rarity.cjs` checks rates, capped pools and save
+replay. `node scripts/test-rain-rarity-browser.cjs` checks covered-card contrast,
+rarity labels, bilingual supply odds and resume behavior with mocked networking.
