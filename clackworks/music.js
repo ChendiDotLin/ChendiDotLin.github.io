@@ -5,11 +5,38 @@
   const STEP = 60 / 96 / 4;
   const CHORDS = [[50,65,69], [46,62,65], [53,60,65], [48,64,67]];
   const THIRDS = [3, 4, 4, 4];
-  // A 2:1 eighth-note swing; quarter notes and the lead stay on the grid.
+  // A 2:1 eighth-note swing shared by bass, ride and melodic offbeats.
   const SWING = STEP * 2 / 3;
-  // F–A–G / F–D: one two-bar phrase, then two bars of breathing room.
-  // The closing phrase resolves to C; intensity never adds competing melodies.
-  const THEME = new Map([[0,[65,3]], [4,[69,3]], [8,[67,6]], [16,[65,3]], [20,[62,8]]]);
+  const LOOP_STEPS = 512;
+  // [sixteenth, MIDI note, duration in steps, touch]. A call and an answer,
+  // then two bars of melodic rest. Four phrases return with new endings.
+  const phrase = (keys, guitar) => new Map([
+    ...keys.map(([at, ...note]) => [at, ['keys', ...note]]),
+    ...guitar.map(([at, ...note]) => [at, ['guitar', ...note]])
+  ]);
+  const PHRASES = [
+    // Dm: the familiar F–A–G hook, answered down to D by the guitar.
+    phrase([[0,65,3,.9], [6,69,2,1], [10,67,4,.8]],
+      [[18,65,2,.9], [22,64,2,.72], [26,62,5,.88]]),
+    // Bb: the guitar asks a rising question; keys answer from the major 7th.
+    phrase([[18,69,2,.86], [22,65,2,.78], [26,62,5,.9]],
+      [[2,62,2,.85], [6,65,3,1], [12,67,3,.78]]),
+    // F: a brighter leap, then a short ascending guitar reply.
+    phrase([[0,69,3,.9], [6,72,2,1], [10,69,2,.76], [14,67,2,.7]],
+      [[20,65,3,.85], [24,67,3,.78], [30,69,2,.9]]),
+    // C: guitar turn, keyboard descent. Space before the next section.
+    phrase([[18,64,2,.86], [22,62,2,.74], [26,60,5,.9]],
+      [[2,64,2,.84], [6,67,2,1], [10,69,2,.78], [14,67,2,.72]]),
+    // Second chorus: displaced hook and a longer falling guitar answer.
+    phrase([[2,65,2,.86], [6,69,4,1], [12,67,3,.8]],
+      [[18,69,2,.86], [22,67,2,.76], [26,65,2,.72], [30,62,2,.9]]),
+    phrase([[20,67,3,.88], [24,65,3,.78], [28,62,3,.86]],
+      [[0,65,3,.9], [6,62,2,.8], [10,65,2,.86], [14,69,2,1]]),
+    phrase([[2,69,2,.9], [6,67,4,.8], [12,65,3,.76]],
+      [[18,67,2,.85], [22,69,2,.9], [26,72,2,1], [30,69,2,.76]]),
+    phrase([[18,64,2,.8], [22,67,2,.92], [26,64,2,.76], [30,60,2,.88]],
+      [[0,67,3,.92], [6,64,4,.82], [12,62,3,.74]])
+  ];
   const hz = note => 440 * 2 ** ((note - 69) / 12);
   class WorkshopMusic {
     constructor(context = null) {
@@ -31,8 +58,9 @@
       this.master.connect(this.compressor);
       this.effectBus = ctx.createGain(); this.effectBus.gain.value = this.effectsVolume * .65;
       this.effectBus.connect(this.compressor);
-      this.leadWave = ctx.createPeriodicWave(new Float32Array(5), new Float32Array([0,1,.12,.03,0]));
+      this.leadWave = ctx.createPeriodicWave(new Float32Array(6), new Float32Array([0,1,.2,.035,.055,.009]));
       this.bassWave = ctx.createPeriodicWave(new Float32Array(6), new Float32Array([0,1,.42,.18,.065,.02]));
+      this.guitarBuffers = new Map();
       this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = this.noiseBuffer.getChannelData(0); let seed = 719;
       for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; data[i] = (seed >>> 0) / 2147483648 - 1; }
@@ -70,6 +98,40 @@
       this.tone(47, time, .26, strength, 'sine', { endNote: 25, effect, cutoff: 800 });
       this.noise(time, .025, strength * .15, 1800, { effect });
     }
+    guitarBuffer(note) {
+      if (this.guitarBuffers.has(note)) return this.guitarBuffers.get(note);
+      const rate = this.context.sampleRate;
+      const buffer = this.context.createBuffer(1, Math.ceil(rate * 1.4), rate);
+      const samples = buffer.getChannelData(0), frequency = hz(note);
+      // A plucked string: pluck position colors the partials; upper harmonics
+      // decay faster. Recurrence avoids per-sample trig; cache each pitch.
+      for (let partial = 1; partial <= 10 && frequency * partial < rate * .45; partial++) {
+        const angle = 2 * Math.PI * frequency * partial / rate;
+        const rotateSin = Math.sin(angle), rotateCos = Math.cos(angle);
+        const decay = Math.exp(-1 / (rate * (.55 / (1 + .18 * (partial - 1)))));
+        let sine = 0, cosine = 1, amplitude = Math.sin(Math.PI * .23 * partial) / partial ** 1.5;
+        for (let i = 0; i < samples.length; i++) {
+          samples[i] += sine * amplitude;
+          const nextSin = sine * rotateCos + cosine * rotateSin;
+          cosine = cosine * rotateCos - sine * rotateSin; sine = nextSin; amplitude *= decay;
+        }
+      }
+      this.guitarBuffers.set(note, buffer);
+      return buffer;
+    }
+    melody(instrument, note, time, duration, touch) {
+      const length = duration * STEP;
+      if (instrument === 'guitar') {
+        const source = this.context.createBufferSource(); source.buffer = this.guitarBuffer(note);
+        this.voice(source, time, length, .23 * touch,
+          { attack: .004, hold: length * .65, cutoff: 3200 });
+      } else {
+        // A rounded electric-key attack with a very quiet, short tine overtone.
+        this.tone(note, time, length, .15 * touch, 'sine',
+          { theme: true, attack: .009, hold: length * .4, cutoff: 2100 });
+        this.tone(note + 19, time, Math.min(.12, length), .009 * touch, 'sine', { attack: .003, cutoff: 3200 });
+      }
+    }
     renderStep(step, time, energy = this.scene) {
       const beat = step % 16, bar = Math.floor(step / 16) % 16;
       const chordIndex = Math.floor(bar / 4), chord = CHORDS[chordIndex];
@@ -99,11 +161,10 @@
         this.noise(time, .16, .037 + energy * .012, 1800, { q: .5, attack: .018 });
         this.noise(time, .04, .021, 4200, { q: .6 });
       }
-      const phraseStep = (bar % 4) * 16 + beat, theme = THEME.get(phraseStep);
-      if (theme) {
-        const [note, duration] = theme, length = duration * STEP;
-        this.tone(bar >= 12 && phraseStep === 20 ? 60 : note, time, length, .15, 'sine',
-          { theme: true, attack: .035, hold: length * .45, cutoff: 1600 });
+      const melody = PHRASES[Math.floor(step / 64) % PHRASES.length].get(step % 64);
+      if (melody) {
+        const [instrument, note, duration, touch] = melody;
+        this.melody(instrument, note, swungTime, duration, touch);
       }
     }
     schedule() {
@@ -111,7 +172,7 @@
       if (this.next < this.context.currentTime) this.next = this.context.currentTime + .04;
       while (this.next < this.context.currentTime + .18) {
         this.renderStep(this.step, this.next, Math.max(this.scene, this.next < this.chainUntil ? .9 : 0));
-        this.next += STEP; this.step = (this.step + 1) % 256;
+        this.next += STEP; this.step = (this.step + 1) % LOOP_STEPS;
       }
     }
     async play() {
@@ -199,5 +260,6 @@
     }
   }
   WorkshopMusic.stepDuration = STEP;
+  WorkshopMusic.loopSteps = LOOP_STEPS;
   root.RainMusic = WorkshopMusic;
 })(typeof window !== 'undefined' ? window : globalThis);
