@@ -1,24 +1,25 @@
 # Rain Match workshop artwork
 
-The current artwork is a set of 21 original workshop illustrations: 12 parts
-and nine machines. The flat hand-drawn style uses rounded, slightly asymmetric
-silhouettes, bold contours, broad color fills and sparse paper grain. Items have
-no faces or human limbs; distinctive proportions and functional details give
-them character without anthropomorphism or realistic 3D rendering.
+The current artwork restores the 21 original workshop character designs from
+`characters/`, redrawn as 2D cartoon illustrations. The same silhouettes,
+expressions, poses, colors and small limbs are retained. Clean colored outlines,
+simplified color areas and cel shading replace realistic clay materials.
+There are 12 part characters and nine machine characters.
 
-Generated using the built-in image_gen tool, each asset separately, with the
-new flat Overload Boiler illustration as a shared style reference. No original
-game assets were used as reference. `flat/prompts.json` records the final prompts.
+Generated using the built-in image_gen tool, one character at a time. Each
+original character is its own edit target, and the new 2D Overload Boiler serves
+as a shared rendering-style reference. `toon/prompts.json` records the prompts.
+No third-party game artwork was supplied as a reference.
 
-Production assets live in `flat/`: 512px transparent WebP images and a 96px PNG
+Production assets live in `toon/`: 512px transparent WebP images and a 96px PNG
 bulb favicon. Delivery encoding preserves the generated composition and alpha.
-The previous `characters/` images are kept for design history but are no longer
-loaded by the game or homepage. The earliest SVG set is also superseded.
+The earlier `characters/` (clay), `flat/` (inanimate objects) and SVG sets remain
+for design history; the game and homepage load only the current cartoon set.
 Covered-card contrast, names, rarity tiers, rules and save IDs remain unchanged.
 
 ## Stable equipment IDs → new presentation
 
-| Save/API ID | English | 中文 | Asset (in flat/) |
+| Save/API ID | English | 中文 | Asset (in toon/) |
 | --- | --- | --- | --- |
 | feather | Telescopic Grabber | 伸缩抓手 | module-grabber.webp |
 | shield | Safety Cushion | 应急缓冲垫 | module-cushion.webp |

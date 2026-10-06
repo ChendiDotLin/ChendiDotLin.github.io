@@ -41,7 +41,7 @@
   function ghost(from, target, type, matched, delay = 0) {
     if (motion.matches || !from) return Promise.resolve();
     const item = RainMatch.ITEMS[type], el = node('fx-loot', center(from), item.color);
-    const img = document.createElement('img'); img.src = `assets/flat/${item.icon}.webp`; img.alt = ''; el.append(img);
+    const img = document.createElement('img'); img.src = `assets/toon/${item.icon}.webp`; img.alt = ''; el.append(img);
     el.style.width = `${from.width}px`; el.style.height = `${from.height}px`;
     const origin = center(from), x = target.x - origin.x, y = target.y - origin.y;
     return animate(el, [
@@ -90,7 +90,7 @@
   function detonate(from, kind, delay, index) {
     const point = center(from.rect), item = RainMatch.ITEMS[from.type];
     const el = node('fx-loot fx-hit-loot', point, kind === 'behemoth' ? '#ffc36b' : '#ff874f');
-    const img = document.createElement('img'); img.src = `assets/flat/${item.icon}.webp`; img.alt = ''; el.append(img);
+    const img = document.createElement('img'); img.src = `assets/toon/${item.icon}.webp`; img.alt = ''; el.append(img);
     el.style.width = `${from.rect.width}px`; el.style.height = `${from.rect.height}px`;
     const direction = index % 2 ? 1 : -1;
     return animate(el, [

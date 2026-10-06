@@ -486,7 +486,7 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-portal { border-color: #f5d49e; }
 .boss-run .landscape { background: radial-gradient(ellipse at 50% 30%, #ab774a25, transparent 65%), #222b31; }
 
-/* Flat workshop stickers: generous silhouettes, quiet card faces. */
+/* Original workshop friends redrawn in 2D: generous silhouettes, quiet cards. */
 .tile img { filter: none; }
 .reward-choice img { width: 62px; height: 62px; filter: none; }
 .relic-large img { width: 128px; height: 128px; }

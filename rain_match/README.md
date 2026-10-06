@@ -25,12 +25,13 @@ The optional shared leaderboard requires the public Supabase configuration below
 ## Workshop presentation
 
 The workshop edition replaces the former third-party item pictures and soundtrack
-with 12 original part illustrations, nine original machine illustrations and an
+with 12 original part characters, nine original machine characters and an
 original browser-synthesized music loop. See `assets/README.md` for the asset map.
 Names, descriptions, effects labels, home-page promotion and credits are bilingual.
-The artwork uses AI-assisted flat hand-drawn illustration, with a distinct
-silhouette and palette per item, without faces or realistic 3D materials. Production images retain transparent
-backgrounds and are compressed as WebP; full prompts are recorded in the assets.
+The artwork restores the original workshop characters as AI-assisted 2D cartoon
+illustrations, preserving their faces, poses and palettes with simpler shading.
+Production images retain transparent backgrounds and are compressed as WebP;
+full prompts are recorded in the assets.
 
 This is a presentation-only update: the layered matching rules, seven-slot tray,
 gear interactions, drop weights, growth gates, Boss energy and all score timing
@@ -306,7 +307,7 @@ playable as legacy runs and do not qualify for the new boards. Already frozen
 legacy submissions still retry the original endpoint. New runs use the new rules
 and qualify normally. Browser saves do not sync across devices or to Supabase.
 
-All equipment uses original flat workshop illustrations. Flame, blast and restart
+All equipment uses original 2D workshop character illustrations. Flame, blast and restart
 feedback uses original CSS animation.
 Reduced-motion settings skip animation waits.
 
