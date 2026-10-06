@@ -19,7 +19,7 @@
   const itemName = type => language === 'en' ? ITEMS[type].en : ITEMS[type].name;
   const modeName = mode => t(`${mode}Title`);
   let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = false, audio, comboTimeout;
-  let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'rain';
+  let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance';
   let tenTime = null, tenRecord = null, tenSubmitting = false, expeditionBoard = 'expedition_distance';
   let submitting = false, submissionPayload = null, rankingRequest = 0;
   let rankingData = null, rankingError = '', rankingLoading = false;
@@ -185,14 +185,14 @@
   }
   $('resume-expedition').addEventListener('click', showResume);
 
-  function start(mode = game?.mode || 'rain') {
+  function start(mode = game?.mode || 'expedition') {
     if (mode === 'expedition' && !saveStore.owned) { requestExpedition(); return; }
     if (isExpedition()) { updateClock(); checkpoint(); }
     if (mode !== 'expedition') saveStore.release();
     savePaused = false;
     fx.reset();
-    const outgoing = game ? fx.captureBoard() : null;
-    animating = !!game;
+    const outgoing = runId && game ? fx.captureBoard() : null;
+    animating = !!runId;
     closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
     targeting = null; stageRewardClaimed = false; replacementItem = null; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
@@ -271,6 +271,7 @@
       $(name).querySelector('.charge').textContent = t(game.used[name] ? 'used' : 'free');
     }
     $('result-button').hidden = game.status === 'playing' || (isExpedition() && game.status === 'won');
+    $('result-button').disabled = savePaused || animating;
     document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
     renderExpedition();
@@ -705,6 +706,15 @@
       updateClock(); savePaused = true; saveStore.release(); showSaveLocked(); render(); syncClock();
     } else { saveState = saveStore.read(); renderResumeBanner(); }
   });
-  localizePage(); start('rain');
-  if (new URLSearchParams(location.search).get('mode') === 'expedition') requestExpedition();
+  localizePage();
+  const requestedMode = new URLSearchParams(location.search).get('mode');
+  if (Object.hasOwn(MODES, requestedMode)) start(requestedMode);
+  else {
+    // A paused preview keeps the landing screen in Expedition while the player
+    // chooses to resume and while the cross-tab save lock is being acquired.
+    game = saveState.record ? RainExpedition.Expedition.fromSave(saveState.record.game) : new RainExpedition.Expedition();
+    elapsed = saveState.record?.elapsedMs || 0; savePaused = true;
+    $('timer').textContent = formatTime(elapsed);
+    render(); refreshRankings('expedition'); requestExpedition();
+  }
 })();

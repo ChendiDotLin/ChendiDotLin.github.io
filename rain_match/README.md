@@ -323,3 +323,9 @@ unchanged. Existing equipment and already saved offers are retained.
 `node scripts/test-rain-reward-rarity.cjs` checks rates, capped pools and save
 replay. `node scripts/test-rain-rarity-browser.cjs` checks covered-card contrast,
 rarity labels, bilingual supply odds and resume behavior with mocked networking.
+
+The main game URL defaults to Expedition and the farthest-stage leaderboard.
+Existing saves are previewed while paused and require Continue before play or
+writes resume. Explicit `?mode=drizzle`, `?mode=rain`, and `?mode=monsoon` links
+still open their classic modes. `node scripts/test-rain-default-browser.cjs`
+checks fresh entry, saved runs, tab locks, unavailable storage and classic links.

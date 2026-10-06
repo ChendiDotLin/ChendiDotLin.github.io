@@ -9,7 +9,9 @@ const assert = require('node:assert/strict');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/rest/v1/rpc/*', route => route.fulfill({ json: { entries: [], total: 0 } }));
-    await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/');
+    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/');
+    url.searchParams.set('mode', 'rain');
+    await page.goto(url.href);
     await page.locator('#board button:enabled').first().waitFor();
     await page.evaluate(() => {
       window.startEffect = (kind, dense = false) => {
