@@ -1,4 +1,4 @@
-# 羊了个雨
+# Rain Match
 
 Standalone, mobile-friendly match-three tile game with Risk of Rain 2 item art.
 Open `index.html` directly, or serve this directory from any static web host.

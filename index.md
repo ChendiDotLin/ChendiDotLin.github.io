@@ -27,7 +27,7 @@ use-site-title: true
   </div>
   <div class="home-game-copy">
     <span class="section-eyebrow">Made for fun · Browser game</span>
-    <h2 id="rain-match-heading">Rain Match <span lang="zh-CN">羊了个雨</span></h2>
+    <h2 id="rain-match-heading">Rain Match</h2>
     <p>A tile-matching fan game with Risk of Rain 2 loot. Three difficulties, free powers, and a shared leaderboard. Play in English or 中文.</p>
     <a class="home-game-play" href="{{ '/yang/' | relative_url }}">Play a round <span lang="zh-CN">开始游戏</span> <span aria-hidden="true">↗</span></a>
   </div>

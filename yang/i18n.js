@@ -2,7 +2,7 @@
   'use strict';
   const messages = {
     zh: {
-      title: '羊了个雨 · RoR2 三消', brand: '羊了个雨', home: '羊了个雨首页',
+      title: 'Rain Match', brand: 'Rain Match', home: 'Rain Match 首页',
       description: '羊了个羊玩法 × Risk of Rain 2 道具。免费三消叠牌小游戏，三个道具每局各用一次。',
       siteHome: '← 主页', admin: '管理', musicOpen: '打开音乐播放器', musicClose: '关闭并停止', musicAlbum: '原声专辑 ↗', musicHint: '点击播放器里的 ▶ 开始音乐，可以边听边玩。加载失败时可打开原声专辑。', blindTile: '未翻开的补给牌', creditsMusic: '原声音乐通过作曲者官方播放器播放：',
       helpStrategy: '暴雨有九层主牌，季风有十二层。优先挖深中间牌区，左右浅层备用牌留给关键三消；下方盲牌只能看到最上面一张。每局初始牌面有解，但选错路线可能卡住。',
@@ -38,7 +38,7 @@
       creditsTitle: '来自雨中的战利品。', creditsCopy: '这是一款「羊了个羊」玩法的非官方同人小游戏，不隶属于原作。', creditsArt: '牌面使用 Risk of Rain 2 道具图标，素材权利归原权利人所有。图标来源：', creditsThanks: '感谢每一位降落在 Petrichor V 的幸存者。'
     },
     en: {
-      title: 'Rain Match · RoR2', brand: 'RAIN MATCH', home: 'Rain Match home',
+      title: 'Rain Match', brand: 'Rain Match', home: 'Rain Match home',
       description: 'A Risk of Rain 2 tile-matching fan game. Match triples and use three free powers each round.',
       siteHome: '← Home', admin: 'Admin', musicOpen: 'Open music player', musicClose: 'Close & stop', musicAlbum: 'Soundtrack ↗', musicHint: 'Press ▶ in the player to listen while playing. If it cannot load, open the soundtrack link.', blindTile: 'Unrevealed supply tile', creditsMusic: 'Soundtrack streamed through the composer’s official player:',
       helpStrategy: 'Rainstorm has nine core layers; Monsoon has twelve. Dig into the center and save shallow side tiles for crucial matches. Only the top supply tile is revealed. Every starting board has a solution, but your choices can lead to a dead end.',
