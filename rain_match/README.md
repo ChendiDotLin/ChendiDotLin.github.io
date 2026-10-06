@@ -183,3 +183,13 @@ repeated restarts cancel the earlier transition. Reduced-motion mode skips it.
 The former `/yang/` and `/yang/admin/` URLs redirect to `/rain_match/` and
 `/rain_match/admin/`, preserving query parameters and fragments when JavaScript
 is enabled. Origin-based preferences and the Supabase leaderboard stay intact.
+
+The leaderboard is displayed directly on the game page: left of the centered
+playfield at widths of 1024 px and above, and below the game on smaller screens.
+Its mode tabs are independent of the current round; selecting a game difficulty
+also selects that leaderboard. Boards load on entry, can be refreshed manually,
+and refresh after a successful submission. A 30-second in-memory cache avoids
+extra reads on rapid restarts. Outdated responses cannot replace a newer tab.
+The Rankings button and result link focus/scroll to this panel without opening a
+dialog. Browsing the panel does not pause the active play clock. Long boards scroll
+inside the panel; empty/error states and the panel controls support both languages.

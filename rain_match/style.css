@@ -299,3 +299,39 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 
 .fx-old-board { position: absolute; pointer-events: none; transform-origin: 50% 50%; }
 .fx-restart-portal { width: min(46vw, 180px); }
+
+/* Keep the playfield centered; the shared leaderboard lives beside it on wide screens. */
+.leaderboard-panel { width: min(calc(100% - 24px), 440px); margin: 24px auto 32px; padding: 20px; border: 1px solid #aab9cd26; border-radius: 14px; background: linear-gradient(155deg, #2b3548ed, #1d2737f5); box-shadow: 0 12px 32px #090d1726; scroll-margin: 20px; }
+.leaderboard-panel:focus-visible { outline: 1px solid #bdb2f166; outline-offset: 4px; }
+.leaderboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.leaderboard-heading h2 { font-size: 15px; font-weight: 600; margin: 0; color: #ded8f0; letter-spacing: .3px; }
+.leaderboard-heading .text-button { flex-shrink: 0; }
+.leaderboard-heading .text-button:disabled { opacity: .4; text-decoration: none; }
+.leaderboard-panel .scope-note { margin: 8px 0 0; font-size: 10px; }
+.leaderboard-panel .ranking-tabs { margin: 18px 0 12px; }
+.leaderboard-panel .ranking-tabs button { font-size: 10px; padding: 8px 2px; }
+.leaderboard-panel .ranking-rules { font-size: 10px; line-height: 1.7; color: #93a4b9; margin: 0 0 12px; }
+.leaderboard-panel .ranking-scroll { max-height: 380px; scrollbar-width: thin; scrollbar-color: #68758b #1e2838; }
+.leaderboard-panel .ranking-table { table-layout: fixed; }
+.leaderboard-panel .ranking-table th:first-child { width: 13%; }
+.leaderboard-panel .ranking-table th:nth-child(2) { width: 37%; }
+.leaderboard-panel .ranking-table th:nth-child(3) { width: 17%; }
+.leaderboard-panel .ranking-table th:last-child { width: 33%; text-align: right; }
+.leaderboard-panel .ranking-table td, .leaderboard-panel .ranking-table th { padding: 12px 3px; }
+.leaderboard-panel .ranking-table td:first-child { color: #8396b0; font-size: 10px; }
+.leaderboard-panel .ranking-table tr:nth-child(-n+3) td:first-child { color: #dec591; font-weight: 700; }
+.leaderboard-panel .ranking-table td:last-child { text-align: right; font-size: 9px; }
+.leaderboard-panel .ranking-table td:nth-child(2) { font-size: 11px; }
+.leaderboard-panel .ranking-count, .ranking-browse-note { font-size: 9px; line-height: 1.6; color: #879bb3; margin: 12px 0 0; }
+.ranking-browse-note { border-top: 1px solid var(--line); padding-top: 12px; }
+.leaderboard-panel .empty-ranking { font-size: 11px; line-height: 1.8; color: #a1b0c5; text-align: center; padding: 24px 8px; margin: 0; }
+.ranking-empty { padding: 20px 0 8px; }
+.ranking-empty > span { display: block; text-align: center; font-size: 32px; color: #b4a1ed88; }
+.ranking-empty .empty-ranking { padding-top: 8px; }
+.leaderboard-panel .form-error { font-size: 11px; line-height: 1.8; color: #e3ada7; padding: 16px 0; }
+@media (min-width: 1024px) {
+  .play-space { display: grid; grid-template-columns: minmax(0, 1fr) clamp(350px, 47svh, 472px) minmax(0, 1fr); column-gap: 24px; align-items: start; padding: 0 24px; }
+  .play-space > .game-shell { grid-column: 2; grid-row: 1; width: 100%; }
+  .leaderboard-panel { grid-column: 1; grid-row: 1; justify-self: end; position: sticky; top: 24px; width: min(100%, 320px); margin: 102px 0 28px; padding: 18px 16px; }
+  .leaderboard-panel .ranking-scroll { max-height: clamp(140px, calc(100svh - 330px), 430px); }
+}

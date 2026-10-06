@@ -17,6 +17,8 @@
   let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = false, audio, comboTimeout;
   let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'rain';
   let submitting = false, submissionPayload = null, rankingRequest = 0;
+  let rankingData = null, rankingError = '', rankingLoading = false;
+  const rankingCache = new Map();
   let playerDraft = readPreference('rain-match-player') || '', formError = '', lastStatus = null;
   let wins = Math.max(0, Number(readPreference('rain-match-wins')) || 0);
   const formatTime = (ms, precise = false) => `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}${precise ? '.' + String(ms % 1000).padStart(3, '0') : ''}`;
@@ -81,6 +83,8 @@
       button.textContent = t(button.dataset.mode);
       button.title = t('modeHint', { mode: modeName(button.dataset.mode), n: MODES[button.dataset.mode].count });
     });
+    $('inline-ranking-tabs').setAttribute('aria-label', t('rankingModes'));
+    renderRankings();
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
     $('wins').textContent = String(wins).padStart(2, '0');
   }
@@ -98,6 +102,7 @@
       button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
     });
     render(!animating); syncClock();
+    refreshRankings(game.mode);
     if (animating) {
       const effectRun = runId;
       fx.restart(outgoing).finally(() => {
@@ -229,42 +234,71 @@
         if (runId !== submittingRun) return;
         submitting = false;
         if (!result.ok) formError = result.error;
-        else { receipt = result; playerDraft = result.playerId; savePreference('rain-match-player', playerDraft); }
+        else {
+          receipt = result; playerDraft = result.playerId; savePreference('rain-match-player', playerDraft);
+          rankingCache.delete(game.mode); refreshRankings(game.mode, true);
+        }
         render();
         if (modal.open && dialogView === 'result') { showResult(); (receipt ? $('save-feedback') : $('score-error')).focus(); }
       });
     }
   }
-  async function showRankings(mode = game.mode) {
+  function renderRankings() {
+    const content = $('inline-ranking-content');
+    content.setAttribute('aria-busy', String(rankingLoading));
+    $('refresh-rankings').disabled = rankingLoading || !leaderboard.configured;
+    $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => {
+      const selected = button.dataset.leaderboardMode === rankingMode;
+      button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+    if (rankingLoading) {
+      content.innerHTML = `<p class="empty-ranking" role="status">${t('loading')}</p>`; return;
+    }
+    if (rankingError) {
+      content.innerHTML = `<p class="form-error" role="status">${t(rankingError)}</p>`; return;
+    }
+    const { entries = [], total = 0 } = rankingData || {};
+    content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t('score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
+      : `<div class="ranking-empty"><span aria-hidden="true">♧</span><p class="empty-ranking" role="status">${t('noScores')}</p></div>`;
+    const ownId = receipt?.playerId || readPreference('rain-match-player');
+    entries.forEach((entry, index) => {
+      const row = document.createElement('tr');
+      if (ownId === entry.playerId) row.className = 'own-score';
+      for (const value of [index + 1, entry.playerId, entry.cleared, formatTime(entry.elapsedMs, true)]) {
+        const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
+      }
+      $('ranking-rows').append(row);
+    });
+  }
+  async function refreshRankings(mode = rankingMode, force = false) {
+    // A tab change never starts a game. Ignore responses for previously selected tabs.
+    if (!force && rankingLoading && mode === rankingMode) return;
     rankingMode = mode;
     const request = ++rankingRequest;
-    function frame(body) {
-      showDialog('rankings', `<div class="modal-symbol">♧</div><h2 id="modal-title">${t('rankingTitle')}</h2>
-        <p class="scope-note">${t('rankingScope')}</p><p class="ranking-rules">${t('rankingRules')}</p>
-        <div class="ranking-tabs" role="group" aria-label="${t('difficulty')}">${Object.keys(MODES).map(key => `<button class="${key === mode ? 'selected' : ''}" data-leaderboard-mode="${key}" aria-pressed="${key === mode}">${t(key)}</button>`).join('')}</div>
-        ${body}${game.status !== 'playing' ? `<button class="secondary-button" id="back-result">${t('backResult')}</button>` : ''}`);
-      document.querySelectorAll('[data-leaderboard-mode]').forEach(button => button.addEventListener('click', () => showRankings(button.dataset.leaderboardMode)));
-      $('back-result')?.addEventListener('click', showResult);
+    const cached = rankingCache.get(mode);
+    rankingError = '';
+    if (!force && cached && Date.now() - cached.loadedAt < 30000) {
+      rankingLoading = false; rankingData = cached.data; renderRankings(); return;
     }
-    frame(`<p class="empty-ranking" role="status">${t(leaderboard.configured ? 'loading' : 'notConfigured')}</p>`);
+    rankingData = null; rankingLoading = leaderboard.configured;
+    if (!leaderboard.configured) rankingError = 'notConfigured';
+    renderRankings();
     if (!leaderboard.configured) return;
     try {
-      const { entries, total } = await leaderboard.list(mode);
-      if (request !== rankingRequest || !modal.open || dialogView !== 'rankings') return;
-      frame(entries.length ? `<div class="ranking-scroll"><table class="ranking-table"><caption class="visually-hidden">${modeName(mode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t('score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="input-hint">${t('leaderboardCount', { n: total })}</p>` : `<p class="empty-ranking">${t('noScores')}</p>`);
-      entries.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        if (receipt?.playerId === entry.playerId && game.mode === mode) row.className = 'own-score';
-        for (const value of [index + 1, entry.playerId, entry.cleared, formatTime(entry.elapsedMs, true)]) {
-          const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
-        }
-        $('ranking-rows').append(row);
-      });
+      const data = await leaderboard.list(mode);
+      if (request !== rankingRequest) return;
+      rankingCache.set(mode, { data, loadedAt: Date.now() }); rankingData = data;
     } catch (error) {
-      if (request !== rankingRequest || !modal.open || dialogView !== 'rankings') return;
-      frame(`<p class="form-error" role="alert">${t(error.message === 'notConfigured' ? 'notConfigured' : 'networkError')}</p><button class="secondary-button" id="retry-rankings">${t('retry')}</button>`);
-      $('retry-rankings').addEventListener('click', () => showRankings(mode));
+      if (request !== rankingRequest) return;
+      rankingError = error.message === 'notConfigured' ? 'notConfigured' : 'rankingLoadError';
     }
+    if (request !== rankingRequest) return;
+    rankingLoading = false; renderRankings();
+  }
+  function showRankings(mode = game.mode) {
+    closeDialog(); refreshRankings(mode);
+    $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
+    $('leaderboard-panel').focus({ preventScroll: true });
   }
   function showHelp() {
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
@@ -276,7 +310,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ result: showResult, rankings: () => showRankings(rankingMode), help: showHelp, credits: showCredits })[dialogView]?.();
+    if (modal.open) ({ result: showResult, help: showHelp, credits: showCredits })[dialogView]?.();
     syncClock();
   }
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
@@ -311,6 +345,8 @@
     localizePage(); beep();
   });
   $('help').addEventListener('click', showHelp); $('credits').addEventListener('click', showCredits);
+  $('refresh-rankings').addEventListener('click', () => refreshRankings(rankingMode, true));
+  $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => button.addEventListener('click', () => refreshRankings(button.dataset.leaderboardMode)));
   $('rankings').addEventListener('click', () => showRankings()); $('result-button').addEventListener('click', showResult);
   $('language').addEventListener('click', toggleLanguage); $('modal-language').addEventListener('click', toggleLanguage);
   document.addEventListener('keydown', event => {

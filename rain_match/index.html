@@ -8,17 +8,18 @@
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=2200e82-feedback">
-  <script defer src="core.js?v=2200e82-feedback"></script>
-  <script defer src="i18n.js?v=2200e82-feedback"></script>
-  <script defer src="config.js?v=2200e82-feedback"></script>
-  <script defer src="leaderboard.js?v=2200e82-feedback"></script>
-  <script defer src="effects.js?v=2200e82-feedback"></script>
-  <script defer src="game.js?v=2200e82-feedback"></script>
+  <link rel="stylesheet" href="style.css?v=0c8aed5-sidebar">
+  <script defer src="core.js?v=0c8aed5-sidebar"></script>
+  <script defer src="i18n.js?v=0c8aed5-sidebar"></script>
+  <script defer src="config.js?v=0c8aed5-sidebar"></script>
+  <script defer src="leaderboard.js?v=0c8aed5-sidebar"></script>
+  <script defer src="effects.js?v=0c8aed5-sidebar"></script>
+  <script defer src="game.js?v=0c8aed5-sidebar"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
   <div class="landscape" aria-hidden="true"><div class="planet"></div><div class="mountain back"></div><div class="mountain front"></div></div>
+  <div class="play-space">
   <div class="game-shell">
     <header class="site-header">
       <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>
@@ -64,6 +65,19 @@
       </section>
     </main>
     <footer><span><a href="/" data-i18n="siteHome">← 主页</a> · <span data-i18n="wins">累计通关</span> <strong id="wins">00</strong></span><span><span data-i18n="fan">RoR2 非官方同人小游戏</span> <button id="credits" data-i18n="credits">素材致谢</button> <a href="admin/" data-i18n="admin">管理</a></span></footer>
+  </div>
+  <aside id="leaderboard-panel" class="leaderboard-panel" aria-labelledby="leaderboard-title" tabindex="-1">
+    <div class="leaderboard-heading"><h2 id="leaderboard-title" data-i18n="rankingTitle">幸存者排行榜</h2><button id="refresh-rankings" class="text-button"><span aria-hidden="true">↻</span> <span data-i18n="refreshRankings">刷新</span></button></div>
+    <p class="scope-note" data-i18n="rankingScope">全站榜 · 成绩跨设备共享</p>
+    <div id="inline-ranking-tabs" class="ranking-tabs" role="group" aria-label="排行榜模式">
+      <button data-leaderboard-mode="drizzle" data-i18n="drizzle" aria-pressed="false">细雨</button>
+      <button data-leaderboard-mode="rain" data-i18n="rain" class="selected" aria-pressed="true">暴雨</button>
+      <button data-leaderboard-mode="monsoon" data-i18n="monsoon" aria-pressed="false">季风</button>
+    </div>
+    <p class="ranking-rules" data-i18n="rankingRules">按回收数量降序，同分按用时升序。每个 ID 在各模式保留最佳成绩。</p>
+    <div id="inline-ranking-content" aria-busy="true"><p class="empty-ranking" role="status" data-i18n="loading">正在加载排行榜…</p></div>
+    <p class="ranking-browse-note" data-i18n="rankingBrowseHint">切换榜单不影响当前牌局</p>
+  </aside>
   </div>
   <dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-button" id="close-modal" aria-label="关闭弹窗">×</button><button id="modal-language" class="language-button" aria-label="Switch to English">EN</button><div id="modal-content"></div></dialog>
 </body>
