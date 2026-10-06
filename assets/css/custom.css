@@ -527,13 +527,13 @@ blockquote p:last-child {
   min-height: 238px;
   height: 100%;
   isolation: isolate;
-  background: radial-gradient(ellipse at 50% 45%, #4b4669, #202a3a 72%);
+  background: radial-gradient(ellipse at 50% 45%, #426264, #172a32 72%);
 }
 .home-game-orbit {
   position: absolute;
   width: 176px;
   height: 176px;
-  border: 1px solid #bdb2f166;
+  border: 1px solid #e6c28c66;
   border-radius: 50%;
   box-shadow: 0 0 28px #bdb2f11a, inset 0 0 20px #bdb2f117;
   transform: rotateX(52deg) rotate(-18deg);
@@ -544,10 +544,10 @@ blockquote p:last-child {
   place-items: center;
   width: 61px;
   height: 66px;
-  border: 2px solid #242d3e;
-  border-top-color: #87909e;
+  border: 2px solid #b39b74;
+  border-top-color: #fff0ce;
   border-radius: 8px;
-  background: linear-gradient(145deg, #6e7d90, #48566d);
+  background: linear-gradient(145deg, #fff4d9, #d9c9a8);
   box-shadow: 0 5px 0 #141d2c, 0 9px 20px #0003;
   transform: translate(5px, 13px) rotate(-13deg);
 }

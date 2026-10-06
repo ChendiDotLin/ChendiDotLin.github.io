@@ -5,15 +5,15 @@
   const VERSION = 3;
   const PASSIVE_SLOTS = 6;
   const RELICS = {
-    feather: { kind: 'passive', icon: 'feather', symbol: '↟', rarity: 'uncommon', weight: 60 },
-    shield: { kind: 'passive', icon: 'shield', symbol: '◈', rarity: 'void', weight: 35 },
-    ukulele: { kind: 'passive', icon: 'ukulele', symbol: 'ϟ', rarity: 'uncommon', weight: 60 },
-    cell: { kind: 'passive', icon: 'cell', symbol: '▥', rarity: 'uncommon', weight: 60 },
-    gasoline: { kind: 'passive', icon: 'gasoline', symbol: '♨', rarity: 'common', weight: 100 },
-    behemoth: { kind: 'passive', icon: 'behemoth', symbol: '✹', rarity: 'legendary', weight: 60 },
-    clover: { kind: 'passive', icon: 'clover', symbol: '♧', rarity: 'legendary', weight: 40 },
-    blackhole: { kind: 'active', icon: 'blackhole', symbol: '◎', rarity: 'equipment', weight: 45 },
-    radar: { kind: 'active', icon: 'radar', symbol: '⌖', rarity: 'equipment', weight: 45 }
+    feather: { kind: 'passive', icon: 'module-grabber', symbol: '↟', rarity: 'uncommon', weight: 60 },
+    shield: { kind: 'passive', icon: 'module-cushion', symbol: '◈', rarity: 'void', weight: 35 },
+    ukulele: { kind: 'passive', icon: 'module-coil', symbol: 'ϟ', rarity: 'uncommon', weight: 60 },
+    cell: { kind: 'passive', icon: 'module-flywheel', symbol: '▥', rarity: 'uncommon', weight: 60 },
+    gasoline: { kind: 'passive', icon: 'module-torch', symbol: '♨', rarity: 'common', weight: 100 },
+    behemoth: { kind: 'passive', icon: 'module-boiler', symbol: '✹', rarity: 'legendary', weight: 60 },
+    clover: { kind: 'passive', icon: 'module-calibrator', symbol: '⚙', rarity: 'legendary', weight: 40 },
+    blackhole: { kind: 'active', icon: 'module-vacuum', symbol: '◎', rarity: 'equipment', weight: 45 },
+    radar: { kind: 'active', icon: 'module-scanner', symbol: '⌖', rarity: 'equipment', weight: 45 }
   };
   function weightedChoice(pool, random) {
     const weight = id => RELICS[id]?.weight ?? 50;

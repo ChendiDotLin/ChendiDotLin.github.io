@@ -1,19 +1,20 @@
 /* Pure game rules, shared by the browser and the verification script. */
 (function (root) {
   'use strict';
+  // IDs/order stay stable for existing saves; only presentation metadata changes.
   const ITEMS = [
-    { id: 'bear', name: '艰难时光', en: 'Tougher Times', color: '#d5deec' },
-    { id: 'glasses', name: '透镜制造者的眼镜', en: "Lens-Maker’s Glasses", color: '#d5deec' },
-    { id: 'syringe', name: '士兵的注射器', en: "Soldier’s Syringe", color: '#d5deec' },
-    { id: 'crowbar', name: '撬棍', en: 'Crowbar', color: '#d5deec' },
-    { id: 'backupMag', name: '备用弹匣', en: 'Backup Magazine', color: '#d5deec' },
-    { id: 'feather', name: '霍普羽毛', en: 'Hopoo Feather', color: '#9be2a4' },
-    { id: 'bandolier', name: '弹药带', en: 'Bandolier', color: '#9be2a4' },
-    { id: 'cell', name: '燃料电池', en: 'Fuel Cell', color: '#9be2a4' },
-    { id: 'buckler', name: '玫瑰圆盾', en: 'Rose Buckler', color: '#9be2a4' },
-    { id: 'clover', name: '57 叶草', en: '57 Leaf Clover', color: '#f298a4' },
-    { id: 'behemoth', name: '辉煌巨兽', en: 'Brilliant Behemoth', color: '#f298a4' },
-    { id: 'blackhole', name: '原始立方', en: 'Primordial Cube', color: '#efc077' }
+    { id: 'bear', icon: 'part-glove', name: '工作手套', en: 'Work Glove', color: '#d5deec' },
+    { id: 'glasses', icon: 'part-bulb', name: '信号灯泡', en: 'Signal Bulb', color: '#d5deec' },
+    { id: 'syringe', icon: 'part-plug', name: '电源插头', en: 'Power Plug', color: '#d5deec' },
+    { id: 'crowbar', icon: 'part-key', name: '柜门钥匙', en: 'Cabinet Key', color: '#d5deec' },
+    { id: 'backupMag', icon: 'part-spring', name: '压缩弹簧', en: 'Compression Spring', color: '#d5deec' },
+    { id: 'feather', icon: 'part-magnet', name: '马蹄磁铁', en: 'Horseshoe Magnet', color: '#9be2a4' },
+    { id: 'bandolier', icon: 'part-spool', name: '绕线轴', en: 'Thread Spool', color: '#9be2a4' },
+    { id: 'cell', icon: 'part-fan', name: '散热风扇', en: 'Cooling Fan', color: '#9be2a4' },
+    { id: 'buckler', icon: 'part-tape', name: '胶带卷', en: 'Tape Roll', color: '#9be2a4' },
+    { id: 'clover', icon: 'part-bell', name: '柜台铃', en: 'Counter Bell', color: '#f298a4' },
+    { id: 'behemoth', icon: 'part-bolt', name: '六角螺栓', en: 'Hex Bolt', color: '#f298a4' },
+    { id: 'blackhole', icon: 'part-tin', name: '颜料罐', en: 'Paint Tin', color: '#efc077' }
   ];
   const MODES = {
     drizzle: { name: '细雨热身', count: 36, kinds: 6 },

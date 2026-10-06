@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   const modal = $('modal');
   const fx = RainEffects;
+  const music = new RainMusic();
   let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
   const isExpedition = () => game?.mode === 'expedition';
   const recovered = () => isExpedition() ? game.recovered : game.cleared;
@@ -63,7 +64,7 @@
     el.style.setProperty('--rarity', item.color); el.title = itemName(tile.type);
     el.setAttribute('aria-label', itemName(tile.type));
     const img = document.createElement('img');
-    img.src = `assets/${item.id}.webp`; img.alt = ''; img.draggable = false;
+    img.src = `assets/${item.icon}.svg`; img.alt = ''; img.draggable = false;
     img.addEventListener('error', () => { el.textContent = itemName(tile.type); el.style.fontSize = '9px'; });
     el.append(img); return el;
   }
@@ -71,6 +72,8 @@
     document.documentElement.lang = language === 'en' ? 'en' : 'zh-CN';
     document.title = t('title'); document.querySelector('meta[name="description"]').content = t('description');
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    $('music-toggle').textContent = t(music.playing ? 'musicPause' : 'musicPlay');
+    $('music-toggle').setAttribute('aria-pressed', String(music.playing));
     $('brand-name').textContent = t('brand'); document.querySelector('.brand').setAttribute('aria-label', t('home'));
     const labels = { sound: $('music-panel').hidden ? 'musicOpen' : 'musicClose', help: 'help', restart: 'restart', timer: 'time', board: 'board', rack: 'inventory', 'close-modal': 'close' };
     for (const [id, key] of Object.entries(labels)) {
@@ -396,7 +399,7 @@
     }
     const { entries = [], total = 0 } = rankingData || {};
     content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t(['expedition_distance', 'expedition_speed'].includes(rankingMode) ? 'expCompleted' : 'score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
-      : `<div class="ranking-empty"><span aria-hidden="true">♧</span><p class="empty-ranking" role="status">${t('noScores')}</p></div>`;
+      : `<div class="ranking-empty"><span aria-hidden="true">⚙</span><p class="empty-ranking" role="status">${t('noScores')}</p></div>`;
     const ownId = receipt?.playerId || readPreference('rain-match-player');
     entries.slice(0, 10).forEach((entry, index) => {
       const row = document.createElement('tr');
@@ -452,10 +455,7 @@
     return t('desc_' + id, values[id]) + (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '');
   }
   function relicIcon(id) {
-    // Safer Spaces uses an original shield glyph; other icons use the credited item art.
-    if (id === 'gasoline') return '<span class="gasoline-glyph" aria-hidden="true">♨</span>';
-    return id === 'shield' ? '<span class="shield-glyph" aria-hidden="true">◈</span>'
-      : `<img src="assets/${RainExpedition.RELICS[id].icon}.webp" alt="">`;
+    return `<img src="assets/${RainExpedition.RELICS[id].icon}.svg" alt="">`;
   }
   function loadoutMarkup() {
     return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${t('relic_' + id)} ${level}`).join(' / ')}</p>`;
@@ -528,7 +528,7 @@
     $('radar-preview').replaceChildren(...game.previewIds().map(id => {
       const tile = game.tiles[id], label = document.createElement('span');
       label.className = 'radar-preview-tile'; label.title = t(tile.pile) + ' · ' + itemName(tile.type);
-      const img = document.createElement('img'); img.src = `assets/${ITEMS[tile.type].id}.webp`; img.alt = label.title;
+      const img = document.createElement('img'); img.src = `assets/${ITEMS[tile.type].icon}.svg`; img.alt = label.title;
       label.append(img); return label;
     }));
   }
@@ -664,7 +664,7 @@
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
   }
   function showCredits() {
-    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')} <a href="https://github.com/Glagan/RoR2-Items/tree/master/public/img" target="_blank" rel="noopener noreferrer">Glagan / RoR2-Items</a></p><p>${t('creditsMusic')} <a href="https://chrischristodoulou.bandcamp.com/album/risk-of-rain-2-4" target="_blank" rel="noopener noreferrer">Chris Christodoulou / Bandcamp</a></p><p>${t('creditsThanks')}</p>`);
+    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')}</p><p>${t('creditsMusic')}</p><p>${t('creditsThanks')}</p>`);
   }
   function toggleLanguage() {
     if ($('player-id')) playerDraft = $('player-id').value;
@@ -685,21 +685,25 @@
     $('music-panel').hidden = !open;
     $('sound').setAttribute('aria-expanded', String(open));
     $('sound').style.color = open ? 'var(--purple)' : '';
-    if (open) {
-      // Official streaming embed: no copied audio files or extracted stream URLs.
-      const frame = document.createElement('iframe');
-      frame.src = 'https://bandcamp.com/EmbeddedPlayer/album=270762832/size=small/bgcol=202936/linkcol=bdb2f1/transparent=true/';
-      frame.title = 'Risk of Rain 2 — Chris Christodoulou';
-      frame.allow = 'autoplay'; frame.referrerPolicy = 'strict-origin-when-cross-origin';
-      $('music-player').replaceChildren(frame);
-    } else {
-      $('music-player').replaceChildren(); // Removing the player also stops its audio.
-      $('sound').focus();
-    }
+    if (!open) { music.stop(); $('sound').focus(); }
     localizePage();
   }
   $('sound').addEventListener('click', toggleMusic);
   $('music-close').addEventListener('click', toggleMusic);
+  $('music-toggle').addEventListener('click', async () => {
+    $('music-error').hidden = true;
+    if (music.playing) music.stop();
+    else {
+      try { await music.play(); }
+      catch (_) { $('music-error').hidden = false; }
+    }
+    localizePage();
+  });
+  $('music-volume').addEventListener('input', event => music.setVolume(Number(event.target.value) / 100));
+  document.addEventListener('visibilitychange', () => {
+    music.visibility(document.hidden).catch(() => { music.stop(); $('music-error').hidden = false; localizePage(); });
+  });
+  window.addEventListener('pagehide', () => { music.stop(); localizePage(); });
   $('effects').addEventListener('click', () => {
     sound = !sound; $('effects').setAttribute('aria-pressed', String(sound));
     localizePage(); beep();

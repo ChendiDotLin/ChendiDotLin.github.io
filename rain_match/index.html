@@ -3,39 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#171c2a">
-  <meta name="description" content="Risk of Rain 2 道具主题的免费三消叠牌小游戏。三种经典难度、装备成长的无限远征、中英双语与共享排行榜。">
+  <meta name="theme-color" content="#172a32">
+  <meta name="description" content="原创工坊主题的层叠三消肉鸽游戏。装备成长与连锁回收、无限远征、中英双语与共享排行榜。">
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
-  <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=sealer-levels-v1">
-  <script defer src="core.js?v=expedition-v3-boss"></script>
-  <script defer src="expedition.js?v=sealer-levels-v1"></script>
+  <link rel="icon" href="assets/part-bulb.svg">
+  <link rel="stylesheet" href="style.css?v=workshop-v1">
+  <script defer src="core.js?v=workshop-v1"></script>
+  <script defer src="expedition.js?v=workshop-v1"></script>
   <script defer src="expedition-save.js?v=sealer-levels-v1"></script>
-  <script defer src="i18n.js?v=sealer-levels-v1"></script>
+  <script defer src="i18n.js?v=workshop-v1"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
   <script defer src="presence.js?v=presence-v1"></script>
   <script defer src="leaderboard.js?v=expedition-v3-boss"></script>
-  <script defer src="effects.js?v=sealer-levels-v1"></script>
-  <script defer src="game.js?v=sealer-levels-v1"></script>
+  <script defer src="effects.js?v=workshop-v1"></script>
+  <script defer src="music.js?v=workshop-v1"></script>
+  <script defer src="game.js?v=workshop-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
-  <div class="landscape" aria-hidden="true"><div class="planet"></div><div class="mountain back"></div><div class="mountain front"></div></div>
+  <div class="landscape" aria-hidden="true"><div class="workshop-lamp"></div><div class="workshop-shelf"></div></div>
   <div class="play-space">
   <div class="game-shell">
     <header class="site-header">
       <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>
-      <a class="brand" href="./" aria-label="Rain Match 首页"><span id="brand-name">Rain Match</span><small>RISK OF RAIN 2</small></a>
+      <a class="brand" href="./" aria-label="Rain Match 首页"><span id="brand-name">Rain Match</span><small data-i18n="brandSubtitle">奇想工坊 · 连锁回收</small></a>
       <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button><button class="icon-button" id="restart" aria-label="重新开局" title="重新开局">↻</button></div>
     </header>
     <div class="presence-status" id="presence-status" data-state="connecting" role="status" aria-live="polite"><span class="presence-dot" aria-hidden="true"></span><span id="presence-text">正在连接在线人数…</span></div>
-    <section id="music-panel" class="music-panel" hidden aria-label="Risk of Rain 2 soundtrack">
-      <div class="music-heading"><span>RoR2 · Chris Christodoulou</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
-      <div id="music-player"></div>
-      <div class="music-actions"><button id="effects" class="text-button" aria-pressed="false">开启音效</button><a href="https://chrischristodoulou.bandcamp.com/album/risk-of-rain-2-4" target="_blank" rel="noopener noreferrer" data-i18n="musicAlbum">原声专辑 ↗</a></div>
-      <p data-i18n="musicHint">点击播放器里的 ▶ 开始音乐，可以边听边玩。</p>
+    <section id="music-panel" class="music-panel" hidden aria-labelledby="music-title">
+      <div class="music-heading"><span id="music-title" data-i18n="musicTitle">工坊小夜曲</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
+      <div id="music-player"><button id="music-toggle" class="text-button" aria-pressed="false" data-i18n="musicPlay">▶ 播放音乐</button><label class="music-volume"><span data-i18n="musicVolume">音乐音量</span><input id="music-volume" type="range" min="0" max="100" value="35"></label></div>
+      <div class="music-actions"><button id="effects" class="text-button" aria-pressed="false">开启音效</button><span data-i18n="musicAlbum">原创合成配乐</span></div>
+      <p data-i18n="musicHint">点击播放，听一段工坊小夜曲。切到后台自动暂停；音效可单独开关。</p>
+      <p id="music-error" role="status" hidden data-i18n="musicUnavailable"></p>
     </section>
     <main class="app-layout">
       <div class="play-menu">
@@ -85,10 +87,10 @@
         <p class="free-note" data-i18n="freeNote">每局各免费一次 · 重新开局全部恢复</p>
       </section>
     </main>
-    <footer><span><a href="/" data-i18n="siteHome">← 主页</a> · <span data-i18n="wins">累计通关</span> <strong id="wins">00</strong></span><span><span data-i18n="fan">RoR2 非官方同人小游戏</span> <button id="credits" data-i18n="credits">素材致谢</button> <a href="admin/" data-i18n="admin">管理</a></span></footer>
+    <footer><span><a href="/" data-i18n="siteHome">← 主页</a> · <span data-i18n="wins">累计通关</span> <strong id="wins">00</strong></span><span><span data-i18n="fan">奇想工坊 · 连锁回收</span> <button id="credits" data-i18n="credits">素材致谢</button> <a href="admin/" data-i18n="admin">管理</a></span></footer>
   </div>
   <aside id="leaderboard-panel" class="leaderboard-panel" aria-labelledby="leaderboard-title" tabindex="-1">
-    <div class="leaderboard-heading"><h2 id="leaderboard-title" data-i18n="rankingTitle">幸存者排行榜</h2><button id="refresh-rankings" class="text-button"><span aria-hidden="true">↻</span> <span data-i18n="refreshRankings">刷新</span></button></div>
+    <div class="leaderboard-heading"><h2 id="leaderboard-title" data-i18n="rankingTitle">工坊排行榜</h2><button id="refresh-rankings" class="text-button"><span aria-hidden="true">↻</span> <span data-i18n="refreshRankings">刷新</span></button></div>
     <p class="scope-note" data-i18n="rankingScope">全站榜 · 成绩跨设备共享</p>
     <div id="inline-ranking-tabs" class="ranking-tabs" role="group" aria-label="排行榜模式">
       <button data-leaderboard-mode="drizzle" data-i18n="drizzle" aria-pressed="false">细雨</button>

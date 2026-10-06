@@ -1,10 +1,10 @@
 :root {
   color-scheme: dark;
-  --bg: #171c2a;
+  --bg: #172a32;
   --text: #eef0f4;
   --muted: #98a5b6;
-  --purple: #bdb2f1;
-  --green: #b3d8bd;
+  --purple: #f2c481;
+  --green: #9cddc5;
   --line: #aab9cd1c;
   font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 }
@@ -42,13 +42,13 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 #progress { height: 100%; background: #b0a5d7; transition: width .25s; }
 
 /* The scene is open; the cards supply the structure instead of a dashboard box. */
-.landscape { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 50% 35%, #3a4b5b75, transparent 65%), linear-gradient(#171c2a, #202936); }
-.planet { position: absolute; width: 190px; height: 190px; top: 15%; left: calc(50% - 340px); border-radius: 50%; background: linear-gradient(140deg, #a1a2c414, #a1a2c400 60%); box-shadow: inset 1px 1px 0 #b9bec80b; }
-.mountain { position: absolute; bottom: 0; left: 0; right: 0; height: 34%; background: #34445045; clip-path: polygon(0 55%,12% 32%,22% 59%,34% 8%,45% 71%,59% 44%,72% 62%,84% 18%,100% 64%,100% 100%,0 100%); }
-.mountain.front { height: 21%; transform: scaleX(-1); background: #10192373; }
+.landscape { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 50% 22%, #67847530, transparent 65%), radial-gradient(circle at 15% 12%, #ffc87817, transparent 35%), #172a32; }
+.landscape::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#a2c1bb16 1px, transparent 1px); background-size: 24px 24px; mask-image: linear-gradient(#000, transparent 85%); }
+.workshop-lamp { position: absolute; left: calc(50% - 440px); top: -6px; width: 170px; height: 120px; border-bottom: 5px solid #d9b37a1c; border-radius: 0 0 50% 50%; background: linear-gradient(#31505730, #d9b37a0a); box-shadow: 0 70px 100px #f2c48108; }
+.workshop-shelf { position: absolute; bottom: 10%; width: 100%; height: 20%; border-block: 1px solid #9dbfba0b; background: repeating-linear-gradient(90deg, transparent 0 139px, #9dbfba08 140px 141px, transparent 142px 280px); }
 .board-area { position: relative; margin-top: 13px; }
 .board { position: relative; width: 100%; aspect-ratio: 600 / 590; }
-.tile { position: absolute; display: grid; place-items: center; width: 12%; height: 12.20339%; padding: 0; border: 2px solid #8195ac; border-radius: 7px; background: linear-gradient(145deg, #34465b, #172536); box-shadow: 0 4px 0 #0b1420, 0 5px 5px #0006, inset 0 1px 0 #dceaff30; transition: filter .15s, transform .15s, border-color .15s; isolation: isolate; }
+.tile { position: absolute; display: grid; place-items: center; width: 12%; height: 12.20339%; padding: 0; border: 2px solid #e9d4a8; border-radius: 7px; background: linear-gradient(145deg, #fff4d9, #d9c9a8); box-shadow: 0 4px 0 #0b1420, 0 5px 5px #0006, inset 0 1px 0 #dceaff30; transition: filter .15s, transform .15s, border-color .15s; isolation: isolate; }
 .tile::after { content: ""; position: absolute; bottom: 4px; left: calc(50% - 7px); width: 14px; height: 2px; border-radius: 2px; background: var(--rarity, #c3cedd); opacity: .85; }
 .tile img { width: 86%; height: 86%; object-fit: contain; border-radius: 4px; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 2px #0004); }
 .tile:not(:disabled):hover { border-color: #e3d5ff; box-shadow: 0 4px 0 #0b1420, 0 0 10px #c0b0ef50; transform: translateY(-2px); }
@@ -238,7 +238,11 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .music-panel { margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #202936; }
 .music-heading, .music-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 10px; }
 .music-heading { margin-bottom: 10px; color: var(--purple); }
-.music-panel iframe { display: block; width: 100%; height: 42px; border: 0; }
+#music-player { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; }
+.music-volume { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--muted); }
+.music-volume input { width: 74px; accent-color: #9cddc5; }
+#music-toggle { color: #f2c481; white-space: nowrap; }
+.music-actions > span { color: var(--muted); }
 .music-panel p { margin: 6px 0 0; font-size: 10px; line-height: 1.5; color: var(--muted); }
 .music-actions { margin-top: 8px; }
 .tile.blind img, .tile.blind::after { visibility: hidden; }
@@ -247,7 +251,7 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 /* Teleporter energy and recovered loot: all overlays ignore pointer input. */
 .fx-layer { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; contain: strict; }
 .fx-layer > i { position: absolute; display: block; pointer-events: none; }
-.fx-loot { display: grid !important; place-items: center; border: 1px solid var(--fx-color); border-radius: 7px; background: #4b5f75; box-shadow: 0 0 18px #bdb2f15c; }
+.fx-loot { display: grid !important; place-items: center; border: 1px solid var(--fx-color); border-radius: 7px; background: #f3e5c7; box-shadow: 0 0 18px #bdb2f15c; }
 .fx-loot img { width: 86%; height: 86%; object-fit: contain; }
 .fx-ring { width: 32px; height: 32px; border: 1px solid var(--fx-color); border-radius: 50%; box-shadow: 0 0 12px var(--fx-color); }
 .fx-mote { width: 4px; height: 4px; border-radius: 1px; background: var(--fx-color); box-shadow: 0 0 7px var(--fx-color); }
@@ -266,13 +270,13 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-portal::after { inset: -14px; border-style: solid; border-color: #bda2ff28; }
 .slot .tile { animation: none; }
 
-/* A small original teleporter vignette replaces the static end-screen symbol. */
+/* A finished parts crate rolls through the workshop delivery ring. */
 .result-scene { position: relative; height: 128px; margin: 10px -10px 18px; overflow: hidden; pointer-events: none; color: #cbb4fc; background: radial-gradient(ellipse at 50% 55%, #9576bc25, transparent 65%); }
 .result-orbit { position: absolute; width: 105px; height: 42px; top: 67px; left: calc(50% - 52.5px); border: 2px solid #b6a1e7; border-radius: 50%; box-shadow: 0 0 14px #b6a1e754, inset 0 0 12px #b6a1e72e; transform: rotate(-8deg); }
 .result-orbit.inner { width: 72px; height: 28px; top: 74px; left: calc(50% - 36px); border-width: 1px; border-color: #e0caff; transform: rotate(8deg); }
 .result-beam { position: absolute; top: 0; bottom: 29px; left: calc(50% - 29px); width: 58px; background: linear-gradient(to top, #c6b1f584, #b298e026 60%, transparent); clip-path: polygon(25% 100%, 0 0, 100% 0, 75% 100%); opacity: .65; }
-.result-core { position: absolute; top: 44px; left: calc(50% - 12px); width: 24px; height: 35px; transform: rotate(8deg); background: linear-gradient(120deg, #e2d9f7, #66738a 70%); clip-path: polygon(50% 0, 80% 24%, 100% 83%, 65% 72%, 50% 100%, 35% 72%, 0 83%, 20% 24%); }
-.result-core span { position: absolute; width: 5px; height: 10px; top: 12px; left: 10px; background: #272d4a; border-radius: 50%; }
+.result-core { position: absolute; top: 44px; left: calc(50% - 12px); width: 28px; height: 28px; transform: rotate(8deg); background: linear-gradient(120deg, #ffe3aa, #c49152); border: 2px solid #f6d49b; border-radius: 4px; }
+.result-core span { position: absolute; width: 7px; height: 24px; top: 0; left: 9px; background: #568e8a; border-radius: 0; }
 .result-horizon { position: absolute; bottom: 30px; left: 12%; right: 12%; height: 1px; background: linear-gradient(90deg, transparent, #b5a1d66e, transparent); }
 .result-signal { position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; font-size: 9px; letter-spacing: 1.3px; color: #cab7ed; }
 .result-spark { position: absolute; left: var(--x); top: 72px; width: 2px; height: 8px; border-radius: 2px; background: #d8bfff; opacity: .35; transform: translateY(calc(var(--n) * -4px)); }
@@ -465,3 +469,19 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-seal-energy { width: 7px; height: 7px; border-radius: 50%; background: #eadcff; box-shadow: 0 0 12px 3px #c7a6ff80; }
 .fx-seal-level { color: var(--fx-color); background: #211a32eb; border: 1px solid #c7a6ff70; border-radius: 5px; padding: 3px 7px; font-size: 11px; font-weight: 700; font-style: normal; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .boss-emblem i { animation: none; } }
+
+/* Workshop trim. Rarity colors still identify the same equipment tiers. */
+.brand > span { color: #f5d49e; }
+.brand small { color: #9ab8b5; letter-spacing: 2px; }
+.difficulty-options button.selected { background: #8ac9b517; border-color: #8ac9b54d; color: #bce8d8; }
+#progress { background: #8ac9b5; }
+.rack { background: #6a8887; border-top-color: #b5c8bc; }
+.slot { background: #304e55; }
+.tile:not(:disabled):hover { border-color: #fff8dc; }
+.tile.blind { background: repeating-linear-gradient(135deg, #3d5c61 0 4px, #304b52 4px 8px); }
+.reward-choice { background: #92c7b50a; border-color: #98bfb249; }
+.reward-choice:hover, .reward-choice:focus-visible { background: #d6be8c19; border-color: #e7c48d; }
+.result-orbit { border-color: #9edaca; }
+.result-signal { color: #dfc494; }
+.fx-portal { border-color: #f5d49e; }
+.boss-run .landscape { background: radial-gradient(ellipse at 50% 30%, #ab774a25, transparent 65%), #222b31; }

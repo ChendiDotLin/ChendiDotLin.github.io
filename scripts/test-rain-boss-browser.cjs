@@ -12,7 +12,7 @@ const saved=()=>page.evaluate(()=>RainSave.parse(localStorage.getItem(RainSave.K
 // Stage-nine checkpoint fixture: actual full-size board and a six-passive build.
 await page.evaluate(()=>{const g=testGame,spec=RainExpedition.stageSpec(9),b=new RainMatch.Game(spec.mode,Math.random,spec);for(const key of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[key]=b[key];g.stage=9;g.banked=RainExpedition.bankedBefore(9);g.relics={feather:2,shield:2,ukulele:2,cell:2,gasoline:2,behemoth:2,radar:2};g.equipment='radar';g.charge=1;g.tiles.forEach(t=>t.zone='matched');g.cleared=g.tiles.length;g.status='won';document.querySelector('#board').replaceChildren();});
 await page.locator('#language').click();await page.locator('#expedition-continue').click();await page.locator('#stage-next').click();await page.locator('[data-reward]').first().click();const owned=(await saved()).game.relics;
-await page.locator('#stage-next').click();await page.locator('#boss-start').waitFor();assert.match(await page.locator('#modal-title').textContent(),/Sealer/);await page.screenshot({path:'/tmp/rain-sealer-intro.png'});await page.locator('#boss-start').click();
+await page.locator('#stage-next').click();await page.locator('#boss-start').waitFor();assert.match(await page.locator('#modal-title').textContent(),/Emergency Lockdown/);await page.screenshot({path:'/tmp/rain-sealer-intro.png'});await page.locator('#boss-start').click();
 if(process.env.RAIN_TEST_MOTION==='1') {assert.equal(await page.locator('.fx-seal-lock').count(),1);await page.waitForFunction(()=>!document.querySelector('.fx-seal-lock'));}
 let record=await saved();assert.equal(record.game.stage,10);assert.deepEqual(record.game.sealed,owned);assert.deepEqual(record.game.relics,{});assert.equal(await page.locator('.relic-chip.sealed').count(),7);assert.match(await page.locator('#boss-status').textContent(),/7/);assert.ok(!await page.locator('#expedition-active').isVisible());
 await page.screenshot({path:'/tmp/rain-boss-phone.png',fullPage:true});
@@ -22,7 +22,7 @@ if(process.env.RAIN_TEST_MOTION==='1') {assert.ok(await page.locator('.fx-seal-l
 assert.equal(await page.locator('.relic-chip.sealed').count(),6);
 await page.screenshot({path:'/tmp/rain-sealer-partial-phone.png',fullPage:true});
 await page.setViewportSize({width:320,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-await page.locator('#language').click();assert.match(await page.locator('#boss-energy-label').textContent(),/解封能量/);
+await page.locator('#language').click();assert.match(await page.locator('#boss-energy-label').textContent(),/解锁能量/);
 await page.screenshot({path:'/tmp/rain-sealer-320.png',fullPage:true});
 await page.setViewportSize({width:1366,height:1300});await page.evaluate(()=>scrollTo(0,0));
 await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

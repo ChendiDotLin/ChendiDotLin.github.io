@@ -21,14 +21,14 @@ use-site-title: true
 <section class="home-game" aria-labelledby="rain-match-heading">
   <div class="home-game-art" aria-hidden="true">
     <span class="home-game-orbit"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/feather.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/clover.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/blackhole.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-coil.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-boiler.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-vacuum.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
   </div>
   <div class="home-game-copy">
     <span class="section-eyebrow">Made for fun · Browser game</span>
     <h2 id="rain-match-heading">Rain Match</h2>
-    <p>A tile-matching fan game with Risk of Rain 2 loot. Three classic difficulties, an endless expedition with evolving equipment, and shared leaderboards. Play in English or 中文.</p>
+    <p>A workshop roguelite built on layered tile matching. Assemble inventive machines, spark chain reactions, and take your evolving build on an endless expedition. Shared leaderboards included. Play in English or 中文.</p>
     <a class="home-game-play" href="{{ '/rain_match/' | relative_url }}">Play a round <span lang="zh-CN">开始游戏</span> <span aria-hidden="true">↗</span></a>
   </div>
 </section>

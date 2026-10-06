@@ -1,6 +1,6 @@
 # Rain Match
 
-Standalone, mobile-friendly match-three tile game with Risk of Rain 2 item art.
+Standalone, mobile-friendly layered match-three roguelite with an original invention-workshop theme.
 Open `index.html` directly, or serve this directory from any static web host.
 In this GitHub Pages repository the game lives at `/rain_match/`.
 No build step, external JavaScript, ads, or paid actions are required to play.
@@ -22,13 +22,19 @@ The optional shared leaderboard requires the public Supabase configuration below
 - A new round or difficulty change resets all powers. Win totals are stored
   locally when browser storage is available. Sound is optional and off by default.
 
-## Artwork attribution
+## Workshop presentation
 
-Item images: Risk of Rain 2, via
-[Glagan/RoR2-Items](https://github.com/Glagan/RoR2-Items/tree/master/public/img).
-Original artwork belongs to its respective game rights holders. This is an
-unofficial fan project. Icons are bundled locally to avoid external hotlinking.
-The game implementation is original; no source code from that repository is used.
+The workshop edition replaces the former third-party item pictures and soundtrack
+with 12 original part illustrations, nine original machine illustrations and an
+original browser-synthesized music loop. See `assets/README.md` for the asset map.
+Names, descriptions, effects labels, home-page promotion and credits are bilingual.
+
+This is a presentation-only update: the layered matching rules, seven-slot tray,
+gear interactions, drop weights, growth gates, Boss energy and all score timing
+remain unchanged. Legacy internal IDs are deliberately retained in saves and
+leaderboard payloads; existing runs/records display the new names automatically.
+No database migration, save reset or leaderboard reset is required.
+This asset replacement is not a trademark clearance or a legal opinion.
 
 ## Rule verification
 
@@ -111,15 +117,13 @@ reserves and blind stacks](https://www.18183.com/zqnews/202209/4162031.html).
 This is an original implementation informed by visible gameplay, not a claim to
 reproduce the original game's private generation algorithm.
 
-## Official soundtrack
+## Original music
 
-The ♪ button opens the official Bandcamp player for Chris Christodoulou's
-[Risk of Rain 2 soundtrack](https://chrischristodoulou.bandcamp.com/album/risk-of-rain-2-4).
-Press play inside the player to begin streaming. It remains mounted during play,
-new rounds and language switches; closing the music panel removes the iframe and
-stops playback. Click/match effects have a separate switch. Nothing autoplays.
-The player needs network access to Bandcamp; a direct album link is also provided.
-Music files are not copied, downloaded or bundled in this repository.
+The ♪ button opens **Workshop Nocturne**, an original sixteen-bar synthesizer
+loop defined in `music.js`. Press Play to start. Music and matching effects have
+independent switches, and music has its own volume slider. Nothing autoplays.
+Closing the panel stops music; background tabs suspend it until visible again.
+No samples, third-party tracks, external player or streaming requests are used.
 
 ## Developer administration
 
@@ -164,11 +168,10 @@ isolated temporary database, never the live leaderboard.
 ## Motion and feedback
 
 - Pickups fly into the tray; triples converge into rarity-colored recovery sparks.
-- Shuffle flips exposed cards around a violet teleporter ring. Stash and undo
+- Shuffle flips exposed cards around a workshop sorting ring. Stash and undo
   animate cards between their previous and new positions.
-- Victory charges an original CSS teleporter and lifts an escape pod; defeat
-  collapses its signal into rain and a fallen pod. These are original geometric
-  effects inspired by the game's mood, not extracted RoR2 animations.
+- Victory delivers a completed parts crate through a sorting ring; defeat
+  drops the crate beside the workbench. All effects use original CSS geometry.
 - Power transitions briefly guard input and pause the active-play clock; ordinary
   pickups stay responsive. A restart cancels effects and ignores old completion
   callbacks. Result scenes do not replay during translation or score submission.
@@ -201,7 +204,7 @@ inside the panel; empty/error states and the panel controls support both languag
 Open `/rain_match/?mode=expedition`. Classic difficulties keep their own rules.
 
 - Carry **six passive types plus one active equipment**. The pool now includes
-  Gasoline, Brilliant Behemoth and 57 Leaf Clover. A seventh passive requires a
+  Welding Torch, Overload Boiler and Precision Calibrator. A seventh passive requires a
   replacement; two active items cannot coexist.
 - Level 2 unlocks at stage 3. Stage 6 allows two simultaneous level-3 evolutions;
   stage 10 onward allows six. At the evolution cap, a new evolution downgrades
@@ -210,22 +213,22 @@ Open `/rain_match/?mode=expedition`. Classic difficulties keep their own rules.
   stage uses a 36-tile mixed-set deal; later boards grow to 144, or 156 in fog.
   Initial deals have a legal witness. Automatic clears and player choices can
   change which continuation works; the original witness is not an autoplayer.
-- Feather, Shield, Ukulele, Cell, Cube and Radar keep their adapted mechanics.
-  Shield blocks one overflow per stage. Upgrading, swapping and supplies cannot
+- Grabber, Cushion, Arc Coil, Flywheel, Vacuum and Scanner keep their adapted mechanics.
+  Cushion blocks one overflow per stage. Upgrading, swapping and supplies cannot
   reset it. Each emergency power starts with one use; at most two extra refills
   are available across the entire run.
-- Gasoline procs on each recovered triple, including automatic clears, with a
+- Welding Torch procs on each recovered triple, including automatic clears, with a
   25/35/45% chance to recover another reachable triple. Evolution pierces one
-  blocker. Behemoth accumulates all recovered triples and blasts another every
-  4/3/2 triples, through 1/2/3 blockers. Clover adds 5/10/15 percentage points to
-  Gasoline and Ukulele chances. Evolved Clover raises the automatic-clear budget
+  blocker. Boiler accumulates all recovered triples and blasts another every
+  4/3/2 triples, through 1/2/3 blockers. Calibrator adds 5/10/15 percentage points to
+  Welding Torch and Arc Coil chances. Evolved Calibrator raises the automatic-clear budget
   to 52 triples per action (otherwise `16 + 2 * equipped item types`).
 - Chains use a bounded queue and only clear real complete triples. Mature builds
   can nearly clear a board; accessible triples and chance still matter. Fractional
-  Cell recharge remains bounded, equipment never auto-casts itself, and animation
+  Flywheel recharge remains bounded, equipment never auto-casts itself, and animation
   delay is capped so a large burst does not lock input for tens of seconds.
 
-### Stage-ten Boss
+### Stage-ten Boss: Emergency Lockdown
 
 Only stage 10 is a Boss stage. Entering it seals **all passives and the active
 item**, preserving their original levels. The first manual triple immediately
@@ -234,8 +237,8 @@ returns one passive level (or the whole active item). Later manual triples earn
 Every 3 energy returns one random passive level. Items still at zero have priority
 until every owned item is active; remaining upgrades are uniformly selected from
 items below their original level. Active equipment returns at its original level
-with one charge. Feather gets one ready use only on first return, not on upgrades;
-Shield retains its once-per-stage limit.
+with one charge. Grabber gets one ready use only on first return, not on upgrades;
+Cushion retains its once-per-stage limit.
 
 The HUD shows remaining unlocks, a three-point energy meter, and current/original
 levels on partially recovered items. A copper-violet seal closes on entry, energy
@@ -300,12 +303,14 @@ playable as legacy runs and do not qualify for the new boards. Already frozen
 legacy submissions still retry the original endpoint. New runs use the new rules
 and qualify normally. Browser saves do not sync across devices or to Supabase.
 
-Gasoline uses an original heat glyph; Behemoth and Clover reuse the bundled,
-credited RoR2 artwork. New flame/blast/reclaim feedback is original CSS animation.
+All equipment uses original workshop SVG icons. Flame, blast and restart
+feedback uses original CSS animation.
 Reduced-motion settings skip animation waits.
 
 Checks:
 
+- `node scripts/test-rain-workshop-browser.cjs`: original artwork, bilingual names,
+  stable saved gear, responsive layouts and actual synthesized audio lifecycle.
 - `node scripts/test-rain-expedition.cjs`: stage witnesses and item rules.
 - `node scripts/test-rain-boss.cjs`: sealing, random recovery, Undo/reload,
   six-slot builds, near-board bursts and legacy-save migration.
@@ -324,17 +329,17 @@ Checks:
   check explosion/fire/lightning feedback, chain totals, bounded animation
   duration and particle count, cancellation, reduced motion, and responsive UI.
 
-Expedition feedback uses separate Behemoth shockwaves and flying cards, Gasoline
-flames, and Ukulele arcs. Large chains stagger over a 1.6-second launch window
+Expedition feedback uses separate Boiler shockwaves and flying cards, Welding Torch
+flames, and Arc Coil arcs. Large chains stagger over a 1.6-second launch window
 and finish within about three seconds, with sampled particles to limit rendering
 cost. A recovery count appears beside the tray; effects never receive pointer
 input. Reduced motion skips the overlays and all effects are cancelled on reset.
 
 Supply rarity: each ordinary supply rolls a separate legendary slot (18% through
 stage 10, 25% from stage 11), capped at one red item. When both are eligible,
-Behemoth takes 60% of that slot and Clover 40%. The same roll applies to upgrades;
+Boiler takes 60% of that slot and Calibrator 40%. The same roll applies to upgrades;
 max-level items are excluded. Lower-tier gear uses weighted draws without
-replacement (Gasoline 100, green passives 60, Void Shield 35, active equipment 45,
+replacement (Welding Torch 100, green passives 60, Safety Cushion 35, active equipment 45,
 emergency refills 50). Capped lower tiers cannot force a legendary roll to succeed;
 a short offer falls back to recharge. Starter choices and Boss recovery are
 unchanged. Existing equipment and already saved offers are retained.
