@@ -21,9 +21,9 @@ use-site-title: true
 <section class="home-game" aria-labelledby="rain-match-heading">
   <div class="home-game-art" aria-hidden="true">
     <span class="home-game-orbit"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-coil.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-boiler.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/rain_match/assets/module-vacuum.svg' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/characters/module-coil.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/characters/module-boiler.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/rain_match/assets/characters/module-vacuum.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
   </div>
   <div class="home-game-copy">
     <span class="section-eyebrow">Made for fun · Browser game</span>
