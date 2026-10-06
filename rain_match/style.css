@@ -386,3 +386,11 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
   .relic-chip img, .relic-chip .shield-glyph { width: 21px; height: 25px; flex-shrink: 0; }
   .relic-chip small { font-size: 8px; }
 }
+
+/* Checkpoints remain visible without obstructing the board. */
+.resume-banner { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: 0 4px 16px; padding: 11px; border: 1px solid #b9a6ed55; border-radius: 9px; background: #b9a6ed0d; color: #c8d0e2; font-size: 10px; line-height: 1.6; }
+.resume-banner button { flex-shrink: 0; }
+.save-status { margin: 7px 0 0; color: #86ad9b; font-size: 9px; }
+.save-status.save-warning { color: #e4b697; line-height: 1.6; }
+.relic-chip.proc-flash { animation: relic-proc 1.2s ease; }
+@keyframes relic-proc { 25% { border-color: #e7d3ff; box-shadow: 0 0 16px #bbaaef66; background: #bfa8ec2e; } }

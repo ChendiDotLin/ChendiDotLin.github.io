@@ -38,7 +38,7 @@
     return new Map([...document.querySelectorAll('#board .tile, #rack .tile, #reserve .tile')]
       .map(el => [Number(el.dataset.id), { rect: el.getBoundingClientRect(), type: Number(el.dataset.type) }]));
   }
-  function ghost(from, target, type, matched) {
+  function ghost(from, target, type, matched, delay = 0) {
     if (motion.matches || !from) return;
     const item = RainMatch.ITEMS[type], el = node('fx-loot', center(from), item.color);
     const img = document.createElement('img'); img.src = `assets/${item.id}.webp`; img.alt = ''; el.append(img);
@@ -48,7 +48,7 @@
       { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
       { transform: `translate(calc(-50% + ${x * .55}px),calc(-50% + ${y * .45 - 20}px)) scale(1.08)`, opacity: 1, offset: .5 },
       { transform: `translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${matched ? .15 : .8})`, opacity: 0 }
-    ], { duration: matched ? 650 : 440 }, true);
+    ], { duration: matched ? 650 : 440, delay, fill: 'backwards' }, true);
   }
   function pick(before, id, type, matched) {
     if (motion.matches) return;
@@ -116,18 +116,23 @@
     const board = document.getElementById('board').getBoundingClientRect();
     const rack = document.getElementById('rack').getBoundingClientRect();
     const pending = [];
-    for (const event of events) {
+    for (const [index, event] of events.entries()) {
+      const delay = index * 180;
+      // Show the actual recovered cards, including radar and shield follow-ups.
+      if (event.ids.length === 3 && event.kind !== 'blackhole') {
+        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay);
+      }
       if (event.kind === 'shield') {
         const shield = node('fx-shield', { x: rack.left - 5, y: rack.top - 5 });
         shield.style.width = `${rack.width + 10}px`; shield.style.height = `${rack.height + 10}px`;
-        pending.push(animate(shield, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1.02)', offset: .25 }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 1150 }, true));
+        pending.push(animate(shield, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1.02)', offset: .25 }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 1150, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'radar') {
         const scan = node('fx-radar', { x: board.left, y: board.top }); scan.style.width = `${board.width}px`;
-        pending.push(animate(scan, [{ transform: 'translateY(0)', opacity: 0 }, { opacity: .85, offset: .15 }, { transform: `translateY(${board.height}px)`, opacity: 0 }], { duration: 1250 }, true));
+        pending.push(animate(scan, [{ transform: 'translateY(0)', opacity: 0 }, { opacity: .85, offset: .15 }, { transform: `translateY(${board.height}px)`, opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'blackhole') {
         const point = center(rack), portal = node('fx-portal', point, '#c7a5fa');
-        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, point, before.get(id).type, true);
-        pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250 }, true));
+        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, point, before.get(id).type, true, delay);
+        pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'ukulele') {
         let origin = center(rack);
         event.ids.forEach((id, i) => {
@@ -135,7 +140,7 @@
           const point = center(before.get(id).rect), dx = point.x - origin.x, dy = point.y - origin.y;
           const arc = node('fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
           const rotation = `rotate(${Math.atan2(dy, dx)}rad)`;
-          pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 850, delay: i * 130 }, true));
+          pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 1000, delay: delay + i * 150, fill: 'backwards' }, true));
           burst(point, '#b4dfff', 6); origin = point;
         });
       } else if (event.kind === 'feather') {

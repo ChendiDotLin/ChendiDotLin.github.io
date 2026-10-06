@@ -37,8 +37,8 @@ Run `node ../scripts/test-rain-match.cjs` from this directory.
 ## Shared leaderboard setup (Supabase)
 
 The game now supports Chinese and English, and a shared database leaderboard.
-Local storage is used only for language preference, the last player ID, and the
-local win counter. Scores are not silently saved to a local-only leaderboard.
+Local storage keeps language preference, the last player ID, the local win
+counter, and an Expedition checkpoint with one previous valid backup. Scores are not silently saved to a local-only leaderboard.
 
 1. Create a project in the [Supabase dashboard](https://supabase.com/dashboard).
 2. In SQL Editor → New query, run `../scripts/rain-leaderboard.sql` in full.
@@ -67,7 +67,9 @@ The configured client requires HTTPS Supabase project URLs ending in
   is offered before submission; retries retain the same frozen score and run ID.
 - The clock pauses while a dialog is open or the tab is in the background.
 - Requests time out after 12 seconds and can be retried without duplicate scores.
-  Scores awaiting a retry remain in the page; they are not an offline queue.
+  Classic scores awaiting a retry remain in the page. Expedition checkpoints
+  also retain the frozen submission for a manual retry after reloading; nothing
+  is submitted automatically in the background.
 - IDs are public display names, not authenticated accounts. Scores come from the
   browser and have range/type checks, but there is no server-side replay or
   anti-cheat verification. This is a casual, unauthenticated fan-game leaderboard.
@@ -199,44 +201,75 @@ inside the panel; empty/error states and the panel controls support both languag
 Choose **Expedition** in the mode bar, or link directly to
 `/rain_match/?mode=expedition`. Classic difficulties retain their original rules.
 
-- A run begins with one of three starting relics. Clear each finite board to
-  claim a stage supply and travel onward with the same build and charges.
-- Every six manual triple matches grants another supply (a match that clears the
-  stage uses the stage supply instead). Supplies offer up to three upgrades,
-  new equipment, emergency-power refills, or a full recharge.
-- Carry three passive types and one active equipment; duplicates upgrade to
-  level 3. A fourth passive requires choosing a replacement. Active replacements
-  are labelled explicitly. All rewards and choices pause active play time.
-- **Feather:** pick a tile through exactly one blocker; recharges after 5/4/3
-  manual matches. **Safer Spaces:** return the overflow-causing pickup to its
-  origin, then recharge after 5/4/3 matches. **Ukulele:** 25/35/45% chance on a
-  manual match to clear one additional currently exposed triple.
-- **Cube:** complete a tray pair with a third board tile through up to 1/2/3
-  blockers. **Radar:** preview the next two hidden cards in each supply pile
-  for 4/5/6 pickups and highlight exposed cards that complete tray pairs.
-- **Fuel Cell:** 2/3/4 active charges and recharge in 5/4/3 manual matches.
-  Without it, active equipment stores one charge and recharges in six matches.
-- Automatic clears never recursively proc, charge abilities or grant supply
-  progress. Every clear removes a complete triple of one type. Undo restores the
-  pickup, its proc, charges and random cursor; collecting supplies or activating
-  equipment clears the previous undo point to prevent reward duplication.
-- Stash, Undo and Shuffle begin with one free use per entire expedition. Stage
-  transitions preserve spent uses; supply choices can restore them.
-- Stage 1 has 36 tiles; later stages gradually increase depth and item variety.
-  Stage 5 and every third stage after it have larger blind stacks. Layout sizes
-  cap at 144 tiles (storm) or 156 (fog), with no final stage. Initial deals have a
-  solution; player choices and later shuffles may still reach a dead end.
-- Extract from the loadout panel at any time, or submit after failure. The score
-  is the actual total of recovered tiles across stages, then active play time;
-  stage reached and the final build are stored alongside it. Runs currently live
-  in the open page, so refreshing or closing it starts over.
+- Choose Feather, Ukulele or Cube to begin. Each stage offers at most one
+  mid-stage supply and one clear reward. Stage 1 requires three manual matches
+  for its supply; later stages require `min(12, 4 + stage)`. Automatic chains
+  never advance supply progress.
+- Carry three passive types and one active equipment. Level 2 unlocks at stage 3;
+  level 3 evolution unlocks at stage 6. Only one item can stay evolved. Evolving
+  another returns the previous evolution to level 2, as shown before choosing.
+- **Feather:** pick through one blocker, or two when evolved. Recharge takes
+  8/7/6 manual matches. A leap match releases equipped lightning; evolved leap
+  matches also grant two equipment energy.
+- **Safer Spaces:** block one overflow per stage, returning the offending tile.
+  Upgrades, swapping and supplies cannot restore the shield. Level 2 also grants
+  two equipment energy; evolution additionally recovers up to two triples.
+- **Ukulele:** 25/30/35% chance to bank lightning per manual match, guaranteed
+  within 4/3/3 matches. Discharge clears a reachable triple, including tray and
+  reserve cards. No target means the charge is retained. Evolution clears up to
+  three triples and can pierce one blocker.
+- **Cube:** complete a tray pair through up to 1/2/3 blockers. Evolution completes
+  up to three tray pairs in one cast. Casting can trigger equipped lightning.
+- **Radar:** preview blind supply cards and mark a bounty for 4/5/6 pickups.
+  Manually matching the mark grants two energy, an extra recovery triple (two
+  for a leap match), and equipped lightning. Evolution recovers up to two triples
+  and retargets for the remainder of the scan.
+- **Fuel Cell:** store 2/3/4 charges; recharge costs 7/6/5 energy, versus eight
+  without it. Manual matches grant one energy. Automatic chain triples return
+  only 0.25 with Cell, so a cast cannot replenish itself. Evolution stores up to
+  two extra energy at full charge. Upgrades and equipment swaps do not refill.
+- Each emergency power starts with one free use per run. Supplies can restore
+  spent powers at most twice across the entire run. A recharge reward restores
+  one equipment charge (or Feather if no equipment), never Shield.
+- The first 36-tile stage now uses the mixed-set deal generator. Later stages
+  increase depth and variety; stage 3 onward carries more unfinished sets along
+  its initial solution. Fog stages begin at 5 and repeat every three stages.
+  Ion storms begin at 6 and repeat every three stages, adding two energy to the
+  active recharge cost. Boards cap at 144 tiles, or 156 in fog.
+- Every automatic effect removes complete triples. Chains are bounded, with
+  staggered card recovery and triggering equipment highlights. Undo restores the
+  entire pickup, chain, charges and random cursor. Supplies and equipment casts
+  invalidate Undo to prevent reward duplication.
+- Extract or submit after failure. Ranking remains actual cumulative recovered
+  tiles, then active play time; stage and final loadout are included. This balance
+  update preserves existing scores and requires no additional SQL migration.
+
+### Autosave and continue
+
+Expedition saves after actions, reward choices, transitions and submission
+changes, plus a five-second clock checkpoint and page visibility/exit events.
+Choose **Continue expedition** from the main-page banner or Expedition tab.
+The save restores the board, tray/reserve, spent powers, gear, pending choices,
+Undo snapshot, random cursor, active time and frozen submission/receipt. Paused,
+hidden, animation and offline time are excluded. A failed score request can be
+retried with the identical run ID and payload; loading never posts a score.
+
+One versioned save and its previous valid backup live in this browser's local
+storage. They do not sync to Supabase or other devices; clearing browser data
+removes them. Invalid data is retained until an explicit new run replaces it.
+The UI offers a valid backup when possible and displays storage failures rather
+than claiming a save succeeded. Restart asks before replacing the checkpoint.
+Web Locks allow only one active Expedition tab where supported; storage-change
+and compare-before-write guards also pause conflicting pages. Classic modes can
+be played while an Expedition is saved. This is a recovery feature, not an
+anti-cheat or authenticated save system.
 
 Run `scripts/rain-expedition.sql` in the existing project's Supabase SQL Editor.
 It extends the private tables and RPCs, preserves all scores and administrator
 membership, and adds Expedition to the existing audited admin controls. New
 installations can use the updated base and admin setup scripts. Without this
 upgrade the game works, while the Expedition board reports setup pending and
-submission can be retried in the open page after setup.
+submission can be retried after setup, including from a saved Expedition.
 
 The two new item images (`radar.webp`, `ukulele.webp`) use the same credited
 Glagan/RoR2-Items source. Safer Spaces is represented by an original shield glyph.
@@ -250,3 +283,13 @@ replacement and extraction. `node scripts/test-rain-expedition-sql.cjs
 /path/to/pglite/dist/index.cjs` tests upgrading the previous schema with preserved
 scores, repeat migrations, metadata, ordering, retry protection and scoped admin
 removal in an isolated database. Browser checks use mocked score writes.
+
+Run `node scripts/test-rain-save.cjs` for checkpoint round trips, deterministic
+replay, malformed saves, backup recovery, conflicting writes, storage failures
+and frozen score retries. Browser checks cover live tab locks, reload/resume,
+reward checkpoints, restart confirmation, offline time and mobile layouts.
+
+For browser regressions, serve the repository at `http://127.0.0.1:8765`, then
+run `node scripts/test-rain-expedition-browser.cjs` with Playwright installed.
+`RAIN_PLAYWRIGHT` can point to its module; `RAIN_BROWSER_PATH` selects an existing
+Chrome executable. All leaderboard requests in this test are mocked.

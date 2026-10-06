@@ -8,14 +8,15 @@
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=expedition-v1">
-  <script defer src="core.js?v=expedition-v1"></script>
-  <script defer src="expedition.js?v=expedition-v1"></script>
-  <script defer src="i18n.js?v=expedition-v1"></script>
-  <script defer src="config.js?v=expedition-v1"></script>
-  <script defer src="leaderboard.js?v=expedition-v1"></script>
-  <script defer src="effects.js?v=expedition-v1"></script>
-  <script defer src="game.js?v=expedition-v1"></script>
+  <link rel="stylesheet" href="style.css?v=expedition-v2-save">
+  <script defer src="core.js?v=expedition-v2-save"></script>
+  <script defer src="expedition.js?v=expedition-v2-save"></script>
+  <script defer src="expedition-save.js?v=expedition-v2-save"></script>
+  <script defer src="i18n.js?v=expedition-v2-save"></script>
+  <script defer src="config.js?v=expedition-v2-save"></script>
+  <script defer src="leaderboard.js?v=expedition-v2-save"></script>
+  <script defer src="effects.js?v=expedition-v2-save"></script>
+  <script defer src="game.js?v=expedition-v2-save"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -43,6 +44,7 @@
       </div>
       <div class="menu-actions"><button id="rankings" class="text-button" data-i18n="rankings">排行榜</button><button id="language" class="language-button" aria-label="Switch to English">EN</button></div>
       </div>
+      <section id="resume-banner" class="resume-banner" hidden><span id="resume-summary"></span><button id="resume-expedition" class="text-button" data-i18n="saveContinue">继续远征</button></section>
       <section class="game-panel" aria-label="三消游戏">
         <div class="game-topbar"><h1 id="mode-title">暴雨挑战</h1><div class="run-stats"><span><span id="cleared">0</span><span id="total"> / 108</span></span><span id="timer" aria-label="探索时间">00:00</span></div></div>
         <div class="progress-track" role="progressbar" aria-label="消除进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress"></div></div>
@@ -51,6 +53,7 @@
           <div id="relic-bar" class="relic-bar"></div>
           <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-continue" class="text-button" hidden></button></div>
           <div id="radar-preview" class="radar-preview" hidden></div>
+          <p id="expedition-save-status" class="save-status" role="status"></p>
           <p id="expedition-hint" class="expedition-hint" role="status"></p>
         </section>
         <div class="board-area">

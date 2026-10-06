@@ -50,7 +50,7 @@ function fixture(game, types, rack = []) {
   const before = game.snapshot(); const result = game.pick(6);
   assert.equal(result.events[0].kind, 'shield'); assert.equal(game.status, 'playing');
   assert.deepEqual(game.rack, before.rack); assert.equal(game.tiles[6].zone, 'board'); assert.equal(game.moves, before.moves);
-  assert.equal(game.shieldCooldown, 5); assert.equal(game.previous, null); counts(game);
+  assert.equal(game.shieldSpent, true); assert.equal(game.previous, null); counts(game);
   game.pick(6); assert.equal(game.status, 'lost');
 }
 // Feather permits exactly one blocker, consumes a charge and Undo restores the pickup state.
@@ -90,7 +90,7 @@ function fixture(game, types, rack = []) {
 }
 // Pending rewards stop play and are stable across reads; upgrades and replacements respect caps.
 {
-  const game = fresh(); game.relics = { feather: 3, shield: 3, ukulele: 3, blackhole: 3 }; game.equipment = 'blackhole';
+  const game = fresh(); game.stage = 6; game.relics = { feather: 3, shield: 2, ukulele: 2, blackhole: 2 }; game.equipment = 'blackhole';
   game.pendingReward = ['cell']; assert.equal(game.pick(game.available()[0].id).ok, false); assert.equal(game.choose('cell'), false);
   assert.ok(game.choose('cell', 'ukulele')); assert.equal(game.relics.ukulele, undefined); assert.equal(game.relics.cell, 1);
   game.pendingReward = ['radar']; assert.ok(game.choose('radar')); assert.equal(game.relics.blackhole, undefined);
@@ -100,3 +100,70 @@ function fixture(game, types, rack = []) {
   assert.ok(game.end()); assert.equal(game.canUse('remove'), false); assert.equal(game.pick(0).ok, false); assert.equal(game.nextStage(), false);
 }
 console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Shield, Feather, Cube, Radar, Lightning; Undo replay; reward gating, replacement, refills and extraction.');
+// Growth gates, a single evolution, once-per-stage protection and limited refills.
+{
+  const game = fresh();
+  game.pendingReward = ['feather']; assert.equal(game.choose('feather'), false);
+  game.stage = 3; assert.ok(game.choose('feather')); assert.equal(game.relics.feather, 2);
+  game.pendingReward = ['feather']; assert.equal(game.choose('feather'), false);
+  game.stage = 6; assert.ok(game.choose('feather')); assert.equal(game.evolved, 'feather');
+  game.relics.ukulele = 2; game.pendingReward = ['ukulele']; assert.ok(game.choose('ukulele'));
+  assert.equal(game.relics.feather, 2); assert.equal(game.evolved, 'ukulele');
+  game.shieldSpent = true; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
+  game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
+  for (let n = 0; n < 3; n++) {
+    game.used.undo = true; game.pendingReward = ['restore_undo']; assert.equal(game.choose('restore_undo'), n < 2);
+  }
+  game.pendingReward = ['blackhole']; assert.ok(game.choose('blackhole')); assert.equal(game.charge, 1);
+  game.charge = 0; game.pendingReward = ['blackhole']; assert.ok(game.choose('blackhole')); assert.equal(game.charge, 0);
+  game.pendingReward = ['radar']; assert.ok(game.choose('radar')); assert.equal(game.charge, 0);
+  game.pendingReward = ['recharge']; assert.ok(game.choose('recharge')); assert.equal(game.charge, 1); assert.equal(game.shieldSpent, true);
+  assert.equal(game.recharge, 10); game.stage = 7; assert.equal(game.recharge, 8);
+}
+// A stage cannot issue repeated mid-stage rewards, even after Undo.
+{
+  const game = fresh(); let rewards = 0;
+  for (const id of game.solution) {
+    game.pick(id);
+    if (game.pendingReward) { rewards++; assert.equal(game.previous, null); game.choose('blackhole'); }
+  }
+  assert.equal(rewards, 1); assert.ok(game.midRewardTaken);
+}
+// Banked lightning waits for a complete triple; it can clear rack/reserve cards too.
+{
+  const game = fresh(); game.relics.ukulele = 1; game.lightningReady = true;
+  fixture(game, [0,0,0,1,1,1]);
+  game.tiles.forEach((t, i) => { t.x = 0; t.z = i; });
+  const events = []; game.resolveCombos(events); assert.equal(events.length, 0); assert.ok(game.lightningReady);
+  game.tiles.forEach((t, i) => { t.x = i * 90; t.z = 0; });
+  game.resolveCombos(events); assert.equal(game.cleared, 3); assert.equal(game.lightningReady, false); counts(game);
+}
+// A marked leap triggers radar follow-ups and lightning; one manual match, finite chain.
+{
+  const game = fresh(); game.relics = { feather: 1, ukulele: 3, radar: 2, cell: 2 }; game.equipment = 'radar';
+  fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6], [0,1]);
+  game.tiles[2].x = game.tiles[3].x; game.tiles[3].z = 1;
+  game.radarUntil = 10; game.radarMark = 0; game.charge = 0;
+  const before = game.snapshot(), result = game.pick(2, true);
+  assert.equal(result.recovered, 18); assert.equal(game.bestChain, 18); assert.equal(game.manualMatches, 1);
+  assert.equal(result.events.filter(e => e.kind === 'radar').length, 2);
+  assert.equal(result.events.filter(e => e.kind === 'ukulele').length, 3); assert.equal(game.charge, 0); counts(game);
+  // Undo must restore the entire chain, including scan and leap state.
+  assert.ok(game.use('undo')); assert.equal(game.cleared, before.cleared);
+  assert.equal(game.radarMark, before.radarMark); assert.equal(game.featherCharge, before.featherCharge);
+}
+// Evolved cube consumes three tray pairs but cannot pay for another activation.
+{
+  const game = fresh(); game.relics = { blackhole: 3, cell: 2 }; game.equipment = 'blackhole'; game.charge = 1;
+  fixture(game, [0,0,0,1,1,1,2,2,2], [0,1,3,4,6,7]);
+  const result = game.activate(2); assert.equal(result.recovered, 9); assert.equal(game.charge, 0);
+  assert.equal(game.energy, .75); assert.equal(game.manualMatches, 0); assert.equal(game.canActivate(), false); counts(game);
+}
+// Evolved radar marks after the entire chain, never a type lightning just removed.
+{
+  const game = fresh(); game.relics = { radar: 3, ukulele: 2 }; game.equipment = 'radar';
+  fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4], [0,1]);
+  game.radarUntil = 6; game.radarMark = 0;
+  assert.equal(game.pick(2).recovered, 12); assert.equal(game.radarMark, 4); counts(game);
+}
+console.log('PASS: v2 growth gates, single evolution, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');

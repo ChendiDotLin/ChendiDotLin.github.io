@@ -11,6 +11,8 @@
   try { storage = window.localStorage; } catch (_) { storage = null; }
   const readPreference = key => { try { return storage?.getItem(key); } catch (_) { return null; } };
   const savePreference = (key, value) => { try { storage?.setItem(key, value); } catch (_) { /* Preferences are optional. */ } };
+  const saveStore = new RainSave.Store(storage, navigator.locks);
+  let saveState = saveStore.read(), saveNote = saveState.error, savePaused = false, lastCheckpoint = 0, navigationToken = 0, acquiringSave = false;
   const leaderboard = new RainLeaderboard.Leaderboard(window.RAIN_CONFIG);
   let language = readPreference('rain-match-language') === 'en' ? 'en' : 'zh';
   const t = (key, values) => RainI18n.translate(language, key, values);
@@ -30,7 +32,7 @@
     tick = now;
   }
   function syncClock() {
-    clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward;
+    clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward && !savePaused;
   }
   function closeDialog() {
     updateClock(); if (modal.open) modal.close(); dialogView = null; syncClock();
@@ -90,7 +92,95 @@
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
     $('wins').textContent = String(wins).padStart(2, '0');
   }
+  function updateSaveLabel() {
+    if (!$('expedition-save-status')) return;
+    $('expedition-save-status').textContent = t(savePaused ? 'saveConflict' : saveNote ? 'saveUnavailable' : 'saveLocal');
+    $('expedition-save-status').classList.toggle('save-warning', !!saveNote || savePaused);
+  }
+  function checkpoint() {
+    if (!isExpedition() || !saveStore.owned || savePaused || !runId) { updateSaveLabel(); return; }
+    lastCheckpoint = performance.now();
+    const record = { schema: 2, savedAt: Date.now(), runId, elapsedMs: elapsed, finalized, receipt,
+      submissionPayload, stageRewardClaimed, playerDraft, game: game.toSave() };
+    const result = saveStore.write(record);
+    if (result.ok) { saveNote = null; saveState = { record, raw: saveStore.expected, error: null, recovered: false }; }
+    else {
+      saveNote = result.error;
+      if (['conflict', 'locked'].includes(result.error)) {
+        savePaused = true; clockActive = false; saveStore.release();
+        queueMicrotask(() => { showSaveLocked(); render(); });
+      }
+    }
+    updateSaveLabel();
+  }
+  function renderResumeBanner() {
+    if (!$('resume-banner')) return;
+    const available = saveState.record || saveState.error === 'corrupt';
+    $('resume-banner').hidden = !available || (isExpedition() && !savePaused);
+    if (!available) return;
+    $('resume-summary').textContent = saveState.record ? t('saveSummary', {
+      stage: saveState.record.game.stage, n: saveState.record.game.banked + saveState.record.game.cleared,
+      time: formatTime(saveState.record.elapsedMs)
+    }) : t('saveCorrupt');
+  }
+  function showResume() {
+    saveState = saveStore.read();
+    const record = saveState.record;
+    showDialog('resume', `<span class="modal-eyebrow">EXPEDITION / CONTINUE</span><h2 id="modal-title">${t(record ? 'saveFound' : 'saveProblem')}</h2><p>${record ? t('saveSummary', { stage: record.game.stage, n: record.game.banked + record.game.cleared, time: formatTime(record.elapsedMs) }) : t('saveCorrupt')}</p><p>${t('saveScope')}</p>${saveState.recovered ? `<p>${t('saveRecovered')}</p>` : ''}${record ? `<button class="primary-button" id="resume-confirm">${t('saveContinue')}</button>` : ''}<button class="secondary-button" id="resume-new">${t('saveNew')}</button><p class="input-hint">${t('saveReplace')}</p>`);
+    $('resume-confirm')?.addEventListener('click', () => beginExpedition(true));
+    $('resume-new').addEventListener('click', () => beginExpedition(false));
+  }
+  function requestExpedition() {
+    saveState = saveStore.read();
+    if (saveState.record || saveState.error === 'corrupt') showResume();
+    else beginExpedition(false);
+  }
+  async function beginExpedition(resume) {
+    if (acquiringSave) return;
+    acquiringSave = true;
+    const token = ++navigationToken;
+    const acquired = await saveStore.acquire(); acquiringSave = false;
+    if (!acquired) { if (token === navigationToken) showSaveLocked(); return; }
+    if (token !== navigationToken) { saveStore.release(); return; }
+    saveState = saveStore.read(); saveStore.adopt(saveState.raw);
+    if (resume && !saveState.record) { saveStore.release(); showResume(); return; }
+    if (resume) restoreRun(saveState.record);
+    else { start('expedition'); }
+  }
+  function restoreRun(record) {
+    fx.reset(); closeDialog(); clockActive = false;
+    game = RainExpedition.Expedition.fromSave(record.game); elapsed = record.elapsedMs; tick = performance.now();
+    runId = record.runId; finalized = record.finalized; receipt = record.receipt; submissionPayload = record.submissionPayload;
+    stageRewardClaimed = record.stageRewardClaimed; playerDraft = record.playerDraft;
+    savedWin = false; submitting = false; formError = ''; lastStatus = null;
+    animating = false; targeting = null; replacementItem = null; savePaused = false;
+    clearTimeout(comboTimeout); $('combo').classList.remove('show'); $('board').replaceChildren();
+    document.querySelectorAll('[data-mode]').forEach(button => {
+      const selected = button.dataset.mode === 'expedition'; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+    $('timer').textContent = formatTime(elapsed); render(); refreshRankings('expedition');
+    if (game.pendingReward) showExpeditionReward();
+    else if (game.status !== 'playing') showResult();
+    syncClock();
+  }
+  function confirmRestart() {
+    if (!isExpedition()) { start(); return; }
+    updateClock(); checkpoint();
+    showDialog('restartRun', `<h2 id="modal-title">${t('saveRestartTitle')}</h2><p>${t('saveReplace')}</p><button class="primary-button" id="restart-confirm">${t('saveNew')}</button><button class="secondary-button" id="restart-cancel">${t('expStay')}</button>`);
+    $('restart-confirm').addEventListener('click', () => beginExpedition(false));
+    $('restart-cancel').addEventListener('click', closeDialog);
+  }
+  function showSaveLocked() {
+    showDialog('saveLocked', `<h2 id="modal-title">${t('saveLockedTitle')}</h2><p>${t('saveLockedCopy')}</p><button class="primary-button" id="save-lock-retry">${t('saveContinue')}</button>`);
+    $('save-lock-retry').addEventListener('click', () => beginExpedition(true));
+  }
+  $('resume-expedition').addEventListener('click', showResume);
+
   function start(mode = game?.mode || 'rain') {
+    if (mode === 'expedition' && !saveStore.owned) { requestExpedition(); return; }
+    if (isExpedition()) { updateClock(); checkpoint(); }
+    if (mode !== 'expedition') saveStore.release();
+    savePaused = false;
     fx.reset();
     const outgoing = game ? fx.captureBoard() : null;
     animating = !!game;
@@ -132,12 +222,12 @@
         $('board').append(el);
       }
       const blocked = !available.has(tile.id);
-      el.disabled = (targeting ? !targets.has(tile.id) : blocked) || game.status !== 'playing' || finalized || animating || !!game.pendingReward;
+      el.disabled = (targeting ? !targets.has(tile.id) : blocked) || game.status !== 'playing' || finalized || animating || savePaused || !!game.pendingReward;
       el.classList.toggle('blocked', blocked && !targets.has(tile.id));
       el.classList.toggle('relic-target', targets.has(tile.id)); el.classList.toggle('feather-target', targeting === 'feather' && targets.has(tile.id));
       el.style.zIndex = targets.has(tile.id) ? 100 + tile.z : tile.z + 1;
       const pair = game.rack.filter(id => game.tiles[id].type === tile.type).length === 2;
-      el.classList.toggle('radar-pair', isExpedition() && game.radarActive && !blocked && pair);
+      el.classList.toggle('radar-pair', isExpedition() && game.radarActive && (tile.type === game.radarMark || (!blocked && pair)));
       const blind = blocked && ['left', 'right'].includes(tile.pile) && !preview.has(tile.id) && !targets.has(tile.id);
       el.classList.toggle('blind', blind);
       el.title = blind ? t('blindTile') : itemName(tile.type); el.setAttribute('aria-label', blind ? t('blindTile') : itemName(tile.type) + (blocked ? t('covered') : ''));
@@ -150,7 +240,7 @@
       $('rack').append(slot);
     }
     $('reserve').replaceChildren(...game.reserve.map(id => {
-      const el = tileElement(game.tiles[id]); el.disabled = finalized || animating || !!game.pendingReward || !!targeting || game.status !== 'playing'; return el;
+      const el = tileElement(game.tiles[id]); el.disabled = finalized || animating || savePaused || !!game.pendingReward || !!targeting || game.status !== 'playing'; return el;
     }));
     $('reserve-area').hidden = !game.reserve.length;
     $('capacity').innerHTML = `${game.rack.length} <span>/ 7</span>`;
@@ -167,16 +257,17 @@
     $('status').textContent = lastStatus ? t(lastStatus) : receipt ? t('statusFinal') : finalized ? t('statusPending') : isExpedition() && game.finished ? t('expEnded') : game.status === 'won' ? t('statusWon')
       : game.status === 'lost' ? t('statusLost') : danger ? t('statusDanger', { n: 7 - game.rack.length }) : t('statusReady');
     for (const name of ['remove', 'undo', 'shuffle']) {
-      $(name).disabled = finalized || animating || !game.canUse(name); $(name).classList.toggle('used', game.used[name]);
+      $(name).disabled = finalized || animating || savePaused || !game.canUse(name); $(name).classList.toggle('used', game.used[name]);
       $(name).querySelector('.charge').textContent = t(game.used[name] ? 'used' : 'free');
     }
     $('result-button').hidden = game.status === 'playing' || (isExpedition() && game.status === 'won');
     document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
     renderExpedition();
+    checkpoint(); renderResumeBanner();
   }
   function pick(id) {
-    if (finalized || animating) return;
+    if (finalized || animating || savePaused) return;
     const before = fx.snapshot();
     updateClock();
     if (isExpedition() && targeting === 'blackhole') { activateExpedition(id); return; }
@@ -194,7 +285,7 @@
     if (game.status !== 'playing') showResult(true);
   }
   function use(name) {
-    if (finalized || animating) return;
+    if (finalized || animating || savePaused) return;
     const before = fx.snapshot();
     updateClock(); if (!game.use(name)) return;
     targeting = null;
@@ -221,7 +312,7 @@
     showDialog('result', `${fx.resultScene(won, t(won ? 'escapeSignal' : 'defeatSignal'), animateScene === true)}<span class="modal-eyebrow">${modeName(game.mode)}</span>
       <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : 'lostTitle')}</h2>
       <p>${t(rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
-      <div class="result-stats"><span>${t('recovered')}<b>${recovered()}${isExpedition() ? '' : ' / ' + game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t(isExpedition() ? 'expReached' : 'moves')}<b>${isExpedition() ? game.stage : game.moves}</b></span></div>${isExpedition() ? loadoutMarkup() : ''}
+      <div class="result-stats"><span>${t('recovered')}<b>${recovered()}${isExpedition() ? '' : ' / ' + game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t(isExpedition() ? 'expReached' : 'moves')}<b>${isExpedition() ? game.stage : game.moves}</b></span></div>${isExpedition() ? loadoutMarkup() + `<p class="build-summary">${t('expBestChain', { n: game.bestChain })}</p>` : ''}
       ${rescue && game.canUse('remove') ? `<button class="secondary-button" data-rescue="remove">${t('rescueRemove')}</button>` : ''}
       ${rescue && game.canUse('undo') ? `<button class="secondary-button" data-rescue="undo">${t('rescueUndo')}</button>` : ''}
       <div class="score-entry"><p class="scope-note">${t('rankingScope')}</p>
@@ -235,9 +326,9 @@
     if (!receipt) {
       $('player-id').value = playerDraft;
       $('player-id').readOnly = !!submissionPayload;
-      $('player-id').addEventListener('input', () => { playerDraft = $('player-id').value; });
+      $('player-id').addEventListener('input', () => { playerDraft = $('player-id').value; checkpoint(); });
       $('score-form').addEventListener('submit', async event => {
-        event.preventDefault(); if (receipt || submitting || game.status === 'playing') return;
+        event.preventDefault(); if (receipt || submitting || savePaused || game.status === 'playing') return;
         playerDraft = RainLeaderboard.normalizeId($('player-id').value);
         if (!RainLeaderboard.validId(playerDraft)) {
           formError = 'invalidId'; $('score-error').textContent = t(formError);
@@ -328,10 +419,10 @@
     $('leaderboard-panel').focus({ preventScroll: true });
   }
   function relicDescription(id, level = game.relics[id] || 1) {
-    const values = { feather: { n: Math.max(3, 6 - level) }, shield: { n: Math.max(3, 6 - level) },
-      ukulele: { n: 15 + 10 * level }, cell: { n: 1 + level, m: Math.max(3, 6 - level) },
+    const values = { feather: { n: 9 - level, depth: level === 3 ? 2 : 1 }, shield: { n: 1 },
+      ukulele: { n: 20 + 5 * level, m: level >= 2 ? 3 : 4 }, cell: { n: 1 + level, m: 8 - level },
       blackhole: { n: level }, radar: { n: 3 + level } };
-    return t('desc_' + id, values[id]);
+    return t('desc_' + id, values[id]) + (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '');
   }
   function relicIcon(id) {
     // Safer Spaces uses an original shield glyph; other icons use the credited item art.
@@ -354,8 +445,8 @@
     $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
     for (const { id, level } of game.loadout()) {
-      const button = document.createElement('button'); button.className = 'relic-chip';
-      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${t('expLevel', { n: level })}</small></span>`;
+      const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
+      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${level === 3 ? t('expEvolved') : t('expLevel', { n: level })}</small></span>`;
       button.title = relicDescription(id, level);
       button.setAttribute('aria-label', t('relic_' + id) + ' · ' + t('expLevel', { n: level }) + ' · ' + relicDescription(id, level));
       button.addEventListener('click', () => showRelic(id));
@@ -363,24 +454,26 @@
     }
     if (!game.loadout().length) relicBar.textContent = t('expNoRelics');
     $('expedition-feather').hidden = !game.relics.feather;
-    $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${game.featherCharge ? t('expReady') : t('expCharging', { n: Math.max(3, 6 - game.relics.feather) - game.featherEnergy })}`;
-    $('expedition-feather').disabled = animating || finalized || !!game.pendingReward || game.status !== 'playing' || !game.featherTargets().length;
+    $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${game.featherCharge ? t('expReady') : t('expCharging', { n: game.featherRecharge - game.featherEnergy })}`;
+    $('expedition-feather').disabled = animating || finalized || savePaused || !!game.pendingReward || game.status !== 'playing' || !game.featherTargets().length;
     $('expedition-active').hidden = !game.equipment;
     $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${t('relic_' + game.equipment)} · ${t('expCharge', { n: game.charge, max: game.capacity })}`;
-    $('expedition-active').disabled = animating || finalized || !game.canActivate();
+    $('expedition-active').disabled = animating || finalized || savePaused || !game.canActivate();
     $('expedition-active').title = game.equipment ? relicDescription(game.equipment) : '';
     const pending = !!game.pendingReward || game.status === 'won';
     $('expedition-continue').hidden = !pending;
     $('expedition-continue').textContent = t(game.pendingReward ? 'expResumeReward' : 'expResumeStage');
-    $('expedition-continue').disabled = animating;
-    $('expedition-extract').disabled = animating || finalized || !!game.pendingReward || game.finished;
+    $('expedition-continue').disabled = animating || savePaused;
+    $('expedition-extract').disabled = animating || finalized || savePaused || !!game.pendingReward || game.finished;
     let hint = targeting ? t(targeting === 'feather' ? 'expFeatherHint' : 'expCubeHint') : game.pendingReward ? t('expRewardPending')
-      : t('expProgress', { n: game.manualMatches % 6 });
+      : t(game.midRewardTaken ? 'expSupplyDone' : 'expProgress', { n: game.stageMatches, max: game.rewardTarget });
     if (!targeting && !game.pendingReward) {
       if (game.radarActive) hint += ' · ' + t('expRadarOn', { n: game.radarUntil - game.moves });
       else if (game.equipment === 'blackhole' && game.charge && !game.cubeTargets().length) hint += ' · ' + t('expNeedPair');
-      else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: game.recharge - game.energy });
-      if (game.relics.shield) hint += ' · ' + t(game.shieldCooldown ? 'expShieldCharging' : 'expShieldReady', { n: game.shieldCooldown });
+      else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: Math.ceil(game.recharge - game.energy) });
+      if (game.relics.shield) hint += ' · ' + t(game.shieldSpent ? 'expShieldSpent' : 'expShieldReady');
+      if (game.lightningReady) hint += ' · ' + t('expLightningReady');
+      if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
     $('expedition-hint').textContent = hint;
     $('radar-preview').hidden = !game.radarActive;
@@ -395,13 +488,13 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id)}<div><small>${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)}</span></div>`;
+    return `${relicIcon(id)}<div><small>${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)}${level === 2 && game.evolved ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
   }
   function showExpeditionReward() {
-    if (!isExpedition() || !game.pendingReward || animating) return;
+    if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
     targeting = null;
     const first = !game.loadout().length;
-    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p><div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}">${rewardMarkup(id)}</button>`).join('')}</div>`);
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
       const id = button.dataset.reward;
       if (!game.choose(id)) { showReplacement(id); return; }
@@ -422,7 +515,7 @@
     if (game.status === 'won') showExpeditionStage();
   }
   function showExpeditionStage(animate = false) {
-    if (!isExpedition() || game.status !== 'won') return;
+    if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
     showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
     $('stage-extract').addEventListener('click', showExtract);
@@ -430,7 +523,7 @@
       if (!stageRewardClaimed) {
         stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
       }
-      if (animating) return;
+      if (animating || savePaused) return;
       fx.reset(); const outgoing = fx.captureBoard();
       if (!game.nextStage()) { outgoing?.remove(); return; }
       stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;
@@ -443,7 +536,7 @@
     });
   }
   function showExtract() {
-    if (!isExpedition() || game.finished || game.pendingReward || finalized || animating) return;
+    if (!isExpedition() || savePaused || game.finished || game.pendingReward || finalized || animating) return;
     showDialog('extract', `<h2 id="modal-title">${t('expExtractTitle')}</h2><p>${t('expExtractCopy')}</p><p>${t('expTotal', { n: game.recovered })} · ${t('expStage', { n: game.stage })}</p><button class="primary-button" id="extract-confirm">${t('expEnd')}</button><button class="secondary-button" id="extract-cancel">${t('expStay')}</button>`);
     $('extract-cancel').addEventListener('click', () => { closeDialog(); if (game.status === 'won') showExpeditionStage(); });
     $('extract-confirm').addEventListener('click', () => { if (game.end()) { targeting = null; lastStatus = null; render(); showResult(true); } });
@@ -454,16 +547,18 @@
   }
   function finishExpeditionAction(before, events) {
     if (!events.length) { expeditionOutcome(); return; }
-    clearTimeout(comboTimeout); $('combo').textContent = t('expFx_' + events[events.length - 1].kind);
+    const chain = events.reduce((sum, event) => sum + (event.ids.length === 3 ? 3 : 0), 0);
+    clearTimeout(comboTimeout); $('combo').textContent = chain >= 6 ? t('expChain', { n: chain }) : t('expFx_' + events[events.length - 1].kind);
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2200);
     animating = true; render(); syncClock(); const effectRun = runId;
+    events.forEach(event => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === event.kind); chip?.classList.remove('proc-flash'); if (chip) { void chip.offsetWidth; chip.classList.add('proc-flash'); } });
     fx.relic(events, before).finally(() => {
       if (runId !== effectRun) return;
       updateClock(); animating = false; render(); syncClock(); expeditionOutcome();
     });
   }
   function activateExpedition(id) {
-    if (!isExpedition() || finalized || animating) return;
+    if (!isExpedition() || finalized || animating || savePaused) return;
     const before = fx.snapshot(); updateClock(); const result = game.activate(id);
     if (!result.ok) return;
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events);
@@ -487,14 +582,14 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ result: showResult, help: showHelp, credits: showCredits, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   $('reserve').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   for (const name of ['remove', 'undo', 'shuffle']) $(name).addEventListener('click', () => use(name));
-  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { if (button.dataset.mode !== game.mode) start(button.dataset.mode); }));
-  $('restart').addEventListener('click', () => start());
+  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { if (button.dataset.mode !== game.mode) { navigationToken++; if (button.dataset.mode === 'expedition') requestExpedition(); else start(button.dataset.mode); } }));
+  $('restart').addEventListener('click', () => isExpedition() ? confirmRestart() : start());
   $('close-modal').addEventListener('click', closeDialog);
   modal.addEventListener('close', () => { if (!modal.open) { dialogView = null; updateClock(); syncClock(); } });
   function toggleMusic() {
@@ -532,7 +627,26 @@
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });
-  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); }, 250);
-  document.addEventListener('visibilitychange', () => { updateClock(); syncClock(); });
-  localizePage(); start(new URLSearchParams(location.search).get('mode') === 'expedition' ? 'expedition' : 'rain');
+  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
+  document.addEventListener('visibilitychange', () => { updateClock(); checkpoint(); syncClock(); });
+  window.addEventListener('pagehide', () => { updateClock(); checkpoint(); saveStore.release(); clockActive = false; });
+  window.addEventListener('pageshow', async event => {
+    if (!event.persisted || !isExpedition()) return;
+    tick = performance.now();
+    if (!await saveStore.acquire()) { savePaused = true; showSaveLocked(); }
+    else {
+      const latest = saveStore.read();
+      if (latest.raw !== saveStore.expected && latest.record) { saveStore.adopt(latest.raw); restoreRun(latest.record); }
+      else savePaused = false;
+    }
+    render(); syncClock();
+  });
+  window.addEventListener('storage', event => {
+    if (event.key !== RainSave.KEY) return;
+    if (isExpedition() && saveStore.owned && event.newValue !== saveStore.expected) {
+      updateClock(); savePaused = true; saveStore.release(); showSaveLocked(); render(); syncClock();
+    } else { saveState = saveStore.read(); renderResumeBanner(); }
+  });
+  localizePage(); start('rain');
+  if (new URLSearchParams(location.search).get('mode') === 'expedition') requestExpedition();
 })();
