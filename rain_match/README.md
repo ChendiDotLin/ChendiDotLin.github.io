@@ -301,3 +301,12 @@ Checks:
   `node scripts/test-rain-boss-browser.cjs` with Playwright installed. Optional
   `RAIN_PLAYWRIGHT`, `RAIN_BROWSER_PATH` and `RAIN_GAME_URL` select local tools.
   All leaderboard writes in these tests are mocked.
+- `node scripts/test-rain-effects-browser.cjs` uses the same browser setup to
+  check explosion/fire/lightning feedback, chain totals, bounded animation
+  duration and particle count, cancellation, reduced motion, and responsive UI.
+
+Expedition feedback uses separate Behemoth shockwaves and flying cards, Gasoline
+flames, and Ukulele arcs. Large chains stagger over a 1.6-second launch window
+and finish within about three seconds, with sampled particles to limit rendering
+cost. A recovery count appears beside the tray; effects never receive pointer
+input. Reduced motion skips the overlays and all effects are cancelled on reset.

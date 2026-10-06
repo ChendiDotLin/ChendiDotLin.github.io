@@ -582,7 +582,7 @@
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
     animating = true; render(); syncClock(); const effectRun = runId;
     [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
-    fx.relic(events, before).finally(() => {
+    fx.relic(events, before, chain).finally(() => {
       if (runId !== effectRun) return;
       updateClock(); animating = false; render(); syncClock(); expeditionOutcome();
     });

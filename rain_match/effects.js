@@ -39,16 +39,66 @@
       .map(el => [Number(el.dataset.id), { rect: el.getBoundingClientRect(), type: Number(el.dataset.type) }]));
   }
   function ghost(from, target, type, matched, delay = 0) {
-    if (motion.matches || !from) return;
+    if (motion.matches || !from) return Promise.resolve();
     const item = RainMatch.ITEMS[type], el = node('fx-loot', center(from), item.color);
     const img = document.createElement('img'); img.src = `assets/${item.id}.webp`; img.alt = ''; el.append(img);
     el.style.width = `${from.width}px`; el.style.height = `${from.height}px`;
     const origin = center(from), x = target.x - origin.x, y = target.y - origin.y;
-    animate(el, [
+    return animate(el, [
       { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
       { transform: `translate(calc(-50% + ${x * .55}px),calc(-50% + ${y * .45 - 20}px)) scale(1.08)`, opacity: 1, offset: .5 },
       { transform: `translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${matched ? .15 : .8})`, opacity: 0 }
     ], { duration: matched ? 650 : 440, delay, fill: 'backwards' }, true);
+  }
+  // Distinct impacts share one bounded timeline, even for a full-board chain.
+  function impact(point, kind, delay, size, particles) {
+    const blast = kind === 'behemoth', color = blast ? '#ffc36b' : '#ff874f';
+    const pending = [], duration = blast ? 1100 : 1000;
+    const core = node(blast ? 'fx-blast-core' : 'fx-flame', point, color);
+    core.style.width = `${size}px`; core.style.height = `${size}px`;
+    pending.push(animate(core, blast ? [
+      { transform: 'translate(-50%,-50%) scale(.08)', opacity: 0 },
+      { transform: 'translate(-50%,-50%) scale(.28)', opacity: .8, offset: .16 },
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: .95, offset: .27 },
+      { transform: 'translate(-50%,-50%) scale(1.3)', opacity: 0 }
+    ] : [
+      { transform: 'translate(-50%,-35%) scale(.15)', opacity: 0 },
+      { transform: 'translate(-50%,-65%) scale(.8,1.15)', opacity: .85, offset: .3 },
+      { transform: 'translate(-50%,-115%) scale(.4,1.4)', opacity: 0 }
+    ], { duration, delay, easing: 'linear', fill: 'backwards' }, true));
+    if (blast) for (let n = 0; n < 2; n++) {
+      const wave = node('fx-blast-wave', point, color);
+      wave.style.width = `${size * (n ? 1.7 : 1.25)}px`; wave.style.height = wave.style.width;
+      pending.push(animate(wave, [
+        { transform: `translate(-50%,-50%) scale(.12,${n ? '.06' : '.12'})`, opacity: 0 },
+        { opacity: .9, offset: .12 },
+        { transform: `translate(-50%,-50%) scale(1,${n ? '.42' : '1'})`, opacity: 0 }
+      ], { duration: 850, delay: delay + 180 + n * 80, fill: 'backwards' }, true));
+    }
+    for (let i = 0; i < particles; i++) {
+      const angle = i * Math.PI * 2 / particles + .25, distance = size * (.55 + (i % 3) * .18);
+      const spark = node(blast ? 'fx-shrapnel' : 'fx-ember', point, color);
+      const dx = Math.cos(angle) * distance, dy = blast ? Math.sin(angle) * distance : -distance;
+      pending.push(animate(spark, [
+        { transform: `translate(-50%,-50%) rotate(${angle}rad) scale(.2)`, opacity: 0 },
+        { opacity: 1, offset: .1 },
+        { transform: `translate(${dx}px,${dy}px) rotate(${angle + .8}rad) scale(.1)`, opacity: 0 }
+      ], { duration: 650 + (i % 3) * 100, delay: delay + 190, fill: 'backwards' }, true));
+    }
+    return Promise.all(pending);
+  }
+  function detonate(from, kind, delay, index) {
+    const point = center(from.rect), item = RainMatch.ITEMS[from.type];
+    const el = node('fx-loot fx-hit-loot', point, kind === 'behemoth' ? '#ffc36b' : '#ff874f');
+    const img = document.createElement('img'); img.src = `assets/${item.id}.webp`; img.alt = ''; el.append(img);
+    el.style.width = `${from.rect.width}px`; el.style.height = `${from.rect.height}px`;
+    const direction = index % 2 ? 1 : -1;
+    return animate(el, [
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+      { transform: 'translate(-50%,-50%) scale(.9)', opacity: 1, offset: .2 },
+      { transform: `translate(calc(-50% + ${direction * 12}px),-70%) rotate(${direction * 12}deg) scale(1.15)`, opacity: 1, offset: .36 },
+      { transform: `translate(calc(-50% + ${direction * 44}px),-135%) rotate(${direction * 40}deg) scale(.15)`, opacity: 0 }
+    ], { duration: 850, delay, easing: 'linear', fill: 'backwards' }, true);
   }
   function pick(before, id, type, matched, automaticIds = []) {
     if (motion.matches) return;
@@ -111,16 +161,20 @@
     burst(center(target.getBoundingClientRect()), name === 'undo' ? '#9acfe5' : '#b3d8bd', 8);
     return Promise.all(pending);
   }
-  function relic(events, before) {
+  function relic(events, before, recoveredCount) {
     if (motion.matches) return Promise.resolve();
     const board = document.getElementById('board').getBoundingClientRect();
     const rack = document.getElementById('rack').getBoundingClientRect();
     const pending = [];
+    const step = events.length > 1 ? Math.min(180, 1600 / (events.length - 1)) : 0;
+    const heavy = events.filter(event => ['behemoth', 'gasoline'].includes(event.kind));
+    const accentEvery = Math.max(1, Math.ceil(heavy.length / 10));
+    let impactIndex = 0;
     for (const [index, event] of events.entries()) {
-      const delay = Math.min(index * (events.length > 10 ? 65 : 180), 1100);
+      const delay = index * step;
       // Show the actual recovered cards, including radar and shield follow-ups.
-      if (event.ids.length === 3 && event.kind !== 'blackhole') {
-        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay);
+      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth'].includes(event.kind)) {
+        event.ids.forEach((id, i) => { if (before.has(id)) pending.push(ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay + (event.kind === 'ukulele' ? 180 + i * 150 : 0))); });
       }
       if (event.kind === 'shield') {
         const shield = node('fx-shield', { x: rack.left - 5, y: rack.top - 5 });
@@ -131,7 +185,7 @@
         pending.push(animate(scan, [{ transform: 'translateY(0)', opacity: 0 }, { opacity: .85, offset: .15 }, { transform: `translateY(${board.height}px)`, opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'blackhole') {
         const point = center(rack), portal = node('fx-portal', point, '#c7a5fa');
-        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, point, before.get(id).type, true, delay);
+        for (const id of event.ids) if (before.has(id)) pending.push(ghost(before.get(id).rect, point, before.get(id).type, true, delay));
         pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'ukulele') {
         let origin = center(rack);
@@ -141,12 +195,23 @@
           const arc = node('fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
           const rotation = `rotate(${Math.atan2(dy, dx)}rad)`;
           pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 1000, delay: delay + i * 150, fill: 'backwards' }, true));
-          if (events.length < 12) burst(point, '#b4dfff', 6); origin = point;
+          const hit = node('fx-electric-hit', point, '#b4dfff');
+          pending.push(animate(hit, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { opacity: 1, offset: .2 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: 0 }], { duration: 650, delay: delay + i * 150 + 160, fill: 'backwards' }, true));
+          origin = point;
         });
-      } else if (['gasoline', 'behemoth', 'reclaim'].includes(event.kind)) {
+      } else if (['gasoline', 'behemoth'].includes(event.kind)) {
+        const accented = impactIndex++ % accentEvery === 0;
+        event.ids.forEach((id, i) => {
+          const from = before.get(id); if (!from) return;
+          const stagger = delay + i * 75;
+          pending.push(detonate(from, event.kind, stagger, index + i));
+          if (accented) pending.push(impact(center(from.rect), event.kind, stagger,
+            from.rect.width * (event.kind === 'behemoth' ? 2.2 : 1.15), events.length > 12 ? (i ? 0 : 5) : (i ? 3 : 9)));
+        });
+      } else if (event.kind === 'reclaim') {
         const chip = event.relic ? document.querySelector(`[data-relic="${event.relic}"]`) : null;
         const point = chip ? center(chip.getBoundingClientRect()) : event.ids.length && before.has(event.ids[0]) ? center(before.get(event.ids[0]).rect) : center(board);
-        const color = event.kind === 'gasoline' ? '#f6a36f' : event.kind === 'behemoth' ? '#f0d480' : '#cdb3ff';
+        const color = '#cdb3ff';
         const ring = node('fx-ring', point, color);
         pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(3)', opacity: 0 }], { duration: 1100, delay, fill: 'backwards' }, true));
         if (events.length < 12) burst(point, color, 5);
@@ -155,6 +220,45 @@
         if (from) { burst(center(from.rect), '#ead699', 6);
           const ring = node('fx-ring', center(from.rect), '#e8d99d');
           pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.5)', opacity: .8 }, { transform: 'translate(-50%,-100%) scale(1.5)', opacity: 0 }], { duration: 950 }, true)); }
+      }
+    }
+    const firstBlast = events.findIndex(event => event.kind === 'behemoth');
+    if (firstBlast >= 0) {
+      // One restrained board kick avoids stacking dozens of competing shakes.
+      const strength = Math.min(4, board.width / 100);
+      const kick = [
+        { transform: 'translate(0,0)' }, { transform: `translate(${-strength}px,${strength / 2}px)`, offset: .22 },
+        { transform: `translate(${strength}px,${-strength / 2}px)`, offset: .4 },
+        { transform: `translate(${-strength / 2}px,0)`, offset: .62 }, { transform: 'translate(0,0)' }
+      ];
+      for (const id of ['board', 'rack']) pending.push(animate(document.getElementById(id), kick, { duration: 480, delay: firstBlast * step + 200 }));
+    }
+    const recovered = new Set(events.filter(event => event.ids.length === 3).flatMap(event => event.ids)).size;
+    const total = recoveredCount ?? recovered;
+    if (total >= 36) {
+      const wave = node('fx-blast-wave fx-chain-wave', { x: board.left + board.width / 2, y: board.top + board.height * .4 });
+      wave.style.width = `${board.width * .9}px`; wave.style.height = `${board.height * .75}px`;
+      pending.push(animate(wave, [
+        { transform: 'translate(-50%,-50%) scale(.15)', opacity: 0 },
+        { opacity: .7, offset: .18 },
+        { transform: 'translate(-50%,-50%) scale(1.15)', opacity: 0 }
+      ], { duration: 1150, delay: (events.length - 1) * step * .65, fill: 'backwards' }, true));
+    }
+    if (total >= 6) {
+      const indices = [...new Set(total >= 24 ? [0, Math.floor(events.length / 3), Math.floor(events.length * 2 / 3), events.length - 1] : [events.length - 1])];
+      const seen = new Set();
+      for (const [i, event] of events.entries()) {
+        if (event.ids.length === 3) event.ids.forEach(id => seen.add(id));
+        if (!indices.includes(i)) continue;
+        const badge = node('fx-chain-count', { x: rack.right - 4, y: rack.bottom + 12 }, total >= 36 ? '#ffc36b' : '#c9b7ff');
+        badge.textContent = `+${total - recovered + seen.size}`;
+        const next = indices[indices.indexOf(i) + 1];
+        pending.push(animate(badge, [
+          { transform: 'translate(-100%,0) scale(.7)', opacity: 0 },
+          { transform: 'translate(-100%,0) scale(1.08)', opacity: 1, offset: .2 },
+          { transform: 'translate(-100%,0) scale(1)', opacity: 1, offset: .7 },
+          { transform: 'translate(-100%,-8px) scale(1)', opacity: 0 }
+        ], { duration: next === undefined ? 1050 : Math.max(100, (next - i) * step), delay: i * step + 180, easing: 'linear', fill: 'backwards' }, true));
       }
     }
     return Promise.all(pending);
