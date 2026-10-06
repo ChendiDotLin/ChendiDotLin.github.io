@@ -486,9 +486,9 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-portal { border-color: #f5d49e; }
 .boss-run .landscape { background: radial-gradient(ellipse at 50% 30%, #ab774a25, transparent 65%), #222b31; }
 
-/* Sculpted workshop friends: generous silhouettes, quiet card faces. */
+/* Flat workshop stickers: generous silhouettes, quiet card faces. */
 .tile img { filter: none; }
-.reward-choice img { width: 62px; height: 62px; filter: drop-shadow(0 4px 5px #0002); }
+.reward-choice img { width: 62px; height: 62px; filter: none; }
 .relic-large img { width: 128px; height: 128px; }
 .relic-chip img { width: 32px; height: 32px; }
 @media (max-width: 480px) {
