@@ -63,7 +63,10 @@ const assert = require('node:assert/strict');
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     }
     await page.emulateMedia({ reducedMotion: 'no-preference' });
+    // Let the preference-change reset run before starting the desktop preview.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     await page.evaluate(() => { document.querySelectorAll('#board .tile').forEach(el => el.style.removeProperty('visibility')); startEffect('behemoth'); fxAnimations().forEach(a => { a.pause(); a.effect.updateTiming({ fill: 'both' }); a.currentTime = 380; }); });
+    assert.equal(await page.locator('.fx-blast-core').count(), 3);
     await page.screenshot({ path: '/tmp/rain-fx-blast-desktop.png', fullPage: true });
     await page.evaluate(async () => { RainEffects.reset(); await effectPromise; });
     assert.deepEqual(errors, []);
