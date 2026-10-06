@@ -1,4 +1,4 @@
-# Rain Match workshop artwork
+# Clackworks workshop artwork
 
 The game uses the original faceless flat workshop set: 12 part icons and nine
 machine icons. Rounded silhouettes, dark-teal outlines and warm color blocks
@@ -35,7 +35,7 @@ Internal IDs remain stable for browser saves, Undo snapshots and database
 whitelists. These IDs are not player-facing names. `core.js` maps the unchanged
 ordinary tile IDs/type indices to their new part names and asset filenames.
 
-`../music.js` contains Workshop Nocturne, an original note sequence synthesized
+`../music.js` contains Assembly After Hours, an original layered score and effects synthesized
 locally with oscillators, without audio samples. Existing sound effects are also
 synthesized. This provenance records the implementation; it does not claim that
 project names or artwork have undergone legal or trademark clearance.

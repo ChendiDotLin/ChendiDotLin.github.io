@@ -30,7 +30,7 @@ navbar-links:
     - Playwriting: "playwriting"
     - Doodles: "doodles"
     - 60 Days of Pixel Art: "pixel"
-    - Rain Match: "rain_match/"
+    - Clackworks: "clackworks/"
 
 ################
 # --- Logo --- #
@@ -300,7 +300,7 @@ exclude:
   - screenshot.png
   - docs/
   - scripts/
-  - rain_match/README.md
+  - clackworks/README.md
 
 plugins:
   - jekyll-paginate

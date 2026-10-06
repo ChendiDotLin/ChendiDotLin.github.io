@@ -20,7 +20,8 @@
   const t = (key, values) => RainI18n.translate(language, key, values);
   const itemName = type => language === 'en' ? ITEMS[type].en : ITEMS[type].name;
   const modeName = mode => t(`${mode}Title`);
-  let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = false, audio, comboTimeout;
+  let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = readPreference('rain-match-effects') === 'on', comboTimeout;
+  music.setEffects(sound);
   let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance';
   let tenTime = null, tenRecord = null, tenSubmitting = false, expeditionBoard = 'expedition_distance';
   let submitting = false, submissionPayload = null, rankingRequest = 0;
@@ -43,7 +44,7 @@
   }
   function cancelEffects() {
     clearTimeout(activeEffect?.timer); activeEffect = null;
-    fx.reset(); animating = false;
+    fx.reset(); music.cancelEffects(); animating = false;
   }
   function playEffect(play, after = () => {}) {
     const effect = { run: runId };
@@ -53,32 +54,16 @@
       clearTimeout(effect.timer); activeEffect = null;
       updateClock(); animating = false; render(); syncClock(); after();
     };
-    effect.skip = () => { if (activeEffect === effect) { fx.reset(); finish(); } };
+    effect.skip = () => { if (activeEffect === effect) { fx.reset(); music.cancelEffects(); finish(); } };
     // All current scenes finish within 3.1 s. A broken renderer must never own
     // the input lock forever; game state was already committed before the FX.
     effect.timer = setTimeout(effect.skip, 4500);
     Promise.resolve().then(() => activeEffect === effect ? play() : undefined)
-      .catch(error => { console.warn('Rain Match effect skipped:', error); if (activeEffect === effect) fx.reset(); })
+      .catch(error => { console.warn('Clackworks effect skipped:', error); if (activeEffect === effect) { fx.reset(); music.cancelEffects(); } })
       .finally(finish);
     if (document.hidden) effect.skip();
   }
-  function beep(matched = false) {
-    if (!sound) return;
-    try {
-      audio ||= new (window.AudioContext || window.webkitAudioContext)();
-      if (audio.state === 'suspended') audio.resume().catch(() => {});
-      const notes = matched ? [523.25, 659.25, 783.99] : [392];
-      notes.forEach((frequency, i) => {
-        const oscillator = audio.createOscillator(), gain = audio.createGain();
-        const start = audio.currentTime + i * .07;
-        oscillator.type = 'sine'; oscillator.frequency.value = frequency;
-        gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.055, start + .008);
-        gain.gain.exponentialRampToValueAtTime(.001, start + .17);
-        oscillator.connect(gain); gain.connect(audio.destination);
-        oscillator.start(start); oscillator.stop(start + .18);
-      });
-    } catch (_) { /* Audio is optional. */ }
-  }
+  function beep(matched = false) { music.sound(matched ? 'match' : 'pick'); }
 
   function tileElement(tile, interactive = true) {
     const item = ITEMS[tile.type], el = document.createElement(interactive ? 'button' : 'div');
@@ -118,6 +103,7 @@
     renderRankings();
     renderPresence();
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
+    $('effects').setAttribute('aria-pressed', String(sound));
     $('wins').textContent = String(wins).padStart(2, '0');
   }
   function renderPresence() {
@@ -241,7 +227,7 @@
     render(!animating); syncClock();
     refreshRankings(game.mode);
     if (animating) {
-      playEffect(() => fx.restart(outgoing), () => {
+      playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (isExpedition()) showExpeditionReward();
       });
     } else if (isExpedition()) showExpeditionReward();
@@ -305,6 +291,7 @@
     $('result-button').disabled = savePaused || animating;
     document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
+    music.setScene(isExpedition() ? game.stage : 1, !!game.bossActive, danger);
     renderExpedition();
     checkpoint(); renderResumeBanner();
     presence?.setMode(game.mode);
@@ -319,7 +306,7 @@
     lastStatus = null; beep(result.matched); render();
     if (!result.events?.some(event => event.kind === 'shield')) {
       try { fx.pick(before, id, result.type, result.matched, (result.events || []).filter(event => event.ids.length === 3).flatMap(event => event.ids)); }
-      catch (error) { console.warn('Rain Match pick effect skipped:', error); fx.reset(); }
+      catch (error) { console.warn('Clackworks pick effect skipped:', error); fx.reset(); }
     }
     if (result.matched) {
       $('combo').textContent = t('match', { item: itemName(result.type) });
@@ -335,7 +322,7 @@
     const before = fx.snapshot();
     updateClock(); if (!game.use(name)) return;
     targeting = null;
-    closeDialog(); beep();
+    closeDialog(); music.sound(name);
     formError = ''; lastStatus = { remove: 'removed', undo: 'undone', shuffle: 'shuffled' }[name];
     playEffect(() => fx.power(name, before));
   }
@@ -347,6 +334,7 @@
     if (game.status === 'playing') return;
     if (isExpedition() && game.status === 'won') { showExpeditionStage(animateScene === true); return; }
     const won = game.status === 'won';
+    if (animateScene === true) music.sound(won ? 'win' : 'lose');
     if (won && !savedWin) {
       savedWin = true; wins++; $('wins').textContent = String(wins).padStart(2, '0'); savePreference('rain-match-wins', String(wins));
     }
@@ -584,6 +572,7 @@
     if (game.status === 'won') showExpeditionStage();
   }
   function showExpeditionStage(animate = false) {
+    if (animate === true) music.sound('win');
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
     showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.stage === 10 ? `<p class="boss-victory">${t('expBossClear')}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
@@ -598,7 +587,7 @@
       if (!game.nextStage()) { outgoing?.remove(); return; }
       stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;
       closeDialog(); $('board').replaceChildren(); render(); syncClock();
-      playEffect(() => fx.restart(outgoing), () => {
+      playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (game.bossActive) showBossIntro();
       });
     });
@@ -625,6 +614,7 @@
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
     playEffect(() => {
       [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
+      music.chain(events, chain, matchMedia('(prefers-reduced-motion: reduce)').matches);
       return fx.relic(events, before, chain);
     }, expeditionOutcome);
   }
@@ -637,7 +627,7 @@
   function showBossIntro() {
     showDialog('boss', `<div class="boss-emblem" aria-hidden="true"><i></i><i></i><span>◇</span></div><span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><p class="boss-intro-rule">${t('expBossHint')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
     $('boss-start').addEventListener('click', () => {
-      closeDialog(); playEffect(() => fx.bossEntrance());
+      closeDialog(); playEffect(() => { music.sound('boss'); return fx.bossEntrance(); });
     });
   }
   function showTenRecord() {
@@ -706,18 +696,22 @@
     $('music-error').hidden = true;
     if (music.playing) music.stop();
     else {
-      try { await music.play(); }
+      try {
+        await music.play();
+        if (readPreference('rain-match-effects') === null) { sound = true; music.setEffects(true); }
+      }
       catch (_) { $('music-error').hidden = false; }
     }
     localizePage();
   });
   $('music-volume').addEventListener('input', event => music.setVolume(Number(event.target.value) / 100));
+  $('effects-volume').addEventListener('input', event => music.setEffectsVolume(Number(event.target.value) / 100));
   document.addEventListener('visibilitychange', () => {
     music.visibility(document.hidden).catch(() => { music.stop(); $('music-error').hidden = false; localizePage(); });
   });
-  window.addEventListener('pagehide', () => { music.stop(); localizePage(); });
+  window.addEventListener('pagehide', () => { music.stop(); music.cancelEffects(); localizePage(); });
   $('effects').addEventListener('click', () => {
-    sound = !sound; $('effects').setAttribute('aria-pressed', String(sound));
+    sound = !sound; music.setEffects(sound); savePreference('rain-match-effects', sound ? 'on' : 'off');
     localizePage(); beep();
   });
   $('help').addEventListener('click', showHelp); $('credits').addEventListener('click', showCredits);

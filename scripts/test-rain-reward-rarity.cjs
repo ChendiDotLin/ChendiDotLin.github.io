@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition, RELICS } = require('../rain_match/expedition.js');
+const { Expedition, RELICS } = require('../clackworks/expedition.js');
 const seed = n => () => { n = Math.imul(n, 1664525) + 1013904223 | 0; return (n >>> 0) / 4294967296; };
 const red = id => RELICS[id]?.rarity === 'legendary';
 const fresh = () => { const game = new Expedition(seed(319)); game.choose('feather'); return game; };

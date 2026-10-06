@@ -2,7 +2,7 @@
 // RAIN_PLAYWRIGHT, RAIN_BROWSER_PATH and RAIN_GAME_URL can override local test tools.
 const { chromium } = require(process.env.RAIN_PLAYWRIGHT || 'playwright');
 const fs = require('node:fs'); const assert = require('node:assert/strict');
-const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/';
+const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/';
 (async () => {
  const browser = await chromium.launch({ executablePath: process.env.RAIN_BROWSER_PATH || undefined, headless: true, args: ['--disable-gpu'] });
  try {
@@ -11,7 +11,7 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/';
  const errors=[], submissions=[]; let failSubmit=true;
  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
  await context.route('**/expedition.js*',async r=>{
-   const body=fs.readFileSync(require('node:path').join(__dirname, '../rain_match/expedition.js'),'utf8')+`\nconst Base=RainExpedition.Expedition; RainExpedition.Expedition=class extends Base { constructor(){let n=16; super(()=>{n=Math.imul(n,1664525)+1013904223|0;return(n>>>0)/4294967296}); window.testGame=this;} static fromSave(data){const game=Base.fromSave(data);window.testGame=game;return game;} };`;
+   const body=fs.readFileSync(require('node:path').join(__dirname, '../clackworks/expedition.js'),'utf8')+`\nconst Base=RainExpedition.Expedition; RainExpedition.Expedition=class extends Base { constructor(){let n=16; super(()=>{n=Math.imul(n,1664525)+1013904223|0;return(n>>>0)/4294967296}); window.testGame=this;} static fromSave(data){const game=Base.fromSave(data);window.testGame=game;return game;} };`;
    await r.fulfill({contentType:'text/javascript',body});
  });
  await context.route('**/rest/v1/rpc/*',async r=>{

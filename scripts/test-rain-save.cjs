@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition, validSave, bankedBefore, stageSpec } = require('../rain_match/expedition.js');
-const { Store, KEY, BACKUP, valid, parse } = require('../rain_match/expedition-save.js');
+const { Expedition, validSave, bankedBefore, stageSpec } = require('../clackworks/expedition.js');
+const { Store, KEY, BACKUP, valid, parse } = require('../clackworks/expedition-save.js');
 const seed = n => () => { n = Math.imul(n, 1664525) + 1013904223 | 0; return (n >>> 0) / 4294967296; };
 let checkpoints = 0;
 function roundtrip(game) {
@@ -60,7 +60,7 @@ for (let n = 1; n <= 80; n++) {
 // Late-game equipment states: real layered boards, scan expiry, leap charges,
 // automatic chains, shield rollback, rescue and equipment activation checkpoints.
 for (let n = 1; n <= 100; n++) {
-  const { Game } = require('../rain_match/core.js');
+  const { Game } = require('../clackworks/core.js');
   const game = new Expedition(seed(n)); game.choose('feather'); game.stage = 6 + n % 4;
   const spec = stageSpec(game.stage), board = new Game(spec.mode, seed(n * 19), spec);
   for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous']) game[key] = board[key];

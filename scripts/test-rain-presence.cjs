@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Presence, summarize, IDLE_MS, KEY } = require('../rain_match/presence.js');
+const { Presence, summarize, IDLE_MS, KEY } = require('../clackworks/presence.js');
 const config = { supabaseUrl: 'https://example.supabase.co', supabasePublishableKey: 'sb_publishable_test' };
 const a = crypto.randomUUID(), b = crypto.randomUUID();
 assert.deepEqual(summarize({ first: [{ visitorId: a, mode: 'rain' }], duplicate: [{ visitorId: a, mode: 'expedition' }], other: [{ visitorId: b, mode: 'rain' }], bad: [{ visitorId: '<script>', mode: 'expedition' }], malformed: null }), { total: 2, expedition: 1 });

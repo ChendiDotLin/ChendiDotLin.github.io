@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
       const response = await route.fetch();
       await route.fulfill({ response, body: await response.text() + '\nconst Base = RainExpedition.Expedition; RainExpedition.Expedition = class extends Base { constructor() { super(); window.testGame = this; } static fromSave(data) { const game = Base.fromSave(data); window.testGame = game; return game; } };' });
     });
-    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/');
+    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/');
     url.searchParams.set('mode', 'rain');
     await page.goto(url.href);
     await page.locator('#board button:enabled').first().waitFor();

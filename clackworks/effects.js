@@ -71,8 +71,9 @@
     core.style.width = `${size}px`; core.style.height = `${size}px`;
     pending.push(animate(core, blast ? [
       { transform: 'translate(-50%,-50%) scale(.08)', opacity: 0 },
-      { transform: 'translate(-50%,-50%) scale(.28)', opacity: .8, offset: .16 },
-      { transform: 'translate(-50%,-50%) scale(1)', opacity: .95, offset: .27 },
+      { transform: 'translate(-50%,-50%) scale(.22)', opacity: .45, offset: .2 },
+      { transform: 'translate(-50%,-50%) scale(1.08)', opacity: 1, offset: .25 },
+      { transform: 'translate(-50%,-50%) scale(.95)', opacity: .85, offset: .34 },
       { transform: 'translate(-50%,-50%) scale(1.3)', opacity: 0 }
     ] : [
       { transform: 'translate(-50%,-35%) scale(.15)', opacity: 0 },
@@ -298,13 +299,13 @@
     const firstBlast = events.findIndex(event => event.kind === 'behemoth');
     if (firstBlast >= 0) {
       // One restrained board kick avoids stacking dozens of competing shakes.
-      const strength = Math.min(4, board.width / 100);
+      const strength = Math.min(5, board.width / 80);
       const kick = [
         { transform: 'translate(0,0)' }, { transform: `translate(${-strength}px,${strength / 2}px)`, offset: .22 },
         { transform: `translate(${strength}px,${-strength / 2}px)`, offset: .4 },
         { transform: `translate(${-strength / 2}px,0)`, offset: .62 }, { transform: 'translate(0,0)' }
       ];
-      for (const id of ['board', 'rack']) pending.push(animate(document.getElementById(id), kick, { duration: 480, delay: firstBlast * step + 200 }));
+      for (const id of ['board', 'rack']) pending.push(animate(document.getElementById(id), kick, { duration: 420, delay: firstBlast * step + 260 }));
     }
     const recovered = new Set(events.filter(event => event.ids.length === 3).flatMap(event => event.ids)).size;
     const total = recoveredCount ?? recovered;
@@ -328,7 +329,8 @@
         const next = indices[indices.indexOf(i) + 1];
         pending.push(animate(badge, [
           { transform: 'translate(-100%,0) scale(.7)', opacity: 0 },
-          { transform: 'translate(-100%,0) scale(1.08)', opacity: 1, offset: .2 },
+          { transform: 'translate(-100%,0) scale(1.28)', opacity: 1, offset: .16 },
+          { transform: 'translate(-100%,0) scale(1)', opacity: 1, offset: .32 },
           { transform: 'translate(-100%,0) scale(1)', opacity: 1, offset: .7 },
           { transform: 'translate(-100%,-8px) scale(1)', opacity: 0 }
         ], { duration: next === undefined ? 1050 : Math.max(100, (next - i) * step), delay: i * step + 180, easing: 'linear', fill: 'backwards' }, true));

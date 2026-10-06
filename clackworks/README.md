@@ -1,8 +1,8 @@
-# Rain Match
+# Clackworks
 
 Standalone, mobile-friendly layered match-three roguelite with an original invention-workshop theme.
 Open `index.html` directly, or serve this directory from any static web host.
-In this GitHub Pages repository the game lives at `/rain_match/`.
+In this GitHub Pages repository the game lives at `/clackworks/`.
 No build step, external JavaScript, ads, or paid actions are required to play.
 The optional shared leaderboard requires the public Supabase configuration below.
 
@@ -58,7 +58,7 @@ counter, and an Expedition checkpoint with one previous valid backup. Scores are
 4. Fill `supabaseUrl` and `supabasePublishableKey` in `config.js`.
    Use a key beginning with `sb_publishable_`. Never use a Secret key,
    `service_role` key, database password, or connection string in browser code.
-5. Reload `/rain_match/`, finish a round, and submit a test ID. Open the leaderboard
+5. Reload `/clackworks/`, finish a round, and submit a test ID. Open the leaderboard
    in another browser to verify that the score is shared.
 
 Without configuration, the game and language switching work normally. The
@@ -123,15 +123,21 @@ reproduce the original game's private generation algorithm.
 
 ## Original music
 
-The ♪ button opens **Workshop Nocturne**, an original sixteen-bar synthesizer
-loop defined in `music.js`. Press Play to start. Music and matching effects have
-independent switches, and music has its own volume slider. Nothing autoplays.
-Closing the panel stops music; background tabs suspend it until visible again.
-No samples, third-party tracks, external player or streaming requests are used.
+The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 32-bar,
+108 BPM score in `music.js`. Bass, filtered pads, drums, arpeggios and a sparse
+lead share a local audio graph. Later stages, Bosses and chains raise the layer
+density. First Play also enables effects unless the player explicitly muted them;
+volume and mute are independent. Nothing autoplays on page load.
+
+Clicks, matches, blasts, arcs, suction and results have distinct synthesized
+sounds. Chain cues follow the visual timeline and are capped to avoid stacking
+hundreds of voices. A compressor provides headroom; pending cues are cancelled
+on mute, restart, backgrounding or interrupted animation. Background tabs suspend
+audio; closing the player stops music. No external music or samples are used.
 
 ## Developer administration
 
-Open `/rain_match/admin/` (also linked from the game footer). Sign in with your Supabase
+Open `/clackworks/admin/` (also linked from the game footer). Sign in with your Supabase
 Auth email and password. The static page uses only the project's publishable key;
 all management RPCs verify `auth.uid()` against a private administrator whitelist.
 Creating another Auth account does not grant management access.
@@ -142,7 +148,7 @@ Creating another Auth account does not grant management access.
    base migration and the supplied developer UUID
    `cf51ed16-ab31-41a7-8134-154688dfca14`. For a different installation, replace
    that UUID with the intended administrator's Auth user ID before running.
-3. Sign in at `/rain_match/admin/`. Inspect mode counts and scores; remove one ID from a
+3. Sign in at `/clackworks/admin/`. Inspect mode counts and scores; remove one ID from a
    selected mode, reset one mode, or reset all boards. Each deletion requires typing
    the displayed confirmation. Running the setup script does not delete scores.
 
@@ -189,8 +195,8 @@ an approximately 1.6 s transition: the old board contracts into a portal and the
 new tiles descend into place. Input and the play clock resume after landing;
 repeated restarts cancel the earlier transition. Reduced-motion mode skips it.
 
-The former `/yang/` and `/yang/admin/` URLs redirect to `/rain_match/` and
-`/rain_match/admin/`, preserving query parameters and fragments when JavaScript
+The former `/rain_match/`, `/yang/` and their `/admin/` URLs redirect to `/clackworks/` and
+`/clackworks/admin/`, preserving query parameters and fragments when JavaScript
 is enabled. Origin-based preferences and the Supabase leaderboard stay intact.
 
 The leaderboard is displayed directly on the game page: left of the centered
@@ -205,7 +211,7 @@ inside the panel; empty/error states and the panel controls support both languag
 
 ## Expedition (endless roguelike mode, Boss update)
 
-Open `/rain_match/?mode=expedition`. Classic difficulties keep their own rules.
+Open `/clackworks/?mode=expedition`. Classic difficulties keep their own rules.
 
 - Carry **six passive types plus one active equipment**. The pool now includes
   Welding Torch, Overload Boiler and Precision Calibrator. A seventh passive requires a

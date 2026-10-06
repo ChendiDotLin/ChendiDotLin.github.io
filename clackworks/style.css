@@ -534,3 +534,9 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
   .reward-choice .relic-portrait { width: 60px; height: 60px; }
   .relic-chip .relic-copy { white-space: normal; line-height: 1.45; }
 }
+
+/* A crisp attack and readable chain payoff, without covering playable tiles. */
+.fx-blast-core { background: radial-gradient(circle, #fffbea 0 9%, #ffe4a7 13%, #ffb35ce6 23%, #ef633a70 42%, transparent 68%); }
+.fx-blast-wave { border-width: 3px; box-shadow: 0 0 10px #ffc36b65, inset 0 0 7px #ffe3a940; }
+.fx-chain-count { font-weight: 800; font-size: 20px; color: #ffe2a6; text-shadow: 0 2px 0 #172a32, 0 0 12px #ffbf6c70; }
+@keyframes relic-proc { 22% { border-color: var(--gear-color, #e7d3ff); box-shadow: 0 0 16px var(--gear-color, #bbaaef66); background: var(--gear-tint, #bfa8ec2e); } }
