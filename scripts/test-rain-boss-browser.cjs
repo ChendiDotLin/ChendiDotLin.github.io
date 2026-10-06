@@ -2,6 +2,7 @@
 const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.RAIN_BROWSER_PATH||undefined,headless:true,args:['--disable-gpu']});try{
 const page=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});const errors=[],submissions=[];let fail=true;
+await page.routeWebSocket(/\/realtime\/v1\//, socket => socket.close());
 page.on('pageerror',e=>errors.push(e.message));
 await page.route('**/expedition.js*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../rain_match/expedition.js'),'utf8')+`\nconst Base=RainExpedition.Expedition;RainExpedition.Expedition=class extends Base{constructor(){super();window.testGame=this}static fromSave(data){const game=Base.fromSave(data);window.testGame=game;return game}};`}));
 await page.route('**/rest/v1/rpc/*',r=>{const data=r.request().postDataJSON(),url=r.request().url();if(url.includes('submit')){submissions.push({url,data});return r.fulfill(fail?{status:503,json:{message:'offline test'}}:{json:{ok:true,improved:true,rank:2,speedRank:1,playerId:data.p_player_id}})}

@@ -8,15 +8,17 @@
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=rarity-contrast-v1">
+  <link rel="stylesheet" href="style.css?v=presence-v1">
   <script defer src="core.js?v=expedition-v3-boss"></script>
   <script defer src="expedition.js?v=rarity-contrast-v1"></script>
   <script defer src="expedition-save.js?v=expedition-v3-boss"></script>
-  <script defer src="i18n.js?v=rarity-contrast-v1"></script>
+  <script defer src="i18n.js?v=presence-v1"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
+  <script defer src="vendor/supabase-2.117.2.js"></script>
+  <script defer src="presence.js?v=presence-v1"></script>
   <script defer src="leaderboard.js?v=expedition-v3-boss"></script>
   <script defer src="effects.js?v=impact-fx-v1"></script>
-  <script defer src="game.js?v=expedition-default-v1"></script>
+  <script defer src="game.js?v=presence-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -28,6 +30,7 @@
       <a class="brand" href="./" aria-label="Rain Match 首页"><span id="brand-name">Rain Match</span><small>RISK OF RAIN 2</small></a>
       <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button><button class="icon-button" id="restart" aria-label="重新开局" title="重新开局">↻</button></div>
     </header>
+    <div class="presence-status" id="presence-status" data-state="connecting" role="status" aria-live="polite"><span class="presence-dot" aria-hidden="true"></span><span id="presence-text">正在连接在线人数…</span></div>
     <section id="music-panel" class="music-panel" hidden aria-label="Risk of Rain 2 soundtrack">
       <div class="music-heading"><span>RoR2 · Chris Christodoulou</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
       <div id="music-player"></div>

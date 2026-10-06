@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
   const browser = await chromium.launch({ executablePath: process.env.RAIN_BROWSER_PATH || undefined, headless: true, args: ['--disable-gpu'] });
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+    await page.routeWebSocket(/\/realtime\/v1\//, socket => socket.close());
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/rest/v1/rpc/*', route => route.fulfill({ json: { entries: [], total: 0 } }));

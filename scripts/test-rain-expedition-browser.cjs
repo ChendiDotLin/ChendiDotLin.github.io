@@ -7,6 +7,7 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/rain_match/';
  const browser = await chromium.launch({ executablePath: process.env.RAIN_BROWSER_PATH || undefined, headless: true, args: ['--disable-gpu'] });
  try {
  const context = await browser.newContext({ viewport: {width:1366,height:1000}, reducedMotion:'reduce' });
+ await context.routeWebSocket(/\/realtime\/v1\//, socket => socket.close());
  const errors=[], submissions=[]; let failSubmit=true;
  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
  await context.route('**/expedition.js*',async r=>{

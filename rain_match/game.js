@@ -24,6 +24,7 @@
   let submitting = false, submissionPayload = null, rankingRequest = 0;
   let rankingData = null, rankingError = '', rankingLoading = false;
   const rankingCache = new Map();
+  let presence, presenceView = { status: 'connecting' };
   let playerDraft = readPreference('rain-match-player') || '', formError = '', lastStatus = null;
   let wins = Math.max(0, Number(readPreference('rain-match-wins')) || 0);
   const formatTime = (ms, precise = false) => `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}${precise ? '.' + String(ms % 1000).padStart(3, '0') : ''}`;
@@ -90,8 +91,16 @@
     });
     $('inline-ranking-tabs').setAttribute('aria-label', t('rankingModes'));
     renderRankings();
+    renderPresence();
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
     $('wins').textContent = String(wins).padStart(2, '0');
+  }
+  function renderPresence() {
+    const state = presenceView.status;
+    $('presence-status').dataset.state = state;
+    $('presence-status').title = t('onlineHint');
+    $('presence-text').textContent = state === 'ready' ? t('onlineCount', { n: presenceView.total, expedition: presenceView.expedition })
+      : t(state === 'idle' ? 'onlineIdle' : state === 'connecting' ? 'onlineConnecting' : 'onlineUnavailable');
   }
   const newRunId = () => typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
   function captureTen() {
@@ -276,6 +285,7 @@
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
     renderExpedition();
     checkpoint(); renderResumeBanner();
+    presence?.setMode(game.mode);
   }
   function pick(id) {
     if (finalized || animating || savePaused) return;
@@ -717,4 +727,18 @@
     $('timer').textContent = formatTime(elapsed);
     render(); refreshRankings('expedition'); requestExpedition();
   }
+  if (window.RainPresence) {
+    presence = new RainPresence.Presence(window.RAIN_CONFIG, {
+      storage, createClient: window.supabase?.createClient,
+      onChange: state => { presenceView = state; renderPresence(); }
+    });
+    presence.setMode(game.mode); presence.setVisible(!document.hidden); presence.setOnline(navigator.onLine); presence.start();
+    for (const name of ['pointerdown', 'keydown', 'scroll']) document.addEventListener(name, () => presence.activity(), { passive: true });
+    document.addEventListener('visibilitychange', () => presence.setVisible(!document.hidden));
+    window.addEventListener('offline', () => presence.setOnline(false));
+    window.addEventListener('online', () => presence.setOnline(true));
+    window.addEventListener('pagehide', () => presence.stop());
+    window.addEventListener('pageshow', event => { if (event.persisted) { presence.setVisible(!document.hidden); presence.setOnline(navigator.onLine); presence.start(); } });
+    window.addEventListener('storage', event => { if (event.key === RainPresence.KEY) presence.refreshIdentity(); });
+  } else { presenceView = { status: 'unavailable' }; renderPresence(); }
 })();

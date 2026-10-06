@@ -329,3 +329,32 @@ Existing saves are previewed while paused and require Continue before play or
 writes resume. Explicit `?mode=drizzle`, `?mode=rain`, and `?mode=monsoon` links
 still open their classic modes. `node scripts/test-rain-default-browser.cjs`
 checks fresh entry, saved runs, tab locks, unavailable storage and classic links.
+
+## Online players
+
+The header displays approximate active browser counts through
+[Supabase Realtime Presence](https://supabase.com/docs/guides/realtime/presence).
+It uses the existing publishable key and public `rain-match-online-v1` channel;
+no SQL migration, database table or administrator login is required.
+
+Visible pages count for three minutes after opening, clicking, typing or
+scrolling. Hidden, idle, closed and offline pages disconnect. Multiple tabs in
+the same browser share a random local identifier and count once. Expedition
+counts browsers with at least one active tab viewing that mode, including supply
+and resume screens. Devices or browsers cannot be merged into one human without
+login, so the label is an estimate, not an authenticated audience metric.
+
+Only the random browser identifier and mode are sent as ephemeral Presence
+metadata; no player IDs, scores or historical visits are uploaded. Blocked local
+storage falls back to a per-tab identifier. Network failures show unavailable
+instead of zero or an old count; the game and leaderboard remain independent.
+Unexpected connection loss can take about a minute to propagate to other clients
+(65 seconds in the abrupt-offline browser check); normal leaves sync promptly.
+
+The pinned MIT-licensed SDK is hosted in `vendor/` with its provenance and
+license. This separate client disables auth storage and session detection.
+`node scripts/test-rain-presence.cjs` verifies lifecycle and aggregation;
+`node scripts/test-rain-presence-browser.cjs` uses a unique temporary channel to
+test real joins/leaves, browser deduplication, visibility, mode changes and
+offline recovery. Other browser tests block the Presence socket to avoid
+changing public counts. All leaderboard requests in these tests are mocked.

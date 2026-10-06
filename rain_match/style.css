@@ -24,6 +24,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--purple); outlin
 .brand > span { color: var(--purple); }
 .brand small { display: block; color: #a7b1c4; font-size: 8px; font-weight: 500; letter-spacing: 3px; margin-top: 5px; text-shadow: none; }
 .header-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.presence-status { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 20px; margin: 2px 0 3px; color: #8fa2b5; font-size: 10px; font-variant-numeric: tabular-nums; text-align: center; line-height: 1.6; }
+.presence-dot { flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: #67768b; }
+.presence-status[data-state="ready"] { color: #b3d8bd; }
+.presence-status[data-state="ready"] .presence-dot { background: #a1dbb3; box-shadow: 0 0 7px #a1dbb344; }
 .icon-button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #95a1b336; border-radius: 50%; background: #ffffff04; color: #bec7d6; font-size: 20px; padding: 0; }
 .icon-button:hover { background: #ffffff0c; color: #fff; }
 .difficulty-options { display: flex; justify-content: center; gap: 6px; margin: 12px 0 16px; }

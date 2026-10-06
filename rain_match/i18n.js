@@ -2,6 +2,11 @@
   'use strict';
   const messages = {
     zh: {
+      onlineCount: "在线 {n} 人 · 远征 {expedition} 人",
+      onlineConnecting: "正在连接在线人数…",
+      onlineUnavailable: "在线人数暂不可用",
+      onlineIdle: "操作后更新在线人数",
+      onlineHint: "估算近 3 分钟有操作且页面可见的在线人数，包含自己；同一浏览器合并计数。远征人数为其中正在远征界面的玩家，突然断网可能延迟约一分钟更新。",
       expRecharge: "补充一次技能", expRechargeCopy: "补充一次主动装备充能；没有主动装备时恢复羽毛。不会恢复护盾。",
       "expedition": "远征",
       "expeditionTitle": "无限远征",
@@ -191,6 +196,11 @@
       "expFx_reclaim": "装备夺回"
     },
     en: {
+      onlineCount: "{n} online · {expedition} in Expedition",
+      onlineConnecting: "Connecting to online players…",
+      onlineUnavailable: "Online count unavailable",
+      onlineIdle: "Interact to update online count",
+      onlineHint: "Approximate count of visible pages active in the last 3 minutes, including you. Tabs in the same browser count once. Expedition counts those viewing that mode. Abrupt connection loss may take about a minute to sync.",
       expRecharge: "Refill one charge", expRechargeCopy: "Restore one equipment charge, or Feather if you have no equipment. Does not restore Shield.",
       "expedition": "Expedition",
       "expeditionTitle": "Endless expedition",
