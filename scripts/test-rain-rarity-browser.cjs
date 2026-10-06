@@ -56,6 +56,29 @@ const assert = require('node:assert/strict');
     await page.locator(`[data-reward="${red}"]`).click();
     assert.equal(await page.evaluate(id => testGame.relics[id], red), 1);
     assert.ok(await page.locator('#board button:enabled').count());
+    // One loadout displays all five rarity frames; levels remain independent.
+    await page.evaluate(() => {
+      testGame.relics = { gasoline: 1, feather: 1, shield: 1, behemoth: 1, blackhole: 1 };
+      testGame.equipment = 'blackhole'; testGame.charge = 1;
+    });
+    await page.locator('#language').click();
+    const frames = await page.locator('.relic-chip').evaluateAll(chips => chips.map(el => ({
+      rarity: el.dataset.rarity, color: getComputedStyle(el).borderLeftColor,
+      portrait: el.querySelector('.relic-portrait').dataset.rarity, text: el.innerText
+    })));
+    assert.equal(new Set(frames.map(item => item.color)).size, 5, 'five distinct equipment frames');
+    assert.ok(frames.every(item => item.rarity === item.portrait));
+    for (const width of [320, 390, 1366]) {
+      await page.setViewportSize({ width, height: 1000 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.evaluate(() => scrollTo(0, 0));
+      if (width !== 320) await page.screenshot({ path: `/tmp/rain-gear-${width}.png`, fullPage: true });
+    }
+    await page.locator('[data-relic=behemoth]').click();
+    assert.equal(await page.locator('.rarity-badge[data-rarity=legendary]').count(), 1);
+    await page.locator('#modal-language').click();
+    assert.match(await page.locator('.rarity-badge').innerText(), /红装|Legendary/);
+    await page.locator('#relic-close').click();
     assert.deepEqual(errors, []);
     console.log('PASS: covered-vs-playable contrast, hidden stacks, bilingual rarity and odds, real legendary selection, stable saved offers, and mobile/desktop layouts.');
   } finally { await browser.close(); }

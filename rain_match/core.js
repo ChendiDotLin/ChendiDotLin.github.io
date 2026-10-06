@@ -3,7 +3,7 @@
   'use strict';
   // IDs/order stay stable for existing saves; only presentation metadata changes.
   const ITEMS = [
-    { id: 'bear', icon: 'part-glove', name: '工作手套', en: 'Work Glove', color: '#d5deec' },
+    { id: 'bear', icon: 'part-measure', name: '口袋卷尺', en: 'Pocket Tape Measure', color: '#d5deec' },
     { id: 'glasses', icon: 'part-bulb', name: '信号灯泡', en: 'Signal Bulb', color: '#d5deec' },
     { id: 'syringe', icon: 'part-plug', name: '电源插头', en: 'Power Plug', color: '#d5deec' },
     { id: 'crowbar', icon: 'part-key', name: '柜门钥匙', en: 'Cabinet Key', color: '#d5deec' },

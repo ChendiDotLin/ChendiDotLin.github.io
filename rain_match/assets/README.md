@@ -39,3 +39,5 @@ ordinary tile IDs/type indices to their new part names and asset filenames.
 locally with oscillators, without audio samples. Existing sound effects are also
 synthesized. This provenance records the implementation; it does not claim that
 project names or artwork have undergone legal or trademark clearance.
+
+The current first tile is Pocket Tape Measure (`toon/part-measure.webp`), replacing the glove while retaining its saved type index and internal ID. Generated with built-in image_gen using the 2D boiler as the style reference; prompt: `toon/part-measure.prompt.json`. The unused glove is retained as design history.

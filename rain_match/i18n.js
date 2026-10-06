@@ -34,7 +34,7 @@
       "expRewardOdds": "红装出现机会 {n}% · 每次最多一件，升级也遵循此概率。",
       "expRarity_common": "白装",
       "expRarity_uncommon": "绿装",
-      "expRarity_void": "特制",
+      "expRarity_void": "紫装 · 特制",
       "expRarity_legendary": "红装 · 传说",
       "expRarity_equipment": "橙装",
       "expRewardCopy": "最多六类被动与一件主动装备。第 3 关开放二级；第 6 关可保留两件三级进化，第 10 关起可保留六件。",

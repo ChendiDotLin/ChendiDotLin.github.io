@@ -8,13 +8,26 @@
   const center = rect => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
   function animate(el, frames, options, temporary = false) {
     if (motion.matches || !el.animate) { if (temporary) el.remove(); return Promise.resolve(); }
-    const animation = el.animate(frames, { easing: 'cubic-bezier(.2,.7,.25,1)', ...options });
-    active.add(animation);
-    return animation.finished.catch(() => {}).finally(() => {
-      active.delete(animation); animation.cancel(); if (temporary) el.remove();
+    // Native animation promises may stop progressing in a suspended document.
+    // Our completion and cleanup must not depend on the browser settling them.
+    return new Promise(resolve => {
+      let animation, timer, done = false;
+      const finish = () => {
+        if (done) return;
+        done = true; clearTimeout(timer); active.delete(finish);
+        try { animation?.cancel(); } catch (_) { /* Cleanup is best effort. */ }
+        if (temporary) el.remove();
+        resolve();
+      };
+      active.add(finish);
+      try {
+        animation = el.animate(frames, { easing: 'cubic-bezier(.2,.7,.25,1)', ...options });
+        animation.finished.then(finish, finish);
+        timer = setTimeout(finish, (Number(options.duration) || 0) + (Number(options.delay) || 0) + 800);
+      } catch (_) { finish(); }
     });
   }
-  function reset() { active.forEach(a => a.cancel()); active.clear(); layer.replaceChildren(); }
+  function reset() { active.forEach(finish => finish()); layer.replaceChildren(); }
   motion.addEventListener('change', reset);
   function node(className, point, color) {
     const el = document.createElement('i'); el.className = className;

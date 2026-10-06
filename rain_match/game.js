@@ -6,6 +6,7 @@
   const fx = RainEffects;
   const music = new RainMusic();
   let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
+  let activeEffect = null;
   const isExpedition = () => game?.mode === 'expedition';
   const recovered = () => isExpedition() ? game.recovered : game.cleared;
   let storage;
@@ -39,6 +40,27 @@
   }
   function closeDialog() {
     updateClock(); if (modal.open) modal.close(); dialogView = null; syncClock();
+  }
+  function cancelEffects() {
+    clearTimeout(activeEffect?.timer); activeEffect = null;
+    fx.reset(); animating = false;
+  }
+  function playEffect(play, after = () => {}) {
+    const effect = { run: runId };
+    activeEffect = effect; animating = true; render(); syncClock();
+    const finish = () => {
+      if (activeEffect !== effect || effect.run !== runId) return;
+      clearTimeout(effect.timer); activeEffect = null;
+      updateClock(); animating = false; render(); syncClock(); after();
+    };
+    effect.skip = () => { if (activeEffect === effect) { fx.reset(); finish(); } };
+    // All current scenes finish within 3.1 s. A broken renderer must never own
+    // the input lock forever; game state was already committed before the FX.
+    effect.timer = setTimeout(effect.skip, 4500);
+    Promise.resolve().then(() => activeEffect === effect ? play() : undefined)
+      .catch(error => { console.warn('Rain Match effect skipped:', error); if (activeEffect === effect) fx.reset(); })
+      .finally(finish);
+    if (document.hidden) effect.skip();
   }
   function beep(matched = false) {
     if (!sound) return;
@@ -168,7 +190,7 @@
     else { start('expedition'); }
   }
   function restoreRun(record) {
-    fx.reset(); closeDialog(); clockActive = false;
+    cancelEffects(); closeDialog(); clockActive = false;
     game = RainExpedition.Expedition.fromSave(record.game); elapsed = record.elapsedMs; tick = performance.now();
     runId = record.runId; finalized = record.finalized; receipt = record.receipt; submissionPayload = record.submissionPayload;
     tenTime = record.tenTime; tenRecord = record.tenRecord; tenSubmitting = false;
@@ -202,7 +224,7 @@
     if (isExpedition()) { updateClock(); checkpoint(); }
     if (mode !== 'expedition') saveStore.release();
     savePaused = false;
-    fx.reset();
+    cancelEffects();
     const outgoing = runId && game ? fx.captureBoard() : null;
     animating = !!runId;
     closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
@@ -219,10 +241,7 @@
     render(!animating); syncClock();
     refreshRankings(game.mode);
     if (animating) {
-      const effectRun = runId;
-      fx.restart(outgoing).finally(() => {
-        if (runId !== effectRun) return;
-        updateClock(); animating = false; render(); syncClock();
+      playEffect(() => fx.restart(outgoing), () => {
         if (isExpedition()) showExpeditionReward();
       });
     } else if (isExpedition()) showExpeditionReward();
@@ -298,7 +317,10 @@
     const result = game.pick(id, targeting === 'feather'); syncClock(); if (!result.ok) return;
     targeting = null;
     lastStatus = null; beep(result.matched); render();
-    if (!result.events?.some(event => event.kind === 'shield')) fx.pick(before, id, result.type, result.matched, (result.events || []).filter(event => event.ids.length === 3).flatMap(event => event.ids));
+    if (!result.events?.some(event => event.kind === 'shield')) {
+      try { fx.pick(before, id, result.type, result.matched, (result.events || []).filter(event => event.ids.length === 3).flatMap(event => event.ids)); }
+      catch (error) { console.warn('Rain Match pick effect skipped:', error); fx.reset(); }
+    }
     if (result.matched) {
       $('combo').textContent = t('match', { item: itemName(result.type) });
       $('combo').classList.remove('show'); void $('combo').offsetWidth;
@@ -313,13 +335,9 @@
     const before = fx.snapshot();
     updateClock(); if (!game.use(name)) return;
     targeting = null;
-    const effectRun = runId;
-    animating = true; closeDialog(); syncClock(); beep();
-    formError = ''; lastStatus = { remove: 'removed', undo: 'undone', shuffle: 'shuffled' }[name]; render();
-    fx.power(name, before).finally(() => {
-      if (runId !== effectRun) return;
-      updateClock(); animating = false; render(); syncClock();
-    });
+    closeDialog(); beep();
+    formError = ''; lastStatus = { remove: 'removed', undo: 'undone', shuffle: 'shuffled' }[name];
+    playEffect(() => fx.power(name, before));
   }
   function showDialog(view, content) {
     updateClock(); dialogView = view; $('modal-content').innerHTML = content;
@@ -455,7 +473,8 @@
     return t('desc_' + id, values[id]) + (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '');
   }
   function relicIcon(id) {
-    return `<img src="assets/toon/${RainExpedition.RELICS[id].icon}.webp" alt="">`;
+    const relic = RainExpedition.RELICS[id];
+    return `<span class="relic-portrait" data-rarity="${relic.rarity}" aria-hidden="true"><img src="assets/toon/${relic.icon}.webp" alt=""></span>`;
   }
   function loadoutMarkup() {
     return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${t('relic_' + id)} ${level}`).join(' / ')}</p>`;
@@ -463,7 +482,8 @@
   function showRelic(id = selectedRelic) {
     selectedRelic = id;
     const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })} · ${t(game.relics[id] ? 'expPartialHint' : 'expSealedHint')}</p>` : '';
-    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}<p>${relicDescription(id)}</p><button class="primary-button" id="relic-close">${t('expStay')}</button>`);
+    const rarity = RainExpedition.RELICS[id].rarity;
+    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}<p>${relicDescription(id)}</p><button class="primary-button" id="relic-close">${t('expStay')}</button>`);
     $('relic-close').addEventListener('click', closeDialog);
   }
   function renderExpedition() {
@@ -489,11 +509,12 @@
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
     for (const { id, level } of game.loadout()) {
       const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
+      button.dataset.rarity = RainExpedition.RELICS[id].rarity;
       const sealed = Object.hasOwn(game.sealed, id), current = game.relics[id] || 0;
       button.classList.toggle('sealed', sealed && !current); button.classList.toggle('partial', sealed && !!current);
       const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level });
-      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${label}</small></span>`;
-      button.title = label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
+      button.innerHTML = `${relicIcon(id)}<span class="relic-copy">${t('relic_' + id)}<small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small></span>`;
+      button.title = t('expRarity_' + button.dataset.rarity) + ' · ' + label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
       button.setAttribute('aria-label', t('relic_' + id) + ' · ' + button.title);
       button.addEventListener('click', () => showRelic(id));
       relicBar.append(button);
@@ -552,7 +573,7 @@
   function showReplacement(id) {
     replacementItem = id;
     const passives = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === 'passive');
-    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}">${relicIcon(relic.id)}<div><b>${t('relic_' + relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${t('relic_' + id)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.RELICS[relic.id].rarity}">${relicIcon(relic.id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[relic.id].rarity)}</small><b>${t('relic_' + relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${t('relic_' + id)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
     $('reward-back').addEventListener('click', showExpeditionReward);
     $('modal-content').querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => {
       if (game.choose(id, button.dataset.replace)) afterReward();
@@ -573,14 +594,11 @@
         stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
       }
       if (animating || savePaused) return;
-      fx.reset(); const outgoing = fx.captureBoard();
+      cancelEffects(); const outgoing = fx.captureBoard();
       if (!game.nextStage()) { outgoing?.remove(); return; }
       stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;
       closeDialog(); $('board').replaceChildren(); render(); syncClock();
-      const effectRun = runId;
-      fx.restart(outgoing).finally(() => {
-        if (runId !== effectRun) return;
-        updateClock(); animating = false; render(); syncClock();
+      playEffect(() => fx.restart(outgoing), () => {
         if (game.bossActive) showBossIntro();
       });
     });
@@ -605,12 +623,10 @@
       $('combo').textContent = t('expReclaimed', { item: t('relic_' + last.relic), n: last.level });
     }
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
-    animating = true; render(); syncClock(); const effectRun = runId;
-    [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
-    fx.relic(events, before, chain).finally(() => {
-      if (runId !== effectRun) return;
-      updateClock(); animating = false; render(); syncClock(); expeditionOutcome();
-    });
+    playEffect(() => {
+      [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
+      return fx.relic(events, before, chain);
+    }, expeditionOutcome);
   }
   function activateExpedition(id) {
     if (!isExpedition() || finalized || animating || savePaused) return;
@@ -621,11 +637,7 @@
   function showBossIntro() {
     showDialog('boss', `<div class="boss-emblem" aria-hidden="true"><i></i><i></i><span>◇</span></div><span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><p class="boss-intro-rule">${t('expBossHint')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
     $('boss-start').addEventListener('click', () => {
-      const effectRun = runId; animating = true; closeDialog(); render(); syncClock();
-      fx.bossEntrance().finally(() => {
-        if (runId !== effectRun) return;
-        updateClock(); animating = false; render(); syncClock();
-      });
+      closeDialog(); playEffect(() => fx.bossEntrance());
     });
   }
   function showTenRecord() {
@@ -721,7 +733,11 @@
     if (tool) { event.preventDefault(); use(tool); }
   });
   setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
-  document.addEventListener('visibilitychange', () => { updateClock(); checkpoint(); syncClock(); });
+  document.addEventListener('visibilitychange', () => {
+    updateClock();
+    if (document.hidden) { activeEffect?.skip(); fx.reset(); }
+    checkpoint(); syncClock();
+  });
   window.addEventListener('pagehide', () => { updateClock(); checkpoint(); saveStore.release(); clockActive = false; });
   window.addEventListener('pageshow', async event => {
     if (!event.persisted || !isExpedition()) return;
