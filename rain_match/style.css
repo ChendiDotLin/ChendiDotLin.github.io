@@ -363,7 +363,7 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .reward-choice img, .reward-choice .shield-glyph { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
 .reward-choice b { display: block; font-size: 14px; margin: 3px 0; }
 .reward-choice small { color: #c2aedf; font-size: 10px; }
-.reward-choice span:not(.shield-glyph) { display: block; color: #adbbce; font-size: 11px; line-height: 1.65; }
+.reward-choice span:not(.shield-glyph):not(.gasoline-glyph) { display: block; color: #adbbce; font-size: 11px; line-height: 1.65; }
 .relic-large img, .relic-large .shield-glyph { width: 64px; height: 64px; object-fit: contain; }
 .build-summary { font-size: 11px !important; line-height: 1.7 !important; overflow-wrap: anywhere; }
 .ranking-build { display: block; font-size: 9px; margin-top: 4px; color: #b8a2dc; }
@@ -382,7 +382,7 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .ranking-build > span { display: block; margin-top: 5px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 480px) {
   .relic-chip { flex: 1 1 0; min-width: 0; padding: 4px; gap: 4px; }
-  .relic-chip > span:not(.shield-glyph) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+  .relic-chip > span:not(.shield-glyph):not(.gasoline-glyph) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
   .relic-chip img, .relic-chip .shield-glyph { width: 21px; height: 25px; flex-shrink: 0; }
   .relic-chip small { font-size: 8px; }
 }
@@ -394,3 +394,22 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .save-status.save-warning { color: #e4b697; line-height: 1.6; }
 .relic-chip.proc-flash { animation: relic-proc 1.2s ease; }
 @keyframes relic-proc { 25% { border-color: #e7d3ff; box-shadow: 0 0 16px #bbaaef66; background: #bfa8ec2e; } }
+
+/* Expedition: larger builds and the stage-ten equipment lockdown. */
+.relic-chip.sealed { opacity: .6; filter: grayscale(1); border-style: dashed; }
+.gasoline-glyph { width: 27px; font-size: 27px; line-height: 1; color: #f3a475; text-align: center; }
+.boss-status { margin: 8px 0; padding: 9px 11px; border: 1px solid #ef987455; border-radius: 7px; background: #ef98740b; color: #f5bda2; font-size: 11px; line-height: 1.6; }
+.boss-run .expedition-panel { border-color: #b87960; }
+.boss-run .progress-track > div { background: #e99a73; }
+.boss-victory { color: #d9c1fc; }
+.ten-time { font-size: 32px; font-variant-numeric: tabular-nums; color: #d8cbff; letter-spacing: 2px; }
+#expedition-ranking-tabs { margin-top: -5px; }
+#relic-slots { margin: 7px 0; color: #aebbd0; }
+#ten-player { width: 100%; min-width: 0; border: 1px solid #536078; border-radius: 7px; background: #151f2e; color: #f3f3fc; padding: 12px; font: inherit; }
+
+.reward-choice .gasoline-glyph { width: 44px; flex-shrink: 0; font-size: 38px; }
+.relic-large .gasoline-glyph { display: inline-block; width: 64px; font-size: 60px; }
+@media (max-width: 480px) {
+  .relic-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .relic-chip .gasoline-glyph { width: 21px; font-size: 23px; flex-shrink: 0; }
+}

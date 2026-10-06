@@ -20,6 +20,7 @@
   const modeName = mode => t(`${mode}Title`);
   let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = false, audio, comboTimeout;
   let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'rain';
+  let tenTime = null, tenRecord = null, tenSubmitting = false, expeditionBoard = 'expedition_distance';
   let submitting = false, submissionPayload = null, rankingRequest = 0;
   let rankingData = null, rankingError = '', rankingLoading = false;
   const rankingCache = new Map();
@@ -92,6 +93,12 @@
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
     $('wins').textContent = String(wins).padStart(2, '0');
   }
+  const newRunId = () => typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
+  function captureTen() {
+    if (!isExpedition() || !game.competitive || game.completedStages < 10 || tenTime !== null) return;
+    tenTime = Math.round(elapsed);
+    tenRecord = { runId: newRunId(), elapsedMs: tenTime, cleared: game.recovered, loadout: game.loadout(), playerId: null, receipt: null };
+  }
   function updateSaveLabel() {
     if (!$('expedition-save-status')) return;
     $('expedition-save-status').textContent = t(savePaused ? 'saveConflict' : saveNote ? 'saveUnavailable' : 'saveLocal');
@@ -100,8 +107,9 @@
   function checkpoint() {
     if (!isExpedition() || !saveStore.owned || savePaused || !runId) { updateSaveLabel(); return; }
     lastCheckpoint = performance.now();
-    const record = { schema: 2, savedAt: Date.now(), runId, elapsedMs: elapsed, finalized, receipt,
-      submissionPayload, stageRewardClaimed, playerDraft, game: game.toSave() };
+    captureTen();
+    const record = { schema: 3, savedAt: Date.now(), runId, elapsedMs: elapsed, finalized, receipt,
+      submissionPayload, stageRewardClaimed, playerDraft, tenTime, tenRecord, game: game.toSave() };
     const result = saveStore.write(record);
     if (result.ok) { saveNote = null; saveState = { record, raw: saveStore.expected, error: null, recovered: false }; }
     else {
@@ -151,6 +159,7 @@
     fx.reset(); closeDialog(); clockActive = false;
     game = RainExpedition.Expedition.fromSave(record.game); elapsed = record.elapsedMs; tick = performance.now();
     runId = record.runId; finalized = record.finalized; receipt = record.receipt; submissionPayload = record.submissionPayload;
+    tenTime = record.tenTime; tenRecord = record.tenRecord; tenSubmitting = false;
     stageRewardClaimed = record.stageRewardClaimed; playerDraft = record.playerDraft;
     savedWin = false; submitting = false; formError = ''; lastStatus = null;
     animating = false; targeting = null; replacementItem = null; savePaused = false;
@@ -187,6 +196,7 @@
     closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
     targeting = null; stageRewardClaimed = false; replacementItem = null; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
+    tenTime = null; tenRecord = null; tenSubmitting = false;
     runId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
     clearTimeout(comboTimeout); $('combo').classList.remove('show');
     $('board').replaceChildren(); $('timer').textContent = '00:00';
@@ -274,14 +284,14 @@
     const result = game.pick(id, targeting === 'feather'); syncClock(); if (!result.ok) return;
     targeting = null;
     lastStatus = null; beep(result.matched); render();
-    if (!result.events?.some(event => event.kind === 'shield')) fx.pick(before, id, result.type, result.matched);
+    if (!result.events?.some(event => event.kind === 'shield')) fx.pick(before, id, result.type, result.matched, (result.events || []).filter(event => event.ids.length === 3).flatMap(event => event.ids));
     if (result.matched) {
       $('combo').textContent = t('match', { item: itemName(result.type) });
       $('combo').classList.remove('show'); void $('combo').offsetWidth;
       $('combo').classList.add('show'); clearTimeout(comboTimeout);
       comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 1850);
     }
-    if (isExpedition()) { finishExpeditionAction(before, result.events || []); return; }
+    if (isExpedition()) { finishExpeditionAction(before, result.events || [], result.recovered); return; }
     if (game.status !== 'playing') showResult(true);
   }
   function use(name) {
@@ -308,6 +318,7 @@
     if (won && !savedWin) {
       savedWin = true; wins++; $('wins').textContent = String(wins).padStart(2, '0'); savePreference('rain-match-wins', String(wins));
     }
+    const canSubmit = !isExpedition() || game.competitive || !!submissionPayload;
     const rescue = !won && !finalized && (game.canUse('remove') || game.canUse('undo'));
     showDialog('result', `${fx.resultScene(won, t(won ? 'escapeSignal' : 'defeatSignal'), animateScene === true)}<span class="modal-eyebrow">${modeName(game.mode)}</span>
       <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : 'lostTitle')}</h2>
@@ -316,14 +327,14 @@
       ${rescue && game.canUse('remove') ? `<button class="secondary-button" data-rescue="remove">${t('rescueRemove')}</button>` : ''}
       ${rescue && game.canUse('undo') ? `<button class="secondary-button" data-rescue="undo">${t('rescueUndo')}</button>` : ''}
       <div class="score-entry"><p class="scope-note">${t('rankingScope')}</p>
-      ${receipt ? `<p id="save-feedback" class="save-feedback" role="status" tabindex="-1">${t(receipt.improved ? 'saved' : 'notBest', { rank: receipt.rank })}</p>` :
+      ${!canSubmit ? `<p>${t('expLegacyRun')}</p>` : receipt ? `<p id="save-feedback" class="save-feedback" role="status" tabindex="-1">${t(receipt.improved ? 'saved' : 'notBest', { rank: receipt.rank })}</p>` :
         `<form id="score-form" novalidate><label for="player-id">${t('player')}</label><div class="score-input-row"><input id="player-id" name="player-id" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="id-rules score-error" placeholder="${t('playerPlaceholder')}" required><button class="primary-button" type="submit" ${submitting || !leaderboard.configured ? 'disabled' : ''}>${t(submitting ? 'sending' : rescue ? 'submitEnd' : 'submit')}</button></div><p id="id-rules" class="input-hint">${t('idRules')}</p><p id="score-error" class="form-error" role="alert">${formError ? t(isExpedition() && formError === 'notConfigured' ? 'expDatabase' : formError) : !leaderboard.configured ? t('notConfigured') : ''}</p></form>`}
       <button class="text-button" id="view-result-rankings">${t('seeRankings')}</button></div>
       <button class="primary-button" data-new-run>${t(won && game.mode === 'drizzle' ? 'nextRain' : 'again')}</button>`);
     $('modal-content').querySelectorAll('[data-rescue]').forEach(button => button.addEventListener('click', () => use(button.dataset.rescue)));
     $('modal-content').querySelector('[data-new-run]').addEventListener('click', () => start(won && game.mode === 'drizzle' ? 'rain' : game.mode));
     $('view-result-rankings').addEventListener('click', () => showRankings(game.mode));
-    if (!receipt) {
+    if (!receipt && canSubmit) {
       $('player-id').value = playerDraft;
       $('player-id').readOnly = !!submissionPayload;
       $('player-id').addEventListener('input', () => { playerDraft = $('player-id').value; checkpoint(); });
@@ -337,7 +348,7 @@
         if (!leaderboard.configured) { formError = 'notConfigured'; showResult(); return; }
         // Freeze this run on submission, including after an ambiguous timeout.
         // A retry sends the same ID and payload, so the database can deduplicate it.
-        submissionPayload ||= { runId, playerId: playerDraft, mode: game.mode, cleared: recovered(), elapsedMs: Math.round(elapsed), ...(isExpedition() ? { stage: game.stage, loadout: game.loadout() } : {}) };
+        submissionPayload ||= { runId, playerId: playerDraft, mode: game.mode, cleared: recovered(), elapsedMs: Math.round(elapsed), ...(isExpedition() ? { rules: 3, stage: game.stage, completedStages: game.completedStages, tenMs: tenTime, loadout: game.loadout() } : {}) };
         const submittingRun = runId;
         finalized = true; submitting = true; formError = ''; lastStatus = null;
         syncClock(); render(); showResult();
@@ -347,6 +358,7 @@
         if (!result.ok) formError = result.error;
         else {
           receipt = result; playerDraft = result.playerId; savePreference('rain-match-player', playerDraft);
+          rankingCache.delete('expedition_distance'); rankingCache.delete('expedition_speed');
           rankingCache.delete(game.mode); refreshRankings(game.mode, true);
         }
         render();
@@ -359,26 +371,29 @@
     content.setAttribute('aria-busy', String(rankingLoading));
     $('refresh-rankings').disabled = rankingLoading || !leaderboard.configured;
     $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => {
-      const selected = button.dataset.leaderboardMode === rankingMode;
+      const selected = button.dataset.leaderboardMode === (rankingMode.startsWith('expedition') ? 'expedition' : rankingMode);
       button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
     });
+    $('expedition-ranking-tabs').hidden = !rankingMode.startsWith('expedition');
+    $('expedition-ranking-tabs').querySelectorAll('button').forEach(button => { const selected = button.dataset.expBoard === rankingMode; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected)); });
+    document.querySelector('.ranking-rules').textContent = t(rankingMode === 'expedition_distance' ? 'expDistanceRules' : rankingMode === 'expedition_speed' ? 'expSpeedRules' : 'rankingRules');
     if (rankingLoading) {
       content.innerHTML = `<p class="empty-ranking" role="status">${t('loading')}</p>`; return;
     }
     if (rankingError) {
-      content.innerHTML = `<p class="form-error" role="status">${t(rankingMode === 'expedition' && rankingError === 'notConfigured' ? 'expDatabase' : rankingError)}</p>`; return;
+      content.innerHTML = `<p class="form-error" role="status">${t(rankingMode.startsWith('expedition') && rankingError === 'notConfigured' ? 'expDatabase' : rankingError)}</p>`; return;
     }
     const { entries = [], total = 0 } = rankingData || {};
-    content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t('score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
+    content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t(['expedition_distance', 'expedition_speed'].includes(rankingMode) ? 'expCompleted' : 'score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
       : `<div class="ranking-empty"><span aria-hidden="true">♧</span><p class="empty-ranking" role="status">${t('noScores')}</p></div>`;
     const ownId = receipt?.playerId || readPreference('rain-match-player');
     entries.slice(0, 10).forEach((entry, index) => {
       const row = document.createElement('tr');
       if (ownId === entry.playerId) row.className = 'own-score';
-      for (const value of [index + 1, entry.playerId, entry.cleared, formatTime(entry.elapsedMs, true)]) {
+      for (const value of [index + 1, entry.playerId, rankingMode === 'expedition_distance' ? entry.completedStages : rankingMode === 'expedition_speed' ? 10 : entry.cleared, formatTime(entry.elapsedMs, true)]) {
         const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
       }
-      if (rankingMode === 'expedition' && entry.stage) {
+      if (rankingMode.startsWith('expedition') && entry.stage) {
         const detail = document.createElement('details'); detail.className = 'ranking-build';
         const summary = document.createElement('summary'); summary.textContent = t('expStage', { n: entry.stage });
         const build = document.createElement('span'); build.textContent = (entry.loadout || []).map(relic => t('relic_' + relic.id) + ' ' + relic.level).join(' · ');
@@ -389,6 +404,7 @@
     });
   }
   async function refreshRankings(mode = rankingMode, force = false) {
+    if (mode === 'expedition') mode = expeditionBoard;
     // A tab change never starts a game. Ignore responses for previously selected tabs.
     if (!force && rankingLoading && mode === rankingMode) return;
     rankingMode = mode;
@@ -418,14 +434,15 @@
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
-  function relicDescription(id, level = game.relics[id] || 1) {
+  function relicDescription(id, level = game.ownedRelics()[id] || 1) {
     const values = { feather: { n: 9 - level, depth: level === 3 ? 2 : 1 }, shield: { n: 1 },
       ukulele: { n: 20 + 5 * level, m: level >= 2 ? 3 : 4 }, cell: { n: 1 + level, m: 8 - level },
-      blackhole: { n: level }, radar: { n: 3 + level } };
+      blackhole: { n: level }, radar: { n: 3 + level }, gasoline: { n: 15 + 10 * level }, behemoth: { n: 5 - level, depth: level }, clover: { n: 5 * level } };
     return t('desc_' + id, values[id]) + (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '');
   }
   function relicIcon(id) {
     // Safer Spaces uses an original shield glyph; other icons use the credited item art.
+    if (id === 'gasoline') return '<span class="gasoline-glyph" aria-hidden="true">♨</span>';
     return id === 'shield' ? '<span class="shield-glyph" aria-hidden="true">◈</span>'
       : `<img src="assets/${RainExpedition.RELICS[id].icon}.webp" alt="">`;
   }
@@ -440,13 +457,20 @@
   function renderExpedition() {
     document.body.classList.toggle('expedition-run', isExpedition());
     $('expedition-panel').hidden = !isExpedition();
-    if (!isExpedition()) return;
+    if (!isExpedition()) { document.body.classList.remove('boss-run'); return; }
     const spec = RainExpedition.stageSpec(game.stage);
     $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
+    captureTen();
+    $('boss-status').hidden = !game.bossActive;
+    $('boss-status').textContent = t('expBossStatus', { n: Object.keys(game.sealed).length });
+    document.body.classList.toggle('boss-run', game.bossActive);
+    $('relic-slots').textContent = t('expSlots', { n: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'passive').length, max: RainExpedition.PASSIVE_SLOTS, evolutions: game.evolutionSlots });
+    $('expedition-ten').hidden = !tenRecord; $('expedition-ten').disabled = animating || savePaused;
+    $('expedition-ten').textContent = t('expTenButton', { time: formatTime(tenTime || 0, true) });
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
     for (const { id, level } of game.loadout()) {
-      const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
-      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${level === 3 ? t('expEvolved') : t('expLevel', { n: level })}</small></span>`;
+      const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id; button.classList.toggle('sealed', Object.hasOwn(game.sealed, id));
+      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${Object.hasOwn(game.sealed, id) ? t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level })}</small></span>`;
       button.title = relicDescription(id, level);
       button.setAttribute('aria-label', t('relic_' + id) + ' · ' + t('expLevel', { n: level }) + ' · ' + relicDescription(id, level));
       button.addEventListener('click', () => showRelic(id));
@@ -475,6 +499,8 @@
       if (game.lightningReady) hint += ' · ' + t('expLightningReady');
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
+    if (game.bossActive) hint = t('expBossHint');
+    if (!game.competitive) hint += ' · ' + t('expLegacyRun');
     $('expedition-hint').textContent = hint;
     $('radar-preview').hidden = !game.radarActive;
     $('radar-preview').replaceChildren(...game.previewIds().map(id => {
@@ -488,13 +514,13 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id)}<div><small>${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)}${level === 2 && game.evolved ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
+    return `${relicIcon(id)}<div><small>${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level === 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
   }
   function showExpeditionReward() {
     if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
     targeting = null;
     const first = !game.loadout().length;
-    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed, evolutions: game.evolutionSlots })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}">${rewardMarkup(id)}</button>`).join('')}</div>`);
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
       const id = button.dataset.reward;
       if (!game.choose(id)) { showReplacement(id); return; }
@@ -517,7 +543,8 @@
   function showExpeditionStage(animate = false) {
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
-    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.stage === 10 ? `<p class="boss-victory">${t('expBossClear')}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    $('stage-ten')?.addEventListener('click', showTenRecord);
     $('stage-extract').addEventListener('click', showExtract);
     $('stage-next').addEventListener('click', () => {
       if (!stageRewardClaimed) {
@@ -532,6 +559,7 @@
       fx.restart(outgoing).finally(() => {
         if (runId !== effectRun) return;
         updateClock(); animating = false; render(); syncClock();
+        if (game.bossActive) showBossIntro();
       });
     });
   }
@@ -545,13 +573,15 @@
     if (game.status !== 'playing') showResult(true);
     else if (game.pendingReward) showExpeditionReward();
   }
-  function finishExpeditionAction(before, events) {
+  function finishExpeditionAction(before, events, recoveredCount) {
     if (!events.length) { expeditionOutcome(); return; }
-    const chain = events.reduce((sum, event) => sum + (event.ids.length === 3 ? 3 : 0), 0);
+    const chain = recoveredCount ?? events.reduce((sum, event) => sum + (event.ids.length === 3 ? 3 : 0), 0);
     clearTimeout(comboTimeout); $('combo').textContent = chain >= 6 ? t('expChain', { n: chain }) : t('expFx_' + events[events.length - 1].kind);
-    $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2200);
+    const returned = events.filter(event => event.kind === 'reclaim');
+    if (returned.length && chain < 6) $('combo').textContent = t('expReclaimed', { item: t('relic_' + returned[returned.length - 1].relic) });
+    $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
     animating = true; render(); syncClock(); const effectRun = runId;
-    events.forEach(event => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === event.kind); chip?.classList.remove('proc-flash'); if (chip) { void chip.offsetWidth; chip.classList.add('proc-flash'); } });
+    [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
     fx.relic(events, before).finally(() => {
       if (runId !== effectRun) return;
       updateClock(); animating = false; render(); syncClock(); expeditionOutcome();
@@ -561,8 +591,35 @@
     if (!isExpedition() || finalized || animating || savePaused) return;
     const before = fx.snapshot(); updateClock(); const result = game.activate(id);
     if (!result.ok) return;
-    targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events);
+    targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
+  function showBossIntro() {
+    showDialog('boss', `<span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
+    $('boss-start').addEventListener('click', closeDialog);
+  }
+  function showTenRecord() {
+    if (!tenRecord || savePaused) return;
+    showDialog('ten', `<span class="modal-eyebrow">TEN STAGES / RECORD</span><h2 id="modal-title">${t('expTenTitle')}</h2><p class="ten-time">${formatTime(tenTime, true)}</p><p>${t('expTenCopy')}</p>${tenRecord.receipt ? `<p class="save-feedback">${t('expTenSaved', { n: tenRecord.receipt.speedRank || '—' })}</p>` : `<form id="ten-form" novalidate><label for="ten-player">${t('player')}</label><div class="score-input-row"><input id="ten-player" maxlength="20" autocomplete="off" autocapitalize="off"><button class="primary-button" ${tenSubmitting ? 'disabled' : ''}>${t(tenSubmitting ? 'sending' : 'submit')}</button></div><p id="ten-error" class="form-error" role="alert"></p></form>`}<button class="secondary-button" id="ten-continue">${t('expTenContinue')}</button>`);
+    $('ten-continue').addEventListener('click', () => { closeDialog(); if (game.status === 'won') showExpeditionStage(); });
+    if (!tenRecord.receipt) {
+      $('ten-player').value = tenRecord.playerId || playerDraft; $('ten-player').readOnly = !!tenRecord.playerId;
+      $('ten-form').addEventListener('submit', async event => {
+        event.preventDefault(); if (tenSubmitting || savePaused) return;
+        const id = RainLeaderboard.normalizeId($('ten-player').value);
+        if (!RainLeaderboard.validId(id)) { $('ten-error').textContent = t('invalidId'); return; }
+        tenRecord.playerId ||= id; playerDraft = id; tenSubmitting = true; checkpoint(); showTenRecord();
+        const currentRun = runId, milestone = tenRecord;
+        const result = await leaderboard.submit({ rules: 3, runId: milestone.runId, playerId: milestone.playerId, mode: 'expedition',
+          cleared: milestone.cleared, elapsedMs: milestone.elapsedMs, stage: 10, completedStages: 10, tenMs: milestone.elapsedMs, loadout: milestone.loadout });
+        if (currentRun !== runId || tenRecord !== milestone) return;
+        tenSubmitting = false;
+        if (result.ok) { tenRecord.receipt = result; savePreference('rain-match-player', id); rankingCache.delete('expedition_distance'); rankingCache.delete('expedition_speed'); refreshRankings('expedition', true); }
+        checkpoint();
+        if (modal.open && dialogView === 'ten') { showTenRecord(); if (!result.ok) $('ten-error').textContent = t(result.error === 'notConfigured' ? 'expDatabase' : result.error); }
+      });
+    }
+  }
+  $('expedition-ten').addEventListener('click', showTenRecord);
   $('expedition-extract').addEventListener('click', showExtract);
   $('expedition-continue').addEventListener('click', () => game.pendingReward ? showExpeditionReward() : showExpeditionStage());
   $('expedition-feather').addEventListener('click', () => { targeting = targeting === 'feather' ? null : 'feather'; render(); });
@@ -582,7 +639,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
@@ -619,6 +676,7 @@
   $('help').addEventListener('click', showHelp); $('credits').addEventListener('click', showCredits);
   $('refresh-rankings').addEventListener('click', () => refreshRankings(rankingMode, true));
   $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => button.addEventListener('click', () => refreshRankings(button.dataset.leaderboardMode)));
+  $('expedition-ranking-tabs').querySelectorAll('button').forEach(button => button.addEventListener('click', () => { expeditionBoard = button.dataset.expBoard; refreshRankings(expeditionBoard); }));
   $('rankings').addEventListener('click', () => showRankings()); $('result-button').addEventListener('click', showResult);
   $('language').addEventListener('click', toggleLanguage); $('modal-language').addEventListener('click', toggleLanguage);
   document.addEventListener('keydown', event => {

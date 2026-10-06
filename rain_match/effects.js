@@ -50,13 +50,13 @@
       { transform: `translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${matched ? .15 : .8})`, opacity: 0 }
     ], { duration: matched ? 650 : 440, delay, fill: 'backwards' }, true);
   }
-  function pick(before, id, type, matched) {
+  function pick(before, id, type, matched, automaticIds = []) {
     if (motion.matches) return;
-    const rack = document.getElementById('rack');
+    const rack = document.getElementById('rack'), automatic = new Set(automaticIds);
     if (matched) {
       const target = center(rack.getBoundingClientRect());
       for (const [tileId, value] of before) {
-        if (value.type === type && (tileId === id || !document.querySelector(`.game-shell .tile[data-id="${tileId}"]`)))
+        if (!automatic.has(tileId) && value.type === type && (tileId === id || !document.querySelector(`.game-shell .tile[data-id="${tileId}"]`)))
           ghost(value.rect, target, type, true);
       }
       burst(target, RainMatch.ITEMS[type].color, 12);
@@ -117,7 +117,7 @@
     const rack = document.getElementById('rack').getBoundingClientRect();
     const pending = [];
     for (const [index, event] of events.entries()) {
-      const delay = index * 180;
+      const delay = Math.min(index * (events.length > 10 ? 65 : 180), 1100);
       // Show the actual recovered cards, including radar and shield follow-ups.
       if (event.ids.length === 3 && event.kind !== 'blackhole') {
         for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay);
@@ -141,8 +141,15 @@
           const arc = node('fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
           const rotation = `rotate(${Math.atan2(dy, dx)}rad)`;
           pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 1000, delay: delay + i * 150, fill: 'backwards' }, true));
-          burst(point, '#b4dfff', 6); origin = point;
+          if (events.length < 12) burst(point, '#b4dfff', 6); origin = point;
         });
+      } else if (['gasoline', 'behemoth', 'reclaim'].includes(event.kind)) {
+        const chip = event.relic ? document.querySelector(`[data-relic="${event.relic}"]`) : null;
+        const point = chip ? center(chip.getBoundingClientRect()) : event.ids.length && before.has(event.ids[0]) ? center(before.get(event.ids[0]).rect) : center(board);
+        const color = event.kind === 'gasoline' ? '#f6a36f' : event.kind === 'behemoth' ? '#f0d480' : '#cdb3ff';
+        const ring = node('fx-ring', point, color);
+        pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(3)', opacity: 0 }], { duration: 1100, delay, fill: 'backwards' }, true));
+        if (events.length < 12) burst(point, color, 5);
       } else if (event.kind === 'feather') {
         const from = before.get(event.ids[0]);
         if (from) { burst(center(from.rect), '#ead699', 6);

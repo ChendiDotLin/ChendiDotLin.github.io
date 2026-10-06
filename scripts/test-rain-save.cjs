@@ -13,7 +13,9 @@ function roundtrip(game) {
 }
 function choose(game) {
   // Keep the witness intact: these passives/actives do not automatically clear cards.
-  const id = game.pendingReward.find(id => id !== 'ukulele' && !id.startsWith('restore_'));
+  let id = game.pendingReward.find(id => !['ukulele','gasoline','behemoth'].includes(id) && !id.startsWith('restore_'));
+  // A controlled recharge supply avoids changing the deal witness in this serialization test.
+  if (!id) { game.pendingReward = ['recharge']; id = 'recharge'; }
   const replacement = Object.keys(game.relics).find(id => ['shield', 'cell', 'feather'].includes(id));
   assert.ok(game.choose(id, replacement));
 }
@@ -24,6 +26,7 @@ for (let n = 1; n <= 12; n++) {
     const solution = [...game.solution];
     roundtrip(game); if (game.pendingReward) { choose(game); roundtrip(game); }
     for (const id of solution) {
+      if (game.tiles[id].zone === 'matched') continue;
       const restored = roundtrip(game);
       assert.deepEqual(restored.pick(id), game.pick(id));
       assert.deepEqual(restored.toSave(), game.toSave());
@@ -85,7 +88,7 @@ for (let n = 1; n <= 100; n++) {
 let banked = 0;
 for (let stage = 1; stage <= 1000; stage++) { assert.equal(bankedBefore(stage), banked); banked += stageSpec(stage).count; }
 const game = new Expedition(seed(5)); game.choose('blackhole');
-const record = () => ({ schema: 2, savedAt: Date.now(), runId: '12345678-1234-4123-8123-123456789abc', elapsedMs: 1256.4,
+const record = () => ({ schema: 3, tenTime: null, tenRecord: null, savedAt: Date.now(), runId: '12345678-1234-4123-8123-123456789abc', elapsedMs: 1256.4,
   finalized: false, receipt: null, submissionPayload: null, stageRewardClaimed: false, playerDraft: '玩家', game: game.toSave() });
 assert.ok(valid(record()));
 for (const mutate of [r => r.game.tiles[0].type = 99, r => r.game.rack.push(999), r => r.game.relics.bad = 1,
@@ -109,7 +112,7 @@ assert.equal(parse('{bad'), null); assert.equal(parse('x'.repeat(160001)), null)
   assert.equal(new Store(null).read().error, 'unavailable');
   game.end(); const frozen = record(); frozen.finalized = true;
   frozen.submissionPayload = { runId: frozen.runId, playerId: frozen.playerDraft, mode: 'expedition', cleared: game.recovered,
-    elapsedMs: Math.round(frozen.elapsedMs), stage: game.stage, loadout: game.loadout() };
+    rules: 3, completedStages: game.completedStages, tenMs: null, elapsedMs: Math.round(frozen.elapsedMs), stage: game.stage, loadout: game.loadout() };
   assert.ok(valid(frozen)); assert.deepEqual(parse(JSON.stringify(frozen)), frozen);
   frozen.receipt = { ok: true, improved: true, rank: 1, playerId: frozen.playerDraft }; assert.ok(valid(frozen));
   frozen.submissionPayload.cleared += 3; assert.equal(valid(frozen), false);

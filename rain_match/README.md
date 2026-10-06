@@ -74,7 +74,7 @@ The configured client requires HTTPS Supabase project URLs ending in
   browser and have range/type checks, but there is no server-side replay or
   anti-cheat verification. This is a casual, unauthenticated fan-game leaderboard.
 - Tables are in a private schema, with RLS enabled and no direct browser grants.
-  Only two narrowly scoped database functions can read or submit scores.
+  Only narrowly scoped database functions can read or submit scores.
 
 ### Additional checks
 
@@ -135,7 +135,7 @@ Creating another Auth account does not grant management access.
    `cf51ed16-ab31-41a7-8134-154688dfca14`. For a different installation, replace
    that UUID with the intended administrator's Auth user ID before running.
 3. Sign in at `/rain_match/admin/`. Inspect mode counts and scores; remove one ID from a
-   selected mode, reset one mode, or reset all three. Each deletion requires typing
+   selected mode, reset one mode, or reset all boards. Each deletion requires typing
    the displayed confirmation. Running the setup script does not delete scores.
 
 The access token remains in page memory only and expires with the Auth session;
@@ -196,100 +196,108 @@ The Rankings button and result link focus/scroll to this panel without opening a
 dialog. Browsing the panel does not pause the active play clock. Long boards scroll
 inside the panel; empty/error states and the panel controls support both languages.
 
-## Expedition (endless roguelike mode)
+## Expedition (endless roguelike mode, Boss update)
 
-Choose **Expedition** in the mode bar, or link directly to
-`/rain_match/?mode=expedition`. Classic difficulties retain their original rules.
+Open `/rain_match/?mode=expedition`. Classic difficulties keep their own rules.
 
-- Choose Feather, Ukulele or Cube to begin. Each stage offers at most one
-  mid-stage supply and one clear reward. Stage 1 requires three manual matches
-  for its supply; later stages require `min(12, 4 + stage)`. Automatic chains
-  never advance supply progress.
-- Carry three passive types and one active equipment. Level 2 unlocks at stage 3;
-  level 3 evolution unlocks at stage 6. Only one item can stay evolved. Evolving
-  another returns the previous evolution to level 2, as shown before choosing.
-- **Feather:** pick through one blocker, or two when evolved. Recharge takes
-  8/7/6 manual matches. A leap match releases equipped lightning; evolved leap
-  matches also grant two equipment energy.
-- **Safer Spaces:** block one overflow per stage, returning the offending tile.
-  Upgrades, swapping and supplies cannot restore the shield. Level 2 also grants
-  two equipment energy; evolution additionally recovers up to two triples.
-- **Ukulele:** 25/30/35% chance to bank lightning per manual match, guaranteed
-  within 4/3/3 matches. Discharge clears a reachable triple, including tray and
-  reserve cards. No target means the charge is retained. Evolution clears up to
-  three triples and can pierce one blocker.
-- **Cube:** complete a tray pair through up to 1/2/3 blockers. Evolution completes
-  up to three tray pairs in one cast. Casting can trigger equipped lightning.
-- **Radar:** preview blind supply cards and mark a bounty for 4/5/6 pickups.
-  Manually matching the mark grants two energy, an extra recovery triple (two
-  for a leap match), and equipped lightning. Evolution recovers up to two triples
-  and retargets for the remainder of the scan.
-- **Fuel Cell:** store 2/3/4 charges; recharge costs 7/6/5 energy, versus eight
-  without it. Manual matches grant one energy. Automatic chain triples return
-  only 0.25 with Cell, so a cast cannot replenish itself. Evolution stores up to
-  two extra energy at full charge. Upgrades and equipment swaps do not refill.
-- Each emergency power starts with one free use per run. Supplies can restore
-  spent powers at most twice across the entire run. A recharge reward restores
-  one equipment charge (or Feather if no equipment), never Shield.
-- The first 36-tile stage now uses the mixed-set deal generator. Later stages
-  increase depth and variety; stage 3 onward carries more unfinished sets along
-  its initial solution. Fog stages begin at 5 and repeat every three stages.
-  Ion storms begin at 6 and repeat every three stages, adding two energy to the
-  active recharge cost. Boards cap at 144 tiles, or 156 in fog.
-- Every automatic effect removes complete triples. Chains are bounded, with
-  staggered card recovery and triggering equipment highlights. Undo restores the
-  entire pickup, chain, charges and random cursor. Supplies and equipment casts
-  invalidate Undo to prevent reward duplication.
-- Extract or submit after failure. Ranking remains actual cumulative recovered
-  tiles, then active play time; stage and final loadout are included. This balance
-  update preserves existing scores and requires no additional SQL migration.
+- Carry **six passive types plus one active equipment**. The pool now includes
+  Gasoline, Brilliant Behemoth and 57 Leaf Clover. A seventh passive requires a
+  replacement; two active items cannot coexist.
+- Level 2 unlocks at stage 3. Stage 6 allows two simultaneous level-3 evolutions;
+  stage 10 onward allows six. At the evolution cap, a new evolution downgrades
+  the oldest equipped evolution to level 2, with a warning before choosing.
+- Each normal stage offers at most one mid-stage and one clear supply. The first
+  stage uses a 36-tile mixed-set deal; later boards grow to 144, or 156 in fog.
+  Initial deals have a legal witness. Automatic clears and player choices can
+  change which continuation works; the original witness is not an autoplayer.
+- Feather, Shield, Ukulele, Cell, Cube and Radar keep their adapted mechanics.
+  Shield blocks one overflow per stage. Upgrading, swapping and supplies cannot
+  reset it. Each emergency power starts with one use; at most two extra refills
+  are available across the entire run.
+- Gasoline procs on each recovered triple, including automatic clears, with a
+  25/35/45% chance to recover another reachable triple. Evolution pierces one
+  blocker. Behemoth accumulates all recovered triples and blasts another every
+  4/3/2 triples, through 1/2/3 blockers. Clover adds 5/10/15 percentage points to
+  Gasoline and Ukulele chances. Evolved Clover raises the automatic-clear budget
+  to 52 triples per action (otherwise `16 + 2 * equipped item types`).
+- Chains use a bounded queue and only clear real complete triples. Mature builds
+  can nearly clear a board; accessible triples and chance still matter. Fractional
+  Cell recharge remains bounded, equipment never auto-casts itself, and animation
+  delay is capped so a large burst does not lock input for tens of seconds.
 
-### Autosave and continue
+### Stage-ten Boss
 
-Expedition saves after actions, reward choices, transitions and submission
-changes, plus a five-second clock checkpoint and page visibility/exit events.
-Choose **Continue expedition** from the main-page banner or Expedition tab.
-The save restores the board, tray/reserve, spent powers, gear, pending choices,
-Undo snapshot, random cursor, active time and frozen submission/receipt. Paused,
-hidden, animation and offline time are excluded. A failed score request can be
-retried with the identical run ID and payload; loading never posts a score.
+Only stage 10 is a Boss stage. Entering it seals **all passives and the active
+item**, preserving their levels. Every recovered triple, including chain clears,
+returns one uniformly random sealed item. Returned active equipment gets one
+charge; Feather returns ready; Shield retains its once-per-stage limit. There is
+no mid-stage supply, and emergency powers remain available. A final clear restores
+any remaining sealed items. The stage reward and travel then continue into stage
+11 and the normal endless sequence. Later stages do not repeat this Boss.
 
-One versioned save and its previous valid backup live in this browser's local
-storage. They do not sync to Supabase or other devices; clearing browser data
-removes them. Invalid data is retained until an explicit new run replaces it.
-The UI offers a valid backup when possible and displays storage failures rather
-than claiming a save succeeded. Restart asks before replacing the checkpoint.
-Web Locks allow only one active Expedition tab where supported; storage-change
-and compare-before-write guards also pause conflicting pages. Classic modes can
-be played while an Expedition is saved. This is a recovery feature, not an
-anti-cheat or authenticated save system.
+Undo includes returned equipment, sealed equipment, proc counters and RNG state.
+Repeating the same pickup after Undo produces the same return. Gear is never
+permanently deleted by the Boss; a failure records the full owned loadout.
 
-Run `scripts/rain-expedition.sql` in the existing project's Supabase SQL Editor.
-It extends the private tables and RPCs, preserves all scores and administrator
-membership, and adds Expedition to the existing audited admin controls. New
-installations can use the updated base and admin setup scripts. Without this
-upgrade the game works, while the Expedition board reports setup pending and
-submission can be retried after setup, including from a saved Expedition.
+### Two new leaderboards
 
-The two new item images (`radar.webp`, `ukulele.webp`) use the same credited
-Glagan/RoR2-Items source. Safer Spaces is represented by an original shield glyph.
-Effects are original animations: a protective shell, a radar sweep, chain
-lightning, a feather burst and a black-hole pull. Reduced motion skips these.
-These puzzle effects are adaptations, not the original game's exact mechanics.
+Run **`scripts/rain-expedition-boss.sql` in full** in the existing Supabase SQL
+Editor after the previous Expedition setup. It adds the new boards and updates
+existing admin functions without deleting scores or changing the admin whitelist.
+Do not rerun the older migration over this one: its older mode constraints do not
+include the new boards. Fresh installations run the base/admin/Expedition setup
+first, then this Boss migration last.
 
-Verification: `node scripts/test-rain-expedition.cjs` checks 640 stage witnesses,
-charge and loadout carryover, triple conservation, rescue, proc replay, rewards,
-replacement and extraction. `node scripts/test-rain-expedition-sql.cjs
-/path/to/pglite/dist/index.cjs` tests upgrading the previous schema with preserved
-scores, repeat migrations, metadata, ordering, retry protection and scoped admin
-removal in an isolated database. Browser checks use mocked score writes.
+- **Farthest:** completed stages descending, cumulative recovered tiles descending,
+  then total active time ascending. Exact ties use submission time and player ID.
+- **Fastest 10:** only runs that cleared the stage-ten Boss qualify. The cumulative
+  active time at that exact clear is frozen; further stages cannot increase it.
+  Equal times use submission time and player ID. Each board keeps each ID's best
+  result independently and shows the top 10.
+- After defeating the Boss, the player can enter an ID to register the ten-stage
+  checkpoint and keep playing. This does not finalize the expedition. Its request
+  has a separate stable UUID and frozen payload. Later extraction submits another
+  UUID and can improve distance without overwriting a faster ten-stage result.
+- Neither loading a checkpoint nor clearing the Boss automatically posts a score.
+  Failed requests survive reload for an explicit retry with the same UUID/payload.
+- The previous Expedition board remains accessible under **Legacy**. Existing
+  records are never mixed into the new rankings. Admins can view or clear either
+  new board separately; deletion archives the rows and revokes prior run UUIDs.
 
-Run `node scripts/test-rain-save.cjs` for checkpoint round trips, deterministic
-replay, malformed saves, backup recovery, conflicting writes, storage failures
-and frozen score retries. Browser checks cover live tab locks, reload/resume,
-reward checkpoints, restart confirmation, offline time and mobile layouts.
+The new RPCs are `rain_expedition_v3_leaderboard(p_board)` and
+`rain_submit_expedition_v3(...)`. Tables remain private and RLS protected. Server
+validation checks stage/tile boundaries, ten-stage qualification and loadout
+limits, but scores remain client-reported; no server-side replay is performed.
 
-For browser regressions, serve the repository at `http://127.0.0.1:8765`, then
-run `node scripts/test-rain-expedition-browser.cjs` with Playwright installed.
-`RAIN_PLAYWRIGHT` can point to its module; `RAIN_BROWSER_PATH` selects an existing
-Chrome executable. All leaderboard requests in this test are mocked.
+### Autosave and migration
+
+One checkpoint and its previous valid backup stay in this browser. The stable
+storage key is retained, with schema/rule version 3 inside the record. Saved
+state includes the board, tray/reserve, powers, gear, sealed gear, choices, Undo,
+RNG, active time, ten-stage time and both pending submission receipts. Offline,
+background, dialog and animation time are excluded. Starting a new run explicitly
+replaces the old save; storage failures are shown. Web Locks and conflicting-write
+guards prevent active tabs from overwriting one another.
+
+Version-2 saves are upgraded without discarding the board or Undo. They remain
+playable as legacy runs and do not qualify for the new boards. Already frozen
+legacy submissions still retry the original endpoint. New runs use the new rules
+and qualify normally. Browser saves do not sync across devices or to Supabase.
+
+Gasoline uses an original heat glyph; Behemoth and Clover reuse the bundled,
+credited RoR2 artwork. New flame/blast/reclaim feedback is original CSS animation.
+Reduced-motion settings skip animation waits.
+
+Checks:
+
+- `node scripts/test-rain-expedition.cjs`: stage witnesses and item rules.
+- `node scripts/test-rain-boss.cjs`: sealing, random recovery, Undo/reload,
+  six-slot builds, near-board bursts and legacy-save migration.
+- `node scripts/test-rain-save.cjs`: checkpoint replay and storage failure cases.
+- `node scripts/test-rain-boss-sql.cjs /path/to/pglite/dist/index.cjs`: migration,
+  independent bests, time qualification, retries, private tables and admin deletion.
+- Serve this repository at `http://127.0.0.1:8765`, then run
+  `node scripts/test-rain-expedition-browser.cjs` and
+  `node scripts/test-rain-boss-browser.cjs` with Playwright installed. Optional
+  `RAIN_PLAYWRIGHT`, `RAIN_BROWSER_PATH` and `RAIN_GAME_URL` select local tools.
+  All leaderboard writes in these tests are mocked.

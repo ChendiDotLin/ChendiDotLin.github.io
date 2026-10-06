@@ -27,17 +27,19 @@ for (let stage = 1; stage <= 32; stage++) for (let n = 1; n <= 20; n++) {
     const solution = [...game.solution];
     for (const id of solution) {
       if (game.pendingReward) {
-        const choice = game.pendingReward.find(id => ['blackhole', 'radar', 'feather', 'cell', 'shield', 'recharge'].includes(id));
+        // Controlled non-proc supplies keep the original deal witness applicable.
+        game.pendingReward = ['recharge']; const choice = 'recharge';
         assert.ok(choice); assert.ok(game.choose(choice));
       }
-      assert.ok(game.pick(id).ok); counts(game);
+      if (game.tiles[id].zone === 'matched') continue;
+      assert.ok(game.pick(id).ok, `stage ${stage} id ${id} status ${game.status} pending ${game.pendingReward}`); counts(game);
     }
     assert.equal(game.status, 'won'); expected += game.tiles.length; assert.equal(game.recovered, expected);
     game.offerReward(); assert.equal(game.nextStage(), false);
-    assert.ok(game.choose(game.pendingReward.find(id => id !== 'ukulele' && !id.startsWith('restore_'))));
-    const relics = JSON.stringify(game.relics), charge = game.charge;
+    game.pendingReward = ['recharge']; assert.ok(game.choose('recharge'));
+    const relics = JSON.stringify(game.ownedRelics()), charge = game.charge;
     assert.ok(game.nextStage()); assert.equal(game.cleared, 0); assert.equal(game.recovered, expected);
-    assert.equal(JSON.stringify(game.relics), relics); assert.equal(game.charge, charge); assert.ok(game.used.shuffle);
+    assert.equal(JSON.stringify(game.ownedRelics()), relics); assert.equal(game.charge, game.stage === 10 ? 0 : charge); assert.ok(game.used.shuffle);
   }
 }
 function fixture(game, types, rack = []) {
@@ -90,7 +92,7 @@ function fixture(game, types, rack = []) {
 }
 // Pending rewards stop play and are stable across reads; upgrades and replacements respect caps.
 {
-  const game = fresh(); game.stage = 6; game.relics = { feather: 3, shield: 2, ukulele: 2, blackhole: 2 }; game.equipment = 'blackhole';
+  const game = fresh(); game.stage = 6; game.relics = { feather: 3, shield: 2, ukulele: 2, gasoline: 2, behemoth: 2, clover: 1, blackhole: 2 }; game.equipment = 'blackhole';
   game.pendingReward = ['cell']; assert.equal(game.pick(game.available()[0].id).ok, false); assert.equal(game.choose('cell'), false);
   assert.ok(game.choose('cell', 'ukulele')); assert.equal(game.relics.ukulele, undefined); assert.equal(game.relics.cell, 1);
   game.pendingReward = ['radar']; assert.ok(game.choose('radar')); assert.equal(game.relics.blackhole, undefined);
@@ -108,8 +110,9 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.pendingReward = ['feather']; assert.equal(game.choose('feather'), false);
   game.stage = 6; assert.ok(game.choose('feather')); assert.equal(game.evolved, 'feather');
   game.relics.ukulele = 2; game.pendingReward = ['ukulele']; assert.ok(game.choose('ukulele'));
-  assert.equal(game.relics.feather, 2); assert.equal(game.evolved, 'ukulele');
-  game.shieldSpent = true; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
+  assert.equal(game.relics.feather, 3); assert.equal(game.relics.ukulele, 3);
+  game.relics.shield = 2; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.relics.feather, 2);
+  delete game.relics.shield; game.shieldSpent = true; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
   game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
   for (let n = 0; n < 3; n++) {
     game.used.undo = true; game.pendingReward = ['restore_undo']; assert.equal(game.choose('restore_undo'), n < 2);
@@ -166,4 +169,4 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.radarUntil = 6; game.radarMark = 0;
   assert.equal(game.pick(2).recovered, 12); assert.equal(game.radarMark, 4); counts(game);
 }
-console.log('PASS: v2 growth gates, single evolution, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');
+console.log('PASS: growth gates, stage-based evolution slots, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');

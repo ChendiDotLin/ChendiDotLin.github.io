@@ -2,12 +2,16 @@
 (function (root) {
   'use strict';
   const core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.RainMatch;
-  const VERSION = 2;
+  const VERSION = 3;
+  const PASSIVE_SLOTS = 6;
   const RELICS = {
     feather: { kind: 'passive', icon: 'feather', symbol: '↟' },
     shield: { kind: 'passive', icon: 'shield', symbol: '◈' },
     ukulele: { kind: 'passive', icon: 'ukulele', symbol: 'ϟ' },
     cell: { kind: 'passive', icon: 'cell', symbol: '▥' },
+    gasoline: { kind: 'passive', icon: 'gasoline', symbol: '♨' },
+    behemoth: { kind: 'passive', icon: 'behemoth', symbol: '✹' },
+    clover: { kind: 'passive', icon: 'clover', symbol: '♧' },
     blackhole: { kind: 'active', icon: 'blackhole', symbol: '◎' },
     radar: { kind: 'active', icon: 'radar', symbol: '⌖' }
   };
@@ -18,7 +22,7 @@
     const layers = Array(Math.min(18, 2 * stage + 2)).fill(6);
     const pileSize = fog ? 18 : stage < 3 ? 6 : stage < 5 ? 9 : 12;
     return { mode: 'rain', layers, pileSize, kinds: Math.min(12, 4 + 2 * stage),
-      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: fog ? 'fog' : ion ? 'ion' : 'storm' };
+      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: stage === 10 ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
   }
   function bankedBefore(stage) {
     let sum = 0;
@@ -31,13 +35,13 @@
       game.rngState = n >>> 0; return game.rngState / 4294967296; };
   }
   const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
-    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain'];
-  const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'relics', 'equipment', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
+    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed'];
+  const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
-      this.relics = {}; this.equipment = null; this.charge = 0; this.energy = 0;
+      this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
       this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
       this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
       this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
@@ -45,6 +49,10 @@
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
+    get bossActive() { return this.stage === 10 && this.cleared < this.tiles.length; }
+    get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
+    get evolutionSlots() { return this.stage < 6 ? 0 : this.stage < 10 ? 2 : 6; }
+    ownedRelics() { return { ...this.relics, ...this.sealed }; }
     get recovered() { return this.banked + this.cleared; }
     get totalMoves() { return this.bankedMoves + this.moves; }
     get capacity() { return 1 + (this.relics.cell || 0); }
@@ -55,7 +63,7 @@
     get levelCap() { return this.stage < 3 ? 1 : this.stage < 6 ? 2 : 3; }
     get evolved() { return Object.keys(this.relics).find(id => this.relics[id] === 3) || null; }
     snapshot() {
-      return { ...super.snapshot(), ...Object.fromEntries(PICK_FIELDS.map(key => [key, this[key]])) };
+      return { ...super.snapshot(), ...JSON.parse(JSON.stringify(Object.fromEntries(PICK_FIELDS.map(key => [key, this[key]])))) };
     }
     blockers(tile) {
       return this.tiles.filter(other => other.zone === 'board' && other.z > tile.z && core.overlap(tile, other));
@@ -87,7 +95,7 @@
     rollLightning() {
       if (!this.relics.ukulele) return;
       this.spark++;
-      if (this.random() < .2 + .05 * this.relics.ukulele || this.spark >= (this.relics.ukulele >= 2 ? 3 : 4)) {
+      if (this.random() < .2 + .05 * this.relics.ukulele + .05 * (this.relics.clover || 0) || this.spark >= (this.relics.ukulele >= 2 ? 3 : 4)) {
         this.lightningReady = true; this.spark = 0;
       }
     }
@@ -107,17 +115,49 @@
       this.rack = this.rack.filter(id => !ids.includes(id)); this.reserve = this.reserve.filter(id => !ids.includes(id));
       this.cleared += 3;
     }
+    beginBurst() {
+      this.comboQueue = [];
+      this.burstLeft = this.relics.clover === 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
+    }
+    reclaim(events) {
+      const ids = Object.keys(this.sealed); if (!ids.length) return;
+      const id = ids[Math.floor(this.random() * ids.length)];
+      this.relics[id] = this.sealed[id]; delete this.sealed[id];
+      if (RELICS[id].kind === 'active') { this.equipment = id; this.charge = 1; this.energy = 0; }
+      if (id === 'feather') { this.featherCharge = 1; this.featherEnergy = 0; }
+      events.push({ kind: 'reclaim', relic: id, ids: [] });
+    }
+    onTriple(events) {
+      // Every real triple, including a proc, returns one entire sealed item.
+      this.reclaim(events);
+      if (this.relics.behemoth && ++this.blastCharge >= 5 - this.relics.behemoth) {
+        this.blastCharge = 0;
+        this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
+      }
+      if (this.relics.gasoline && this.random() < .15 + .1 * this.relics.gasoline + .05 * (this.relics.clover || 0))
+        this.comboQueue.push({ kind: 'gasoline', depth: this.relics.gasoline === 3 ? 1 : 0 });
+    }
+    drainBurst(events) {
+      while (this.comboQueue.length && this.burstLeft > 0) {
+        const proc = this.comboQueue.shift(); this.pulse(events, proc.kind, 1, proc.depth);
+      }
+      this.comboQueue = [];
+      // Winning must restore gear even if the final burst skipped the return phase.
+      if (this.cleared === this.tiles.length) while (Object.keys(this.sealed).length) this.reclaim(events);
+    }
     pulse(events, kind, count, depth = 0) {
+      if (!this.comboQueue) this.beginBurst();
       let recovered = 0;
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < count && this.burstLeft > 0; i++) {
         const ids = this.findTriple(depth); if (!ids) break;
-        this.clearTriple(ids); events.push({ kind, ids }); recovered += 3;
+        this.clearTriple(ids); this.burstLeft--; events.push({ kind, ids }); recovered += 3; this.onTriple(events);
         // Fractional Cell recovery cannot pay for the cast that created the chain.
         if (this.relics.cell) this.addEnergy(.25);
       }
       return recovered;
     }
     resolveCombos(events, { type, jumping = false, scanned = false, skill = false } = {}) {
+      if (!this.comboQueue) this.beginBurst();
       const before = this.cleared;
       let retarget = false;
       if (scanned && type === this.radarMark) {
@@ -135,6 +175,7 @@
         const count = this.relics.ukulele === 3 ? 3 : 1;
         if (this.pulse(events, 'ukulele', count, this.relics.ukulele === 3 ? 1 : 0)) this.lightningReady = false;
       }
+      this.drainBurst(events);
       // Choose the next bounty after lightning, so it cannot mark a vanished type.
       if (retarget) this.markRadar();
       const recovered = this.cleared - before;
@@ -146,6 +187,7 @@
       const tile = this.tiles[id]; if (!tile) return { ok: false };
       const jumping = leap && this.featherTargets().some(t => t.id === id);
       if (leap && !jumping) return { ok: false };
+      this.beginBurst();
       const before = this.snapshot(), scanned = this.radarActive;
       if (jumping) tile.zone = 'reserve';
       const result = super.pick(id);
@@ -158,16 +200,17 @@
         events.length = 0; events.push({ kind: 'shield', ids: [id] });
         if (this.relics.shield >= 2) this.addEnergy(2);
         if (this.relics.shield === 3) this.pulse(events, 'shield', 2);
+        this.drainBurst(events);
         this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
         this.check(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
       }
       if (result.matched) {
-        this.manualMatches++; this.stageMatches++; this.addEnergy(1);
+        this.manualMatches++; this.stageMatches++; this.onTriple(events); this.addEnergy(1);
         if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
         }
         this.rollLightning(); this.resolveCombos(events, { type: result.type, jumping, scanned });
-        if (!this.midRewardTaken && this.stageMatches >= this.rewardTarget) {
+        if (!this.bossActive && !this.midRewardTaken && this.stageMatches >= this.rewardTarget) {
           this.midRewardTaken = true;
           if (this.status !== 'won') this.offerReward();
         }
@@ -185,18 +228,19 @@
     }
     activate(id) {
       if (!this.canActivate()) return { ok: false };
+      this.beginBurst();
       const events = [], before = this.cleared;
       if (this.equipment === 'blackhole') {
         const tile = this.cubeTargets().find(t => t.id === id); if (!tile) return { ok: false };
         this.charge--; this.previous = null;
         const ids = [...this.rack.filter(n => this.tiles[n].type === tile.type), id];
-        this.clearTriple(ids); events.push({ kind: 'blackhole', ids });
+        this.clearTriple(ids); events.push({ kind: 'blackhole', ids }); this.onTriple(events);
         if (this.relics.cell) this.addEnergy(.25);
         if (this.relics.blackhole === 3) {
           for (let i = 0; i < 2; i++) {
             const next = this.cubeTargets()[0]; if (!next) break;
             const more = [...this.rack.filter(n => this.tiles[n].type === next.type), next.id];
-            this.clearTriple(more); events.push({ kind: 'blackhole', ids: more });
+            this.clearTriple(more); events.push({ kind: 'blackhole', ids: more }); this.onTriple(events);
             if (this.relics.cell) this.addEnergy(.25);
           }
         }
@@ -209,7 +253,7 @@
       return { ok: true, events, recovered: this.cleared - before };
     }
     offerReward() {
-      if (this.finished || this.pendingReward) return;
+      if (this.finished || this.pendingReward || this.bossActive) return;
       const pool = Object.keys(RELICS).filter(id => (this.relics[id] || 0) < this.levelCap && (id !== 'cell' || this.equipment));
       if (this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
       const choices = [];
@@ -232,14 +276,16 @@
       } else {
         if (!RELICS[id] || (this.relics[id] || 0) >= this.levelCap) return false;
         const passives = Object.keys(this.relics).filter(key => RELICS[key].kind === 'passive');
-        if (RELICS[id].kind === 'passive' && !this.relics[id] && passives.length === 3) {
+        if (RELICS[id].kind === 'passive' && !this.relics[id] && passives.length === PASSIVE_SLOTS) {
           if (!passives.includes(replace)) return false;
           delete this.relics[replace];
           if (replace === 'feather') { this.featherCharge = 0; this.featherEnergy = 0; }
+          if (replace === 'behemoth') this.blastCharge = 0;
           if (replace === 'ukulele') { this.spark = 0; this.lightningReady = false; }
         }
         const oldLevel = this.relics[id] || 0;
-        if (oldLevel === 2) for (const key of Object.keys(this.relics)) if (this.relics[key] === 3) this.relics[key] = 2;
+        if (oldLevel === 2 && Object.values(this.relics).filter(level => level === 3).length >= this.evolutionSlots)
+          this.relics[this.evolved] = 2;
         if (RELICS[id].kind === 'active') {
           const first = !this.equipment;
           if (this.equipment && this.equipment !== id) delete this.relics[this.equipment];
@@ -261,13 +307,18 @@
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
+      if (this.stage === 10) {
+        this.sealed = { ...this.relics }; this.relics = {}; this.equipment = null;
+        this.charge = 0; this.energy = 0; this.featherCharge = 0; this.featherEnergy = 0;
+        this.lightningReady = false; this.spark = 0; this.blastCharge = 0; this.midRewardTaken = true;
+      }
       return true;
     }
     end() {
       if (this.finished || this.pendingReward) return false;
       this.finished = true; this.status = 'lost'; this.previous = null; return true;
     }
-    loadout() { return Object.entries(this.relics).map(([id, level]) => ({ id, level })); }
+    loadout() { return Object.entries(this.ownedRelics()).map(([id, level]) => ({ id, level })); }
     toSave() {
       return JSON.parse(JSON.stringify({ version: VERSION, ...this.snapshot(),
         ...Object.fromEntries(RUN_FIELDS.map(key => [key, this[key]])), used: this.used, status: this.status, previous: this.previous }));
@@ -288,7 +339,7 @@
       !integer(data.featherCharge, 0, 1) || !integer(data.featherEnergy, 0, 8) || typeof data.shieldSpent !== 'boolean' ||
       !integer(data.manualMatches) || !integer(data.stageMatches, 0, count / 3) || !integer(data.radarUntil) ||
       !(data.radarMark === null || integer(data.radarMark, 0, core.ITEMS.length - 1)) || !integer(data.spark, 0, 4) ||
-      typeof data.lightningReady !== 'boolean' || !integer(data.rngState, 1, 0xffffffff) || !integer(data.bestChain, 0, 30)) return false;
+      typeof data.lightningReady !== 'boolean' || !integer(data.rngState, 1, 0xffffffff) || !integer(data.bestChain, 0, 156) || !integer(data.blastCharge, 0, 4)) return false;
     const ids = [...data.rack, ...data.reserve], counts = Array(core.ITEMS.length).fill(0);
     if (new Set(ids).size !== ids.length || ids.some(id => !integer(id, 0, count - 1))) return false;
     if (!data.tiles.every((t, id) => {
@@ -305,14 +356,17 @@
     if (!data || data.version !== VERSION || !integer(data.stage, 1, 1000000)) return false;
     const count = stageSpec(data.stage).count;
     if (!validSnapshot(data, count) || data.banked !== bankedBefore(data.stage) || !integer(data.bankedMoves) ||
-      typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
+      typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
       !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
       !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
-    const relics = Object.entries(data.relics);
-    if (relics.length > 4 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, data.stage < 3 ? 1 : data.stage < 6 ? 2 : 3)) ||
-      relics.filter(([, level]) => level === 3).length > 1 || relics.filter(([id]) => RELICS[id].kind === 'passive').length > 3) return false;
-    const actives = relics.filter(([id]) => RELICS[id].kind === 'active');
-    if (actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
+    if (!data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed) ||
+      Object.keys(data.sealed).some(id => Object.hasOwn(data.relics, id)) ||
+      (Object.keys(data.sealed).length && (data.stage !== 10 || data.cleared === count))) return false;
+    const relics = Object.entries({ ...data.relics, ...data.sealed });
+    if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, data.stage < 3 ? 1 : data.stage < 6 ? 2 : 3)) ||
+      relics.filter(([, level]) => level === 3).length > (data.stage < 6 ? 0 : data.stage < 10 ? 2 : 6) || relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
+    const actives = Object.entries(data.relics).filter(([id]) => RELICS[id].kind === 'active');
+    if (relics.filter(([id]) => RELICS[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
     if (data.charge > 1 + (data.relics.cell || 0) || (!data.equipment && (data.charge || data.energy)) ||
       (!data.relics.feather && (data.featherCharge || data.featherEnergy)) || data.manualMatches > (data.banked + data.cleared) / 3 ||
       data.stageMatches > data.cleared / 3 || data.stageMatches > data.manualMatches) return false;
@@ -321,9 +375,17 @@
     if (data.pendingReward !== null && (!Array.isArray(data.pendingReward) || data.pendingReward.length < 1 || data.pendingReward.length > 3 ||
       new Set(data.pendingReward).size !== data.pendingReward.length || data.pendingReward.some(id => !Object.hasOwn(RELICS, id) &&
         !['recharge', 'restore_remove', 'restore_undo', 'restore_shuffle'].includes(id)))) return false;
+    if (data.previous && (!data.previous.relics || !data.previous.sealed ||
+      JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
+      Object.keys(data.previous.sealed).some(id => Object.hasOwn(data.previous.relics, id)) ||
+      (Object.keys(data.previous.sealed).length && data.stage !== 10) ||
+      (Object.keys(data.previous.relics).find(id => RELICS[id].kind === 'active') || null) !== data.previous.equipment)) return false;
+    if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) ||
+      (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
+      (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, stageSpec, VERSION, validSave, bankedBefore };
+  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

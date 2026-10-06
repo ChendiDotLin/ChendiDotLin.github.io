@@ -8,15 +8,15 @@
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=expedition-v2-save">
-  <script defer src="core.js?v=expedition-v2-save"></script>
-  <script defer src="expedition.js?v=expedition-v2-save"></script>
-  <script defer src="expedition-save.js?v=expedition-v2-save"></script>
-  <script defer src="i18n.js?v=expedition-v2-save"></script>
-  <script defer src="config.js?v=expedition-v2-save"></script>
-  <script defer src="leaderboard.js?v=expedition-v2-save"></script>
-  <script defer src="effects.js?v=expedition-v2-save"></script>
-  <script defer src="game.js?v=expedition-v2-save"></script>
+  <link rel="stylesheet" href="style.css?v=expedition-v3-boss">
+  <script defer src="core.js?v=expedition-v3-boss"></script>
+  <script defer src="expedition.js?v=expedition-v3-boss"></script>
+  <script defer src="expedition-save.js?v=expedition-v3-boss"></script>
+  <script defer src="i18n.js?v=expedition-v3-boss"></script>
+  <script defer src="config.js?v=expedition-v3-boss"></script>
+  <script defer src="leaderboard.js?v=expedition-v3-boss"></script>
+  <script defer src="effects.js?v=expedition-v3-boss"></script>
+  <script defer src="game.js?v=expedition-v3-boss"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -50,8 +50,9 @@
         <div class="progress-track" role="progressbar" aria-label="消除进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress"></div></div>
         <section id="expedition-panel" class="expedition-panel" hidden aria-label="Expedition">
           <div class="expedition-heading"><span id="expedition-stage"></span><button id="expedition-extract" class="text-button" data-i18n="expExtract">撤离结算</button></div>
+          <p id="boss-status" class="boss-status" hidden></p><p id="relic-slots" class="expedition-hint"></p>
           <div id="relic-bar" class="relic-bar"></div>
-          <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-continue" class="text-button" hidden></button></div>
+          <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>
           <div id="radar-preview" class="radar-preview" hidden></div>
           <p id="expedition-save-status" class="save-status" role="status"></p>
           <p id="expedition-hint" class="expedition-hint" role="status"></p>
@@ -87,6 +88,7 @@
       <button data-leaderboard-mode="monsoon" data-i18n="monsoon" aria-pressed="false">季风</button>
       <button data-leaderboard-mode="expedition" data-i18n="expedition" aria-pressed="false">远征</button>
     </div>
+    <div id="expedition-ranking-tabs" class="ranking-tabs" hidden><button data-exp-board="expedition_distance" data-i18n="expDistance">最远关数</button><button data-exp-board="expedition_speed" data-i18n="expSpeed">最快 10 关</button><button data-exp-board="expedition_legacy" data-i18n="expLegacy">旧榜</button></div>
     <p class="ranking-rules" data-i18n="rankingRules">按回收数量降序，同分按用时升序。每个 ID 在各模式保留最佳成绩。</p>
     <div id="inline-ranking-content" aria-busy="true"><p class="empty-ranking" role="status" data-i18n="loading">正在加载排行榜…</p></div>
     <p class="ranking-browse-note" data-i18n="rankingBrowseHint">切换榜单不影响当前牌局</p>

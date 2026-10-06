@@ -7,10 +7,10 @@
   <meta name="referrer" content="same-origin">
   <title>排行榜管理 · Rain Match</title>
   <link rel="icon" href="../assets/clover.webp">
-  <link rel="stylesheet" href="../style.css?v=expedition-v1">
-  <link rel="stylesheet" href="admin.css?v=expedition-v1">
+  <link rel="stylesheet" href="../style.css?v=expedition-v3-boss">
+  <link rel="stylesheet" href="admin.css?v=expedition-v3-boss">
   <script defer src="../config.js"></script>
-  <script defer src="admin.js?v=expedition-v1"></script>
+  <script defer src="admin.js?v=expedition-v3-boss"></script>
 </head>
 <body>
   <main class="admin-shell">
@@ -32,7 +32,7 @@
       <div id="counts" class="admin-counts"></div>
       <section class="admin-card">
         <div class="admin-toolbar"><h2 data-text="scores">查看成绩</h2><button id="refresh" class="text-button" data-text="refresh">刷新</button></div>
-        <label for="mode" data-text="mode">模式</label><select id="mode"><option value="drizzle" data-text="drizzle">细雨</option><option value="rain" data-text="rain">暴雨</option><option value="monsoon" data-text="monsoon">季风</option><option value="expedition" data-text="expedition">远征</option></select>
+        <label for="mode" data-text="mode">模式</label><select id="mode"><option value="drizzle" data-text="drizzle">细雨</option><option value="rain" data-text="rain">暴雨</option><option value="monsoon" data-text="monsoon">季风</option><option value="expedition" data-text="expedition">远征旧榜</option><option value="expedition_distance" data-text="expedition_distance">远征最远</option><option value="expedition_speed" data-text="expedition_speed">最快 10 关</option></select>
         <div class="ranking-scroll"><table class="ranking-table"><thead><tr><th data-text="player">用户 ID</th><th data-text="tiles">回收</th><th data-text="time">用时</th><th data-text="action">操作</th></tr></thead><tbody id="rows"></tbody></table></div>
         <p class="input-hint" data-text="topNote">显示前 100 名。也可在下方输入任意 ID 删除。</p>
       </section>
