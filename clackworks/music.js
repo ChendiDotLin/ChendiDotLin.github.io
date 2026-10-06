@@ -2,11 +2,11 @@
    Synthesized locally; no recordings or external samples. Audio is opt-in. */
 (function (root) {
   'use strict';
-  const STEP = 60 / 108 / 4;
-  const CHORDS = [[50,57,60,64], [46,53,57,60], [53,60,64,67], [48,55,58,62],
-    [50,57,60,65], [43,50,57,62], [46,53,60,65], [45,52,59,64]];
-  const LEAD = [74,0,77,0,81,0,79,77, 0,74,0,72,69,0,0,0,
-    77,0,81,0,84,81,0,79, 77,0,74,0,72,0,69,0];
+  const STEP = 60 / 96 / 4;
+  const CHORDS = [[50,65,69], [46,62,65], [53,60,65], [48,64,67]];
+  // F–A–G / F–D: one two-bar phrase, then two bars of breathing room.
+  // The closing phrase resolves to C; intensity never adds competing melodies.
+  const THEME = new Map([[0,[65,3]], [4,[69,3]], [8,[67,6]], [16,[65,3]], [20,[62,8]]]);
   const hz = note => 440 * 2 ** ((note - 69) / 12);
   class WorkshopMusic {
     constructor(context = null) {
@@ -28,10 +28,7 @@
       this.master.connect(this.compressor);
       this.effectBus = ctx.createGain(); this.effectBus.gain.value = this.effectsVolume * .65;
       this.effectBus.connect(this.compressor);
-      this.delay = ctx.createDelay(1); this.delay.delayTime.value = STEP * 3;
-      const echo = ctx.createGain(), filter = ctx.createBiquadFilter();
-      echo.gain.value = .2; filter.type = 'lowpass'; filter.frequency.value = 2200;
-      this.delay.connect(filter); filter.connect(echo); echo.connect(this.master);
+      this.leadWave = ctx.createPeriodicWave(new Float32Array(5), new Float32Array([0,1,.12,.03,0]));
       this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = this.noiseBuffer.getChannelData(0); let seed = 719;
       for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; data[i] = (seed >>> 0) / 2147483648 - 1; }
@@ -45,15 +42,16 @@
       const attack = Math.min(options.attack || .003, length / 3);
       envelope.gain.setValueAtTime(.0001, time);
       envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, strength), time + attack);
+      if (options.hold) envelope.gain.linearRampToValueAtTime(Math.max(.0002, strength * .85), time + Math.min(length * .7, options.hold));
       envelope.gain.exponentialRampToValueAtTime(.0001, time + length);
       source.connect(filter); filter.connect(envelope); envelope.connect(options.effect ? this.effectBus : this.master);
-      if (options.echo) envelope.connect(this.delay);
       set.add(source);
       source.onended = () => { source.disconnect(); filter.disconnect(); envelope.disconnect(); set.delete(source); };
       source.start(time); source.stop(time + length + .025);
     }
     tone(note, time, length, strength, type = 'triangle', options = {}) {
       const source = this.context.createOscillator(); source.type = type;
+      if (options.theme) source.setPeriodicWave(this.leadWave);
       source.frequency.setValueAtTime(hz(note), time);
       if (options.endNote !== undefined) source.frequency.exponentialRampToValueAtTime(hz(options.endNote), time + length * .8);
       if (options.detune) source.detune.value = options.detune;
@@ -68,36 +66,28 @@
       this.noise(time, .025, strength * .15, 1800, { effect });
     }
     renderStep(step, time, energy = this.scene) {
-      const beat = step % 16, bar = Math.floor(step / 16) % 32;
-      const chord = CHORDS[Math.floor(bar / 4)], phrase = bar % 4;
-      const groove = time + (beat % 2 ? .009 : 0);
+      const beat = step % 16, bar = Math.floor(step / 16) % 16;
+      const chord = CHORDS[Math.floor(bar / 4)];
       if (beat === 0) {
-        chord.slice(1).forEach((note, i) => this.tone(note, time + i * .018, STEP * 17, .075, 'triangle', { attack: .13, cutoff: 1200, detune: i % 2 ? 5 : -5 }));
+        chord.slice(1).forEach(note => this.tone(note, time, STEP * 15, .04, 'sine', { attack: .18, cutoff: 1100 }));
+        this.tone(chord[0] - 12, time, STEP * 9, .2, 'triangle', { attack: .025, cutoff: 450 });
       }
-      if ([0,6,8,14].includes(beat)) this.tone(chord[0] - 12 + (beat === 14 ? 12 : 0), groove, STEP * (beat === 0 ? 4 : 2), .27, 'triangle', { cutoff: 650 });
-      if ([0,8].includes(beat) || energy > .55 && beat === 11) this.kick(groove, .3 + energy * .1);
-      if ([4,12].includes(beat)) {
-        this.noise(groove, .13, .19, 1700, { q: .5 });
-        this.tone(50, groove, .08, .12, 'triangle', { endNote: 43, cutoff: 1400 });
+      if (beat === 0 || beat === 8) this.kick(time, .12 + energy * .055);
+      if (beat === 4 || beat === 12) this.noise(time, .025, .035 + energy * .012, 1250, { q: .6 });
+      if (beat === 14 && bar % 2 === 1) this.noise(time, .035, .018, 3000, { q: .5 });
+      const phraseStep = (bar % 4) * 16 + beat, theme = THEME.get(phraseStep);
+      if (theme) {
+        const [note, duration] = theme, length = duration * STEP;
+        this.tone(bar >= 12 && phraseStep === 20 ? 60 : note, time, length, .15, 'sine',
+          { theme: true, attack: .035, hold: length * .45, cutoff: 1600 });
       }
-      if (beat % 2 === 0 || energy > .6) this.noise(groove, beat === 14 ? .09 : .035, beat % 4 === 2 ? .06 : .027, 7000, { filterType: 'highpass' });
-      if (beat % 2 === 0) {
-        const arp = chord[[0,2,1,3,2,1,3,1][beat / 2]] + 12;
-        this.tone(arp, groove, .24, .08 + energy * .045, 'triangle', { cutoff: 2400, echo: true });
-      }
-      const lead = LEAD[(phrase % 2) * 16 + beat];
-      if (lead && (phrase < 2 || energy > .65)) {
-        this.tone(lead, groove, .38, .095, 'sine', { echo: true, attack: .015 });
-        this.tone(lead + 12, groove, .19, .016, 'triangle', { cutoff: 3500 });
-      }
-      if (energy > .75 && beat === 15 && phrase === 3) this.noise(groove, .18, .07, 3500);
     }
     schedule() {
       if (!this.playing || this.context.state !== 'running') return;
       if (this.next < this.context.currentTime) this.next = this.context.currentTime + .04;
       while (this.next < this.context.currentTime + .18) {
         this.renderStep(this.step, this.next, Math.max(this.scene, this.next < this.chainUntil ? .9 : 0));
-        this.next += STEP; this.step = (this.step + 1) % 512;
+        this.next += STEP; this.step = (this.step + 1) % 256;
       }
     }
     async play() {
@@ -184,5 +174,6 @@
       // Effects-only playback resumes on the next intentional game action.
     }
   }
+  WorkshopMusic.stepDuration = STEP;
   root.RainMusic = WorkshopMusic;
 })(typeof window !== 'undefined' ? window : globalThis);

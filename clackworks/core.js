@@ -5,7 +5,7 @@
   const ITEMS = [
     { id: 'bear', icon: 'part-measure', name: '口袋卷尺', en: 'Pocket Tape Measure', color: '#d5deec' },
     { id: 'glasses', icon: 'part-battery', name: '迷你电池', en: 'Mini Battery', color: '#d5deec' },
-    { id: 'syringe', icon: 'part-plug', name: '电源插头', en: 'Power Plug', color: '#d5deec' },
+    { id: 'syringe', icon: 'part-plug-side', name: '电源插头', en: 'Power Plug', color: '#d5deec' },
     { id: 'crowbar', icon: 'part-key', name: '柜门钥匙', en: 'Cabinet Key', color: '#d5deec' },
     { id: 'backupMag', icon: 'part-spring', name: '压缩弹簧', en: 'Compression Spring', color: '#d5deec' },
     { id: 'feather', icon: 'part-magnet', name: '马蹄磁铁', en: 'Horseshoe Magnet', color: '#9be2a4' },

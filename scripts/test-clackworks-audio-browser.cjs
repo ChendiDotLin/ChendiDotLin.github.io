@@ -44,7 +44,7 @@ const fs = require('node:fs');
   const rendered = await page.evaluate(async () => {
    const rate = 22050, seconds = 28, ctx = new OfflineAudioContext(2, rate * seconds, rate);
    const mix = new RainMusic(ctx); mix.ensure(); mix.setVolume(.45); mix.master.gain.value = .45 * .7;
-   for (let step = 0; step < 192; step++) mix.renderStep(step, .05 + step * 60 / 108 / 4, step > 96 ? .9 : .25);
+   for (let step = 0; step < 160; step++) mix.renderStep(step, .05 + step * RainMusic.stepDuration, step > 96 ? .9 : .25);
    ['pick','match','behemoth','ukulele','blackhole','win'].forEach((kind, i) => mix.effectAt(kind, 18 + i * 1.2));
    const buffer = await ctx.startRendering(), left = buffer.getChannelData(0), right = buffer.getChannelData(1);
    let peak = 0, sum = 0;

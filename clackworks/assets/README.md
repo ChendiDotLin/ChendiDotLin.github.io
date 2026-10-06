@@ -39,3 +39,7 @@ ordinary tile IDs/type indices to their new part names and asset filenames.
 locally with oscillators, without audio samples. Existing sound effects are also
 synthesized. This provenance records the implementation; it does not claim that
 project names or artwork have undergone legal or trademark clearance.
+
+The plug now uses `flat/part-plug-side.webp`: a horizontal lavender-blue body,
+gold pins and a left-side cord, distinct from the red U-shaped magnet. Built-in
+image_gen edit prompt: `flat/part-plug-side.prompt.json`. Saved item IDs are unchanged.

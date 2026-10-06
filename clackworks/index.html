@@ -8,18 +8,18 @@
   <title>咔嗒工坊 · Clackworks</title>
   <link rel="canonical" href="https://chendilin.com/clackworks/">
   <link rel="icon" href="assets/flat/favicon-battery.png">
-  <link rel="stylesheet" href="style.css?v=clackworks-audio-v1">
-  <script defer src="core.js?v=clackworks-audio-v1"></script>
+  <link rel="stylesheet" href="style.css?v=clackworks-theme-v2">
+  <script defer src="core.js?v=clackworks-theme-v2"></script>
   <script defer src="expedition.js?v=workshop-v1"></script>
   <script defer src="expedition-save.js?v=sealer-levels-v1"></script>
-  <script defer src="i18n.js?v=clackworks-audio-v1"></script>
+  <script defer src="i18n.js?v=clackworks-theme-v2"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
   <script defer src="presence.js?v=presence-v1"></script>
   <script defer src="leaderboard.js?v=expedition-v3-boss"></script>
-  <script defer src="effects.js?v=clackworks-audio-v1"></script>
-  <script defer src="music.js?v=clackworks-audio-v1"></script>
-  <script defer src="game.js?v=clackworks-audio-v1"></script>
+  <script defer src="effects.js?v=clackworks-theme-v2"></script>
+  <script defer src="music.js?v=clackworks-theme-v2"></script>
+  <script defer src="game.js?v=clackworks-theme-v2"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -36,7 +36,7 @@
       <div class="music-heading"><span id="music-title" data-i18n="musicTitle">夜班流水线</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
       <div id="music-player"><button id="music-toggle" class="text-button" aria-pressed="false" data-i18n="musicPlay">▶ 播放音乐</button><label class="music-volume"><span data-i18n="musicVolume">音乐音量</span><input id="music-volume" type="range" min="0" max="100" value="35"></label></div>
       <div class="music-actions"><button id="effects" class="text-button" aria-pressed="false">开启音效</button><label class="music-volume"><span data-i18n="effectsVolume">音效音量</span><input id="effects-volume" type="range" min="0" max="100" value="65"></label></div>
-      <p data-i18n="musicHint">鼓点、低音和旋律随关卡与连锁增强。音乐和音效可独立调节；切到后台自动暂停。</p>
+      <p data-i18n="musicHint">简短主题、轻鼓点与低音。连锁只加强节奏力度，音乐和音效可独立调节。</p>
       <p id="music-error" role="status" hidden data-i18n="musicUnavailable"></p>
     </section>
     <main class="app-layout">
