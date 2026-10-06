@@ -445,7 +445,7 @@
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
-  function relicDescription(id, level = game.ownedRelics()[id] || 1) {
+  function relicDescription(id, level = game.relics[id] || (RainExpedition.RELICS[id]?.kind === 'active' ? game.ownedRelics()[id] : 1) || 1) {
     const values = { feather: { n: 9 - level, depth: level === 3 ? 2 : 1 }, shield: { n: 1 },
       ukulele: { n: 20 + 5 * level, m: level >= 2 ? 3 : 4 }, cell: { n: 1 + level, m: 8 - level },
       blackhole: { n: level }, radar: { n: 3 + level }, gasoline: { n: 15 + 10 * level }, behemoth: { n: 5 - level, depth: level }, clover: { n: 5 * level } };
@@ -462,7 +462,8 @@
   }
   function showRelic(id = selectedRelic) {
     selectedRelic = id;
-    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><h2 id="modal-title">${t('relic_' + id)}</h2><p>${relicDescription(id)}</p><button class="primary-button" id="relic-close">${t('expStay')}</button>`);
+    const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })} · ${t(game.relics[id] ? 'expPartialHint' : 'expSealedHint')}</p>` : '';
+    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}<p>${relicDescription(id)}</p><button class="primary-button" id="relic-close">${t('expStay')}</button>`);
     $('relic-close').addEventListener('click', closeDialog);
   }
   function renderExpedition() {
@@ -473,17 +474,27 @@
     $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
     captureTen();
     $('boss-status').hidden = !game.bossActive;
-    $('boss-status').textContent = t('expBossStatus', { n: Object.keys(game.sealed).length });
+    const sealedCount = Object.keys(game.sealed).length;
+    $('boss-seals').textContent = t(sealedCount ? 'expBossStatus' : 'expBossRestored', { n: sealedCount, levels: game.sealedLevels });
+    $('boss-energy-label').textContent = t(!sealedCount ? 'expBossFinish' : !game.bossStarted ? 'expBossFirst' : 'expBossEnergy', { n: game.bossEnergy });
+    $('boss-meter').hidden = !sealedCount;
+    $('boss-meter').setAttribute('aria-label', t('expBossEnergy', { n: game.bossEnergy }));
+    $('boss-meter').setAttribute('aria-valuenow', String(game.bossEnergy));
+    [...$('boss-meter').children].forEach((pip, index) => pip.classList.toggle('charged', index < game.bossEnergy));
+    $('boss-status').classList.toggle('restored', !sealedCount);
     document.body.classList.toggle('boss-run', game.bossActive);
     $('relic-slots').textContent = t('expSlots', { n: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'passive').length, max: RainExpedition.PASSIVE_SLOTS, evolutions: game.evolutionSlots });
     $('expedition-ten').hidden = !tenRecord; $('expedition-ten').disabled = animating || savePaused;
     $('expedition-ten').textContent = t('expTenButton', { time: formatTime(tenTime || 0, true) });
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
     for (const { id, level } of game.loadout()) {
-      const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id; button.classList.toggle('sealed', Object.hasOwn(game.sealed, id));
-      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${Object.hasOwn(game.sealed, id) ? t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level })}</small></span>`;
-      button.title = relicDescription(id, level);
-      button.setAttribute('aria-label', t('relic_' + id) + ' · ' + t('expLevel', { n: level }) + ' · ' + relicDescription(id, level));
+      const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
+      const sealed = Object.hasOwn(game.sealed, id), current = game.relics[id] || 0;
+      button.classList.toggle('sealed', sealed && !current); button.classList.toggle('partial', sealed && !!current);
+      const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level });
+      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${label}</small></span>`;
+      button.title = label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
+      button.setAttribute('aria-label', t('relic_' + id) + ' · ' + button.title);
       button.addEventListener('click', () => showRelic(id));
       relicBar.append(button);
     }
@@ -510,7 +521,7 @@
       if (game.lightningReady) hint += ' · ' + t('expLightningReady');
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
-    if (game.bossActive) hint = t('expBossHint');
+    if (game.bossActive && !targeting) hint = t(sealedCount ? 'expBossHint' : 'expBossFinish');
     if (!game.competitive) hint += ' · ' + t('expLegacyRun');
     $('expedition-hint').textContent = hint;
     $('radar-preview').hidden = !game.radarActive;
@@ -589,7 +600,10 @@
     const chain = recoveredCount ?? events.reduce((sum, event) => sum + (event.ids.length === 3 ? 3 : 0), 0);
     clearTimeout(comboTimeout); $('combo').textContent = chain >= 6 ? t('expChain', { n: chain }) : t('expFx_' + events[events.length - 1].kind);
     const returned = events.filter(event => event.kind === 'reclaim');
-    if (returned.length && chain < 6) $('combo').textContent = t('expReclaimed', { item: t('relic_' + returned[returned.length - 1].relic) });
+    if (returned.length && chain < 6) {
+      const last = returned[returned.length - 1];
+      $('combo').textContent = t('expReclaimed', { item: t('relic_' + last.relic), n: last.level });
+    }
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
     animating = true; render(); syncClock(); const effectRun = runId;
     [...new Set(events.map(event => event.relic || event.kind))].forEach(id => { const chip = [...$('relic-bar').children].find(el => el.dataset.relic === id); chip?.classList.add('proc-flash'); });
@@ -605,8 +619,14 @@
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
   function showBossIntro() {
-    showDialog('boss', `<span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
-    $('boss-start').addEventListener('click', closeDialog);
+    showDialog('boss', `<div class="boss-emblem" aria-hidden="true"><i></i><i></i><span>◇</span></div><span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><p class="boss-intro-rule">${t('expBossHint')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
+    $('boss-start').addEventListener('click', () => {
+      const effectRun = runId; animating = true; closeDialog(); render(); syncClock();
+      fx.bossEntrance().finally(() => {
+        if (runId !== effectRun) return;
+        updateClock(); animating = false; render(); syncClock();
+      });
+    });
   }
   function showTenRecord() {
     if (!tenRecord || savePaused) return;

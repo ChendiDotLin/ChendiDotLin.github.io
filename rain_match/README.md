@@ -228,16 +228,32 @@ Open `/rain_match/?mode=expedition`. Classic difficulties keep their own rules.
 ### Stage-ten Boss
 
 Only stage 10 is a Boss stage. Entering it seals **all passives and the active
-item**, preserving their levels. Every recovered triple, including chain clears,
-returns one uniformly random sealed item. Returned active equipment gets one
-charge; Feather returns ready; Shield retains its once-per-stage limit. There is
-no mid-stage supply, and emergency powers remain available. A final clear restores
-any remaining sealed items. The stage reward and travel then continue into stage
-11 and the normal endless sequence. Later stages do not repeat this Boss.
+item**, preserving their original levels. The first manual triple immediately
+returns one passive level (or the whole active item). Later manual triples earn
+2 seal energy; all proc triples in a single action together earn at most 1 extra.
+Every 3 energy returns one random passive level. Items still at zero have priority
+until every owned item is active; remaining upgrades are uniformly selected from
+items below their original level. Active equipment returns at its original level
+with one charge. Feather gets one ready use only on first return, not on upgrades;
+Shield retains its once-per-stage limit.
 
-Undo includes returned equipment, sealed equipment, proc counters and RNG state.
-Repeating the same pickup after Undo produces the same return. Gear is never
-permanently deleted by the Boss; a failure records the full owned loadout.
+The HUD shows remaining unlocks, a three-point energy meter, and current/original
+levels on partially recovered items. A copper-violet seal closes on entry, energy
+travels toward the meter, each returned level shatters a small seal by its item,
+and the full seal breaks when the board is cleared. These effects do not change
+card contrast or accept pointer input, and reduced motion skips their waits.
+
+There is no mid-stage supply, and emergency powers keep their remaining uses.
+Recovering all items alone does not win: the full board must be cleared. A final
+clear restores every remaining level. The stage reward and travel then continue
+into stage 11 and the normal endless sequence. Later stages do not repeat this Boss.
+
+Undo includes partial levels, seal energy, the first-return flag, proc counters
+and RNG state. Repeating the same pickup after Undo produces the same return.
+Existing v3 saves keep already-returned items and initialize the new energy field
+to zero, including their Undo state. This update needs no database migration and
+preserves existing leaderboard records. Gear is never permanently deleted by the
+Boss; a failure records the full owned loadout.
 
 ### Two new leaderboards
 
@@ -293,6 +309,8 @@ Checks:
 - `node scripts/test-rain-expedition.cjs`: stage witnesses and item rules.
 - `node scripts/test-rain-boss.cjs`: sealing, random recovery, Undo/reload,
   six-slot builds, near-board bursts and legacy-save migration.
+- `node scripts/test-rain-sealer.cjs`: 60 full Boss runs, gradual recovery, chain
+  energy cap, active casts, Undo/reload, old saves and invalid states.
 - `node scripts/test-rain-save.cjs`: checkpoint replay and storage failure cases.
 - `node scripts/test-rain-boss-sql.cjs /path/to/pglite/dist/index.cjs`: migration,
   independent bests, time qualification, retries, private tables and admin deletion.
@@ -300,7 +318,8 @@ Checks:
   `node scripts/test-rain-expedition-browser.cjs` and
   `node scripts/test-rain-boss-browser.cjs` with Playwright installed. Optional
   `RAIN_PLAYWRIGHT`, `RAIN_BROWSER_PATH` and `RAIN_GAME_URL` select local tools.
-  All leaderboard writes in these tests are mocked.
+  All leaderboard writes in these tests are mocked. Set `RAIN_TEST_MOTION=1`
+  for the Boss browser test to exercise entry, reclaim and victory effects.
 - `node scripts/test-rain-effects-browser.cjs` uses the same browser setup to
   check explosion/fire/lightning feedback, chain totals, bounded animation
   duration and particle count, cancellation, reduced motion, and responsive UI.

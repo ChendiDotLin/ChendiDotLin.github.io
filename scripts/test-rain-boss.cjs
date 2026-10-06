@@ -8,7 +8,7 @@ const gear={feather:2,shield:2,cell:2,clover:2,gasoline:2,behemoth:2,radar:2};
  assert.equal(g.stage,10);assert.deepEqual(g.relics,{});assert.deepEqual(g.sealed,gear);assert.equal(g.equipment,null);assert.equal(g.canActivate(),false);assert.equal(g.featherCharge,0);assert.ok(validSave(g.toSave()));
  const solution=[...g.solution];let match,id,before;
  for(id of solution) {before=g.toSave();match=g.pick(id);if(match.matched)break;}
- const first=g.toSave();assert.equal(Object.keys(g.sealed).length,Math.max(0,7-match.recovered/3));assert.ok(validSave(first));
+ const first=g.toSave();assert.equal(match.events.filter(e=>e.kind==='reclaim').length,1);assert.equal(Object.keys(g.relics).length,1);assert.equal(g.sealedLevels,12);assert.ok(validSave(first));
  const reload=Expedition.fromSave(first);assert.deepEqual(reload.toSave(),first);assert.ok(reload.use('undo'));assert.deepEqual(reload.sealed,before.sealed);assert.deepEqual(reload.relics,before.relics);
  const replay=reload.pick(id);assert.deepEqual(replay.events,match.events);assert.equal(reload.cleared,g.cleared);assert.equal(g.pendingReward,null);
  // Finish real triples through the same return/chain path and verify the travel boundary.

@@ -41,13 +41,14 @@
       game.rngState = n >>> 0; return game.rngState / 4294967296; };
   }
   const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
-    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed'];
+    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted'];
   const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
+      this.bossEnergy = 0; this.bossStarted = false;
       this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
       this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
       this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
@@ -56,6 +57,7 @@
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
     get bossActive() { return this.stage === 10 && this.cleared < this.tiles.length; }
+    get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (RELICS[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
     get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
     get evolutionSlots() { return this.stage < 6 ? 0 : this.stage < 10 ? 2 : 6; }
     ownedRelics() { return { ...this.relics, ...this.sealed }; }
@@ -124,19 +126,35 @@
     }
     beginBurst() {
       this.comboQueue = [];
+      this.bossChainAwarded = false;
       this.burstLeft = this.relics.clover === 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
     }
-    reclaim(events) {
+    reclaim(events, full = false) {
       const ids = Object.keys(this.sealed); if (!ids.length) return;
-      const id = ids[Math.floor(this.random() * ids.length)];
-      this.relics[id] = this.sealed[id]; delete this.sealed[id];
+      const unopened = ids.filter(id => !this.relics[id]);
+      const pool = unopened.length ? unopened : ids;
+      const id = pool[Math.floor(this.random() * pool.length)], target = this.sealed[id], oldLevel = this.relics[id] || 0;
+      this.relics[id] = full || RELICS[id].kind === 'active' ? target : oldLevel + 1;
+      if (this.relics[id] === target) delete this.sealed[id];
       if (RELICS[id].kind === 'active') { this.equipment = id; this.charge = 1; this.energy = 0; }
-      if (id === 'feather') { this.featherCharge = 1; this.featherEnergy = 0; }
-      events.push({ kind: 'reclaim', relic: id, ids: [] });
+      if (id === 'feather' && !oldLevel) { this.featherCharge = 1; this.featherEnergy = 0; }
+      events.push({ kind: 'reclaim', relic: id, level: this.relics[id], target, ids: [] });
+      if (!Object.keys(this.sealed).length) this.bossEnergy = 0;
     }
-    onTriple(events) {
-      // Every real triple, including a proc, returns one entire sealed item.
-      this.reclaim(events);
+    chargeSeal(events, manual) {
+      if (this.stage !== 10 || !Object.keys(this.sealed).length) return;
+      if (manual && !this.bossStarted) {
+        this.bossStarted = true; this.reclaim(events); return;
+      }
+      // A whole action's procs share one point, regardless of burst size.
+      if (!manual && this.bossChainAwarded) return;
+      if (!manual) this.bossChainAwarded = true;
+      this.bossEnergy += manual ? 2 : 1;
+      events.push({ kind: 'sealEnergy', amount: manual ? 2 : 1, ids: [] });
+      if (this.bossEnergy >= 3) { this.bossEnergy -= 3; this.reclaim(events); }
+    }
+    onTriple(events, manual = false) {
+      this.chargeSeal(events, manual);
       if (this.relics.behemoth && ++this.blastCharge >= 5 - this.relics.behemoth) {
         this.blastCharge = 0;
         this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
@@ -150,7 +168,11 @@
       }
       this.comboQueue = [];
       // Winning must restore gear even if the final burst skipped the return phase.
-      if (this.cleared === this.tiles.length) while (Object.keys(this.sealed).length) this.reclaim(events);
+      if (this.cleared === this.tiles.length && this.stage === 10) {
+        while (Object.keys(this.sealed).length) this.reclaim(events, true);
+        this.bossEnergy = 0;
+        events.push({ kind: 'bossBreak', ids: [] });
+      }
     }
     pulse(events, kind, count, depth = 0) {
       if (!this.comboQueue) this.beginBurst();
@@ -212,7 +234,7 @@
         this.check(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
       }
       if (result.matched) {
-        this.manualMatches++; this.stageMatches++; this.onTriple(events); this.addEnergy(1);
+        this.manualMatches++; this.stageMatches++; this.onTriple(events, true); this.addEnergy(1);
         if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
         }
@@ -319,6 +341,7 @@
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
+      this.bossEnergy = 0; this.bossStarted = false;
       if (this.stage === 10) {
         this.sealed = { ...this.relics }; this.relics = {}; this.equipment = null;
         this.charge = 0; this.energy = 0; this.featherCharge = 0; this.featherEnergy = 0;
@@ -336,6 +359,7 @@
         ...Object.fromEntries(RUN_FIELDS.map(key => [key, this[key]])), used: this.used, status: this.status, previous: this.previous }));
     }
     static fromSave(data) {
+      data = normalizeSave(data);
       if (!validSave(data)) throw Error('invalidSave');
       const game = Object.create(Expedition.prototype);
       for (const key of [...RUN_FIELDS, ...PICK_FIELDS, 'tiles', 'rack', 'reserve', 'cleared', 'moves', 'used', 'status', 'previous'])
@@ -344,6 +368,25 @@
     }
   }
   const integer = (n, min = 0, max = 1e9) => Number.isSafeInteger(n) && n >= min && n <= max;
+  // Additive v3 checkpoint upgrade: retain already-returned gear and the old Undo state.
+  function normalizeSave(data) {
+    if (!data || data.version !== VERSION) return data;
+    const copy = JSON.parse(JSON.stringify(data));
+    for (const state of [copy, copy.previous].filter(Boolean)) {
+      if (state.bossEnergy === undefined) state.bossEnergy = 0;
+      if (state.bossStarted === undefined) state.bossStarted = copy.stage === 10 && state.stageMatches > 0;
+    }
+    return copy;
+  }
+  function validSeals(data, stage, count) {
+    if (!data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics) ||
+      !data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed)) return false;
+    if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 3))) return false;
+    return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, 3) &&
+      stage === 10 && data.cleared < count && (data.relics[id] || 0) < target &&
+      !(RELICS[id].kind === 'active' && data.relics[id])) &&
+      (Object.keys(data.sealed).length > 0 || data.bossEnergy === 0);
+  }
   function validSnapshot(data, count) {
     if (!data || !Array.isArray(data.tiles) || data.tiles.length !== count || !Array.isArray(data.rack) || !Array.isArray(data.reserve) ||
       data.rack.length > 7 || data.reserve.length > 3 || !integer(data.cleared, 0, count) || !integer(data.moves) ||
@@ -351,7 +394,8 @@
       !integer(data.featherCharge, 0, 1) || !integer(data.featherEnergy, 0, 8) || typeof data.shieldSpent !== 'boolean' ||
       !integer(data.manualMatches) || !integer(data.stageMatches, 0, count / 3) || !integer(data.radarUntil) ||
       !(data.radarMark === null || integer(data.radarMark, 0, core.ITEMS.length - 1)) || !integer(data.spark, 0, 4) ||
-      typeof data.lightningReady !== 'boolean' || !integer(data.rngState, 1, 0xffffffff) || !integer(data.bestChain, 0, 156) || !integer(data.blastCharge, 0, 4)) return false;
+      typeof data.lightningReady !== 'boolean' || !integer(data.rngState, 1, 0xffffffff) || !integer(data.bestChain, 0, 156) || !integer(data.blastCharge, 0, 4) ||
+      !integer(data.bossEnergy, 0, 2) || typeof data.bossStarted !== 'boolean') return false;
     const ids = [...data.rack, ...data.reserve], counts = Array(core.ITEMS.length).fill(0);
     if (new Set(ids).size !== ids.length || ids.some(id => !integer(id, 0, count - 1))) return false;
     if (!data.tiles.every((t, id) => {
@@ -371,9 +415,7 @@
       typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
       !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
       !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
-    if (!data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed) ||
-      Object.keys(data.sealed).some(id => Object.hasOwn(data.relics, id)) ||
-      (Object.keys(data.sealed).length && (data.stage !== 10 || data.cleared === count))) return false;
+    if (!validSeals(data, data.stage, count) || (data.stage !== 10 && (data.bossEnergy || data.bossStarted))) return false;
     const relics = Object.entries({ ...data.relics, ...data.sealed });
     if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, data.stage < 3 ? 1 : data.stage < 6 ? 2 : 3)) ||
       relics.filter(([, level]) => level === 3).length > (data.stage < 6 ? 0 : data.stage < 10 ? 2 : 6) || relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
@@ -387,17 +429,16 @@
     if (data.pendingReward !== null && (!Array.isArray(data.pendingReward) || data.pendingReward.length < 1 || data.pendingReward.length > 3 ||
       new Set(data.pendingReward).size !== data.pendingReward.length || data.pendingReward.some(id => !Object.hasOwn(RELICS, id) &&
         !['recharge', 'restore_remove', 'restore_undo', 'restore_shuffle'].includes(id)))) return false;
-    if (data.previous && (!data.previous.relics || !data.previous.sealed ||
+    if (data.previous && (!validSeals(data.previous, data.stage, count) ||
       JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
-      Object.keys(data.previous.sealed).some(id => Object.hasOwn(data.previous.relics, id)) ||
-      (Object.keys(data.previous.sealed).length && data.stage !== 10) ||
+      (data.stage !== 10 && (data.previous.bossEnergy || data.previous.bossStarted)) ||
       (Object.keys(data.previous.relics).find(id => RELICS[id].kind === 'active') || null) !== data.previous.equipment)) return false;
     if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) ||
       (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
       (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore };
+  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

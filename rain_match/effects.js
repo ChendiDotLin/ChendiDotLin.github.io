@@ -161,6 +161,47 @@
     burst(center(target.getBoundingClientRect()), name === 'undo' ? '#9acfe5' : '#b3d8bd', 8);
     return Promise.all(pending);
   }
+  function sealShatter(point, size, delay = 0, victory = false) {
+    const pending = [], color = victory ? '#a5e9dd' : '#d6beff';
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.PI * 2 * i / 8;
+      const shard = node('fx-seal-shard', point, color);
+      const start = size * .36, end = size * (victory ? .85 : .65);
+      pending.push(animate(shard, [
+        { transform: `translate(${Math.cos(angle) * start}px,${Math.sin(angle) * start}px) rotate(${i * 45}deg)`, opacity: 0 },
+        { opacity: 1, offset: .2 },
+        { transform: `translate(${Math.cos(angle) * end}px,${Math.sin(angle) * end}px) rotate(${i * 45 + 100}deg) scale(.2)`, opacity: 0 }
+      ], { duration: victory ? 1500 : 1100, delay, fill: 'backwards' }, true));
+    }
+    const seal = node('fx-seal-ring', point, color);
+    seal.style.width = `${size}px`; seal.style.height = `${size}px`;
+    pending.push(animate(seal, [
+      { transform: 'translate(-50%,-50%) rotate(45deg) scale(.75)', opacity: 0 },
+      { transform: 'translate(-50%,-50%) rotate(45deg) scale(1)', opacity: .85, offset: .22 },
+      { transform: 'translate(-50%,-50%) rotate(80deg) scale(1.3)', opacity: 0 }
+    ], { duration: victory ? 1700 : 1250, delay, fill: 'backwards' }, true));
+    return Promise.all(pending);
+  }
+  function bossEntrance() {
+    if (motion.matches) return Promise.resolve();
+    const board = document.getElementById('board'), rect = board.getBoundingClientRect(), pending = [];
+    const seal = node('fx-seal-ring fx-seal-lock', center(rect), '#ddb296');
+    seal.style.width = `${rect.width * .7}px`; seal.style.height = `${rect.width * .7}px`;
+    pending.push(animate(seal, [
+      { transform: 'translate(-50%,-50%) rotate(-45deg) scale(1.3)', opacity: 0 },
+      { transform: 'translate(-50%,-50%) rotate(45deg) scale(.85)', opacity: .8, offset: .45 },
+      { transform: 'translate(-50%,-50%) rotate(45deg) scale(.85)', opacity: .8, offset: .7 },
+      { transform: 'translate(-50%,-50%) rotate(45deg) scale(.25)', opacity: 0 }
+    ], { duration: 1850, easing: 'ease-in-out' }, true));
+    document.querySelectorAll('.relic-chip.sealed').forEach((chip, i) => {
+      pending.push(animate(chip, [
+        { boxShadow: 'inset 0 0 0 0 #efb18d00' },
+        { boxShadow: 'inset 0 0 18px 1px #efb18d88', offset: .5 },
+        { boxShadow: 'inset 0 0 0 0 #efb18d00' }
+      ], { duration: 950, delay: i * 100 }));
+    });
+    return Promise.all(pending);
+  }
   function relic(events, before, recoveredCount) {
     if (motion.matches) return Promise.resolve();
     const board = document.getElementById('board').getBoundingClientRect();
@@ -208,13 +249,32 @@
           if (accented) pending.push(impact(center(from.rect), event.kind, stagger,
             from.rect.width * (event.kind === 'behemoth' ? 2.2 : 1.15), events.length > 12 ? (i ? 0 : 5) : (i ? 3 : 9)));
         });
+      } else if (event.kind === 'sealEnergy') {
+        const meter = document.getElementById('boss-meter');
+        const meterRect = meter.getBoundingClientRect();
+        const target = meterRect.width ? center(meterRect) : { x: board.left + board.width / 2, y: board.top }, origin = center(rack);
+        for (let i = 0; i < event.amount; i++) {
+          const mote = node('fx-seal-energy', origin, '#d6beff');
+          pending.push(animate(mote, [
+            { transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 },
+            { opacity: 1, offset: .15 },
+            { transform: `translate(${target.x - origin.x}px,${target.y - origin.y}px) scale(.3)`, opacity: 0 }
+          ], { duration: 950, delay: delay + i * 90, fill: 'backwards' }, true));
+        }
+      } else if (event.kind === 'bossBreak') {
+        pending.push(sealShatter(center(board), board.width * .7, delay, true));
       } else if (event.kind === 'reclaim') {
         const chip = event.relic ? document.querySelector(`[data-relic="${event.relic}"]`) : null;
         const point = chip ? center(chip.getBoundingClientRect()) : event.ids.length && before.has(event.ids[0]) ? center(before.get(event.ids[0]).rect) : center(board);
-        const color = '#cdb3ff';
-        const ring = node('fx-ring', point, color);
-        pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(3)', opacity: 0 }], { duration: 1100, delay, fill: 'backwards' }, true));
-        if (events.length < 12) burst(point, color, 5);
+        pending.push(sealShatter(point, 46, delay));
+        const label = node('fx-seal-level', { x: point.x, y: point.y - 12 }, '#dbc8ff');
+        label.textContent = `Lv.${event.level}`;
+        pending.push(animate(label, [
+          { transform: 'translate(-50%,0)', opacity: 0 },
+          { transform: 'translate(-50%,-12px)', opacity: 1, offset: .25 },
+          { transform: 'translate(-50%,-12px)', opacity: 1, offset: .65 },
+          { transform: 'translate(-50%,-25px)', opacity: 0 }
+        ], { duration: 1450, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'feather') {
         const from = before.get(event.ids[0]);
         if (from) { burst(center(from.rect), '#ead699', 6);
@@ -309,5 +369,5 @@
       ${Array.from({ length: 12 }, (_, i) => `<i class="result-spark" style="--n:${i};--x:${8 + (i * 37) % 84}%"></i>`).join('')}
       <span class="result-signal">${label}</span></div>`;
   }
-  root.RainEffects = { reset, snapshot, pick, power, relic, captureBoard, restart, resultScene };
+  root.RainEffects = { reset, snapshot, pick, power, relic, captureBoard, restart, resultScene, bossEntrance };
 })(window);

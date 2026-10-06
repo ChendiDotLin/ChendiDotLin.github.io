@@ -5,11 +5,15 @@
   const KEY = 'rain-match-expedition-save-v2', BACKUP = KEY + '-backup';
   const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
   function upgrade(record) {
+    if (record?.schema === 3 && record.game?.version === 3) {
+      record.game = rules.normalizeSave(record.game); return record;
+    }
     if (record?.schema !== 2 || record.game?.version !== 2) return record;
     const game = record.game;
     game.version = 3; game.competitive = false; game.sealed = {}; game.blastCharge = 0;
     if (game.previous) Object.assign(game.previous, { relics: { ...game.relics }, equipment: game.equipment, sealed: {}, blastCharge: 0 });
     record.schema = 3; record.tenTime = null; record.tenRecord = null;
+    record.game = rules.normalizeSave(game);
     return record;
   }
   function valid(record) {

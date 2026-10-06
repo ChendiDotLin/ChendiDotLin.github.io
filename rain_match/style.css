@@ -436,3 +436,32 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
   .relic-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .relic-chip .gasoline-glyph { width: 21px; font-size: 23px; flex-shrink: 0; }
 }
+
+/* The Sealer: ambient corners stay outside the playable cards. */
+.boss-run .landscape { background: radial-gradient(ellipse at 50% 30%, #76556c50, transparent 65%), linear-gradient(#201c2c, #272333); }
+.boss-run .board-area::before { content: ''; position: absolute; inset: -3px; border: 1px solid #d7a28550; border-radius: 15px; pointer-events: none; background: linear-gradient(#dfb290, #dfb290) left top / 24px 2px no-repeat, linear-gradient(#dfb290, #dfb290) right bottom / 24px 2px no-repeat; }
+.boss-status { display: flex; align-items: center; gap: 12px; }
+.boss-readout { flex: 1; min-width: 0; }
+.boss-readout strong, #boss-energy-label { display: block; }
+.boss-readout strong { font-weight: 600; font-size: 10px; }
+#boss-energy-label { color: #c7b6cc; font-size: 10px; margin-top: 3px; }
+.boss-sigil { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #daab85; transform: rotate(45deg); color: #ecd0aa; font-size: 27px; flex-shrink: 0; box-shadow: 0 0 15px #e5ac6b22; }
+.boss-meter { display: flex; gap: 5px; margin-top: 7px; }
+.boss-meter i { flex: 1; height: 4px; background: #70617545; border-radius: 2px; }
+.boss-meter .charged { background: #d4baff; box-shadow: 0 0 9px #c3a5ed70; }
+.boss-status.restored { border-color: #95d6c455; }
+.boss-status.restored .boss-sigil { color: #a5e9dd; border-color: #a5e9dd; }
+.relic-chip.partial { border-color: #c5a8f9; background: #c1a0eb15; }
+.relic-chip.partial small { color: #d8c4fb; }
+.boss-intro-rule { color: #d6c3ef; font-size: 12px; }
+.boss-emblem { position: relative; width: 96px; height: 96px; margin: 4px auto 26px; display: grid; place-items: center; }
+.boss-emblem i { position: absolute; inset: 12px; border: 1px solid #dfb593; transform: rotate(45deg); box-shadow: 0 0 22px #cd95632a, inset 0 0 20px #cc985222; animation: seal-arrival 1.8s ease both; }
+.boss-emblem i:nth-child(2) { inset: 23px; border-color: #ba9fe3; animation-delay: .15s; }
+.boss-emblem span { font-size: 40px; color: #e7c3a4; }
+@keyframes seal-arrival { from { transform: rotate(-45deg) scale(1.3); opacity: 0; } to { transform: rotate(45deg) scale(1); opacity: 1; } }
+.fx-seal-ring { border: 2px solid var(--fx-color); box-shadow: 0 0 20px #c2a4f240, inset 0 0 18px #c2a4f222; }
+.fx-seal-ring::after { content: ''; position: absolute; inset: 12%; border: 1px dashed var(--fx-color); }
+.fx-seal-shard { width: 14px; height: 5px; background: var(--fx-color); clip-path: polygon(0 0, 100% 20%, 75% 100%, 10% 75%); box-shadow: 0 0 8px var(--fx-color); }
+.fx-seal-energy { width: 7px; height: 7px; border-radius: 50%; background: #eadcff; box-shadow: 0 0 12px 3px #c7a6ff80; }
+.fx-seal-level { color: var(--fx-color); background: #211a32eb; border: 1px solid #c7a6ff70; border-radius: 5px; padding: 3px 7px; font-size: 11px; font-weight: 700; font-style: normal; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .boss-emblem i { animation: none; } }
