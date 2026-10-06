@@ -29,7 +29,7 @@
     return result;
   }
   function overlap(a, b) { return Math.abs(a.x - b.x) < 71 && Math.abs(a.y - b.y) < 71; }
-  function layout(mode, random) {
+  function layout(mode, random, options = {}) {
     const tiles = [];
     const add = (x, y, z, pile = 'main') => tiles.push({ id: tiles.length, x, y, z, type: 0, zone: 'board', pile });
     if (mode === 'drizzle') {
@@ -38,7 +38,7 @@
     } else {
       // A deep, irregular core and thin side shelves create distinct resources:
       // digging reveals more tiles; spending a shelf tile does not.
-      const layers = mode === 'rain' ? [8, 9, 8, 9, 8, 9, 8, 9, 10] : Array(12).fill(9);
+      const layers = options.layers || (mode === 'rain' ? [8, 9, 8, 9, 8, 9, 8, 9, 10] : Array(12).fill(9));
       const patterns = [
         [0, 1, 3, 4, 5, 6, 8, 10, 11, 7, 2, 9],
         [1, 2, 4, 5, 7, 8, 9, 10, 11, 0, 3, 6],
@@ -55,13 +55,13 @@
       for (const x of [29, 496]) for (let row = 0; row < 3; row++) for (let z = 0; z < 2; z++)
         add(x + (x < 300 ? z * 9 : -z * 9), 92 + row * 103 + z * 12, z, 'shelf');
     }
-    const pileSize = mode === 'drizzle' ? 6 : mode === 'monsoon' ? 12 : 9;
+    const pileSize = options.pileSize || (mode === 'drizzle' ? 6 : mode === 'monsoon' ? 12 : 9);
     for (const pile of ['left', 'right']) for (let i = 0; i < pileSize; i++)
       add(pile === 'left' ? 72 + i * 3 : 456 - i * 3, 464 + i * 2.5, 30 + i, pile);
     return tiles;
   }
-  function dealTypes(order, tiles, mode, random) {
-    const kinds = MODES[mode].kinds;
+  function dealTypes(order, tiles, mode, random, options = {}) {
+    const kinds = options.kinds || MODES[mode].kinds;
     if (mode === 'drizzle') {
       for (let i = 0; i < order.length; i += 6) {
         const types = shuffled(Array.from({ length: kinds }, (_, k) => k), random);
@@ -72,9 +72,10 @@
     }
     // Construct one legal witness while carrying several unfinished sets across
     // many pickups. Unlike the old six-card packets, triples are widely separated.
-    const remaining = Array(kinds).fill(tiles.length / kinds);
+    const remaining = Array(kinds).fill(0);
+    for (let i = 0; i < tiles.length / 3; i++) remaining[i % kinds] += 3;
     const held = Array(kinds).fill(0);
-    const target = mode === 'monsoon' ? 6 : 5;
+    const target = options.target || (mode === 'monsoon' ? 6 : 5);
     for (const id of order) {
       const occupied = held.reduce((a, b) => a + b, 0);
       const candidates = [];
@@ -97,9 +98,9 @@
     return tile.zone === 'board' && !tiles.some(other => other.zone === 'board' && other.z > tile.z && overlap(tile, other));
   }
   class Game {
-    constructor(mode = 'rain', random = Math.random) {
+    constructor(mode = 'rain', random = Math.random, options = {}) {
       this.mode = MODES[mode] ? mode : 'rain'; this.random = random;
-      this.tiles = layout(this.mode, random); this.rack = []; this.reserve = [];
+      this.tiles = layout(this.mode, random, options); this.rack = []; this.reserve = [];
       this.used = { remove: false, undo: false, shuffle: false };
       this.cleared = 0; this.moves = 0; this.status = 'playing'; this.previous = null;
       // A random topological removal order provides a known legal solution.
@@ -110,7 +111,7 @@
         const tile = available[Math.floor(random() * available.length)];
         order.push(tile.id); tile.zone = 'matched';
       }
-      dealTypes(order, this.tiles, this.mode, random);
+      dealTypes(order, this.tiles, this.mode, random, options);
       this.solution = order;
     }
     available() { return this.tiles.filter(t => exposed(t, this.tiles)); }

@@ -111,6 +111,43 @@
     burst(center(target.getBoundingClientRect()), name === 'undo' ? '#9acfe5' : '#b3d8bd', 8);
     return Promise.all(pending);
   }
+  function relic(events, before) {
+    if (motion.matches) return Promise.resolve();
+    const board = document.getElementById('board').getBoundingClientRect();
+    const rack = document.getElementById('rack').getBoundingClientRect();
+    const pending = [];
+    for (const event of events) {
+      if (event.kind === 'shield') {
+        const shield = node('fx-shield', { x: rack.left - 5, y: rack.top - 5 });
+        shield.style.width = `${rack.width + 10}px`; shield.style.height = `${rack.height + 10}px`;
+        pending.push(animate(shield, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1.02)', offset: .25 }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 1150 }, true));
+      } else if (event.kind === 'radar') {
+        const scan = node('fx-radar', { x: board.left, y: board.top }); scan.style.width = `${board.width}px`;
+        pending.push(animate(scan, [{ transform: 'translateY(0)', opacity: 0 }, { opacity: .85, offset: .15 }, { transform: `translateY(${board.height}px)`, opacity: 0 }], { duration: 1250 }, true));
+      } else if (event.kind === 'blackhole') {
+        const point = center(rack), portal = node('fx-portal', point, '#c7a5fa');
+        for (const id of event.ids) if (before.has(id)) ghost(before.get(id).rect, point, before.get(id).type, true);
+        pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250 }, true));
+      } else if (event.kind === 'ukulele') {
+        let origin = center(rack);
+        event.ids.forEach((id, i) => {
+          if (!before.has(id)) return;
+          const point = center(before.get(id).rect), dx = point.x - origin.x, dy = point.y - origin.y;
+          const arc = node('fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
+          const rotation = `rotate(${Math.atan2(dy, dx)}rad)`;
+          pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 850, delay: i * 130 }, true));
+          burst(point, '#b4dfff', 6); origin = point;
+        });
+      } else if (event.kind === 'feather') {
+        const from = before.get(event.ids[0]);
+        if (from) { burst(center(from.rect), '#ead699', 6);
+          const ring = node('fx-ring', center(from.rect), '#e8d99d');
+          pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.5)', opacity: .8 }, { transform: 'translate(-50%,-100%) scale(1.5)', opacity: 0 }], { duration: 950 }, true)); }
+      }
+    }
+    return Promise.all(pending);
+  }
+
   function captureBoard() {
     if (motion.matches) return null;
     const board = document.getElementById('board'), rect = board.getBoundingClientRect();
@@ -156,5 +193,5 @@
       ${Array.from({ length: 12 }, (_, i) => `<i class="result-spark" style="--n:${i};--x:${8 + (i * 37) % 84}%"></i>`).join('')}
       <span class="result-signal">${label}</span></div>`;
   }
-  root.RainEffects = { reset, snapshot, pick, power, captureBoard, restart, resultScene };
+  root.RainEffects = { reset, snapshot, pick, power, relic, captureBoard, restart, resultScene };
 })(window);

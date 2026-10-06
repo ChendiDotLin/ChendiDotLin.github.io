@@ -29,19 +29,19 @@ const assert = require('node:assert/strict');
   const run = randomUUID();
   await submit('tester', 'rain', run); await submit('keep', 'rain'); await submit('tester', 'drizzle'); await submit('keep', 'monsoon');
   await as('authenticated', admin);
-  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 2, monsoon: 1 });
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 2, monsoon: 1, expedition: 0 });
   for (const args of [['all',null,null,'wrong'],['player','rain','tester',null],['mode','bad',null,'CLEAR bad']])
     await assert.rejects(() => remove(...args), /Confirmation does not match|Invalid mode/);
   assert.equal((await remove('player','rain','tester','DELETE tester')).deleted, 1);
-  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 1, monsoon: 1 });
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 1, monsoon: 1, expedition: 0 });
   await as('anon');
   await assert.rejects(() => submit('tester', 'rain', run), /Run removed by administrator/);
   await submit('tester', 'rain'); // New rounds remain allowed.
   await as('authenticated', admin);
   assert.equal((await remove('mode','rain',null,'CLEAR rain')).deleted, 2);
-  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 0, monsoon: 1 });
+  assert.deepEqual((await status()).counts, { drizzle: 1, rain: 0, monsoon: 1, expedition: 0 });
   assert.equal((await remove('all',null,null,'CLEAR ALL')).deleted, 2);
-  assert.deepEqual((await status()).counts, { drizzle: 0, rain: 0, monsoon: 0 });
+  assert.deepEqual((await status()).counts, { drizzle: 0, rain: 0, monsoon: 0, expedition: 0 });
   assert.equal((await status()).audit.length, 3);
   await assert.rejects(() => db.query('select * from rain_private.admin_audit'), /permission denied/);
   await db.exec('reset role');

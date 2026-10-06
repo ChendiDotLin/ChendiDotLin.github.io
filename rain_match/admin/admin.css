@@ -28,3 +28,5 @@
 #confirm-error { color: #efb4b0; font-size: 12px; }
 .ranking-table td { max-width: 200px; overflow-wrap: anywhere; white-space: normal; }
 .ranking-table { margin-top: 16px; }
+.admin-counts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 480px) { .admin-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

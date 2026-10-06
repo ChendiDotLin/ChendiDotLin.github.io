@@ -335,3 +335,54 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
   .leaderboard-panel { grid-column: 1; grid-row: 1; justify-self: end; position: sticky; top: 24px; width: min(100%, 320px); margin: 102px 0 28px; padding: 18px 16px; }
   .leaderboard-panel .ranking-scroll { max-height: clamp(140px, calc(100svh - 330px), 430px); }
 }
+
+/* Expedition: compact loadout above the board, choices in a paused dialog. */
+.expedition-panel { margin: 10px 4px 15px; padding: 12px; border: 1px solid #a594d647; border-radius: 10px; background: linear-gradient(125deg,#292b443b,#16394326); }
+.expedition-panel[hidden], .expedition-controls button[hidden], .radar-preview[hidden] { display: none; }
+.expedition-heading { display: flex; gap: 10px; align-items: center; justify-content: space-between; color: #bbc7d9; font-size: 10px; }
+.expedition-heading .text-button { font-size: 10px; white-space: nowrap; }
+.relic-bar { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; font-size: 11px; color: #a8b2c6; }
+.relic-chip { display: flex; align-items: center; gap: 5px; padding: 5px 7px; border: 1px solid #c2b5ed29; border-radius: 6px; background: #b9a3ed09; text-align: left; font-size: 10px; color: #dfdbee; }
+.relic-chip img, .relic-chip .shield-glyph { width: 25px; height: 25px; object-fit: contain; }
+.relic-chip small { display: block; margin-top: 2px; color: #9ba8c0; font-size: 9px; }
+.shield-glyph { display: grid; place-items: center; color: #c5a2ff; font-size: 29px; text-shadow: 0 0 14px #9e74f277; }
+.expedition-controls { display: flex; gap: 7px; flex-wrap: wrap; }
+.expedition-controls button { padding: 7px 9px; border: 1px solid #aca2ca40; border-radius: 6px; background: #a697d210; font-size: 10px; }
+.expedition-controls button:disabled { opacity: .5; }
+.expedition-hint { margin: 8px 0 0; color: #a9b6ce; font-size: 10px; line-height: 1.7; }
+.tile.relic-target { border-color: #ccb2ff; filter: brightness(1.15); box-shadow: 0 0 0 2px #a685dd,0 0 16px #b289f270; }
+.tile.feather-target { border-color: #edcf86; box-shadow: 0 0 0 2px #c0a566,0 0 16px #edcf8655; }
+.tile.radar-pair { border-color: #9cdec2; }
+.radar-preview { display: flex; gap: 5px; margin-top: 8px; }
+.radar-preview-tile { border: 1px solid #87c4b95c; border-radius: 4px; background: #22373d; }
+.radar-preview-tile:nth-child(3) { margin-left: 12px; }
+.radar-preview-tile img { width: 30px; height: 30px; object-fit: contain; display: block; }
+.reward-choices { display: grid; gap: 10px; margin-top: 18px; }
+.reward-choice { display: flex; align-items: center; gap: 13px; width: 100%; padding: 14px; text-align: left; background: #c5b4fa0a; color: #eee9fb; border: 1px solid #b9a5e64a; border-radius: 10px; }
+.reward-choice:hover, .reward-choice:focus-visible { background: #bca1f31c; border-color: #c8adee; }
+.reward-choice img, .reward-choice .shield-glyph { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+.reward-choice b { display: block; font-size: 14px; margin: 3px 0; }
+.reward-choice small { color: #c2aedf; font-size: 10px; }
+.reward-choice span:not(.shield-glyph) { display: block; color: #adbbce; font-size: 11px; line-height: 1.65; }
+.relic-large img, .relic-large .shield-glyph { width: 64px; height: 64px; object-fit: contain; }
+.build-summary { font-size: 11px !important; line-height: 1.7 !important; overflow-wrap: anywhere; }
+.ranking-build { display: block; font-size: 9px; margin-top: 4px; color: #b8a2dc; }
+.fx-lightning { position: absolute; height: 3px; transform-origin: left center; background: #dcf5ff; box-shadow: 0 0 8px 3px #b5d8ffb0; }
+.fx-shield { position: absolute; border: 3px solid #c3a5ff; border-radius: 20px; box-shadow: 0 0 28px #b389f780,inset 0 0 18px #c4abff55; }
+.fx-radar { position: absolute; height: 2px; background: #a4f6d5; box-shadow: 0 0 18px 5px #9ceac655; }
+@media (max-width: 480px) {
+  .play-menu { flex-wrap: wrap; row-gap: 8px; }
+  .play-menu .difficulty-options { flex-wrap: wrap; }
+  .expedition-panel { padding: 9px; }
+  .relic-chip { flex: 1 0 40%; }
+  .reward-choice { padding: 11px; gap: 9px; }
+  dialog { padding: 32px 20px 22px; }
+}
+.ranking-build summary { cursor: pointer; }
+.ranking-build > span { display: block; margin-top: 5px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .relic-chip { flex: 1 1 0; min-width: 0; padding: 4px; gap: 4px; }
+  .relic-chip > span:not(.shield-glyph) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+  .relic-chip img, .relic-chip .shield-glyph { width: 21px; height: 25px; flex-shrink: 0; }
+  .relic-chip small { font-size: 8px; }
+}

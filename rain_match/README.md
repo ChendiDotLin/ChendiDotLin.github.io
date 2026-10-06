@@ -193,3 +193,60 @@ extra reads on rapid restarts. Outdated responses cannot replace a newer tab.
 The Rankings button and result link focus/scroll to this panel without opening a
 dialog. Browsing the panel does not pause the active play clock. Long boards scroll
 inside the panel; empty/error states and the panel controls support both languages.
+
+## Expedition (endless roguelike mode)
+
+Choose **Expedition** in the mode bar, or link directly to
+`/rain_match/?mode=expedition`. Classic difficulties retain their original rules.
+
+- A run begins with one of three starting relics. Clear each finite board to
+  claim a stage supply and travel onward with the same build and charges.
+- Every six manual triple matches grants another supply (a match that clears the
+  stage uses the stage supply instead). Supplies offer up to three upgrades,
+  new equipment, emergency-power refills, or a full recharge.
+- Carry three passive types and one active equipment; duplicates upgrade to
+  level 3. A fourth passive requires choosing a replacement. Active replacements
+  are labelled explicitly. All rewards and choices pause active play time.
+- **Feather:** pick a tile through exactly one blocker; recharges after 5/4/3
+  manual matches. **Safer Spaces:** return the overflow-causing pickup to its
+  origin, then recharge after 5/4/3 matches. **Ukulele:** 25/35/45% chance on a
+  manual match to clear one additional currently exposed triple.
+- **Cube:** complete a tray pair with a third board tile through up to 1/2/3
+  blockers. **Radar:** preview the next two hidden cards in each supply pile
+  for 4/5/6 pickups and highlight exposed cards that complete tray pairs.
+- **Fuel Cell:** 2/3/4 active charges and recharge in 5/4/3 manual matches.
+  Without it, active equipment stores one charge and recharges in six matches.
+- Automatic clears never recursively proc, charge abilities or grant supply
+  progress. Every clear removes a complete triple of one type. Undo restores the
+  pickup, its proc, charges and random cursor; collecting supplies or activating
+  equipment clears the previous undo point to prevent reward duplication.
+- Stash, Undo and Shuffle begin with one free use per entire expedition. Stage
+  transitions preserve spent uses; supply choices can restore them.
+- Stage 1 has 36 tiles; later stages gradually increase depth and item variety.
+  Stage 5 and every third stage after it have larger blind stacks. Layout sizes
+  cap at 144 tiles (storm) or 156 (fog), with no final stage. Initial deals have a
+  solution; player choices and later shuffles may still reach a dead end.
+- Extract from the loadout panel at any time, or submit after failure. The score
+  is the actual total of recovered tiles across stages, then active play time;
+  stage reached and the final build are stored alongside it. Runs currently live
+  in the open page, so refreshing or closing it starts over.
+
+Run `scripts/rain-expedition.sql` in the existing project's Supabase SQL Editor.
+It extends the private tables and RPCs, preserves all scores and administrator
+membership, and adds Expedition to the existing audited admin controls. New
+installations can use the updated base and admin setup scripts. Without this
+upgrade the game works, while the Expedition board reports setup pending and
+submission can be retried in the open page after setup.
+
+The two new item images (`radar.webp`, `ukulele.webp`) use the same credited
+Glagan/RoR2-Items source. Safer Spaces is represented by an original shield glyph.
+Effects are original animations: a protective shell, a radar sweep, chain
+lightning, a feather burst and a black-hole pull. Reduced motion skips these.
+These puzzle effects are adaptations, not the original game's exact mechanics.
+
+Verification: `node scripts/test-rain-expedition.cjs` checks 640 stage witnesses,
+charge and loadout carryover, triple conservation, rescue, proc replay, rewards,
+replacement and extraction. `node scripts/test-rain-expedition-sql.cjs
+/path/to/pglite/dist/index.cjs` tests upgrading the previous schema with preserved
+scores, repeat migrations, metadata, ordering, retry protection and scoped admin
+removal in an isolated database. Browser checks use mocked score writes.

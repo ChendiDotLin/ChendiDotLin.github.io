@@ -1,3 +1,5 @@
+-- Rain Match Expedition upgrade. Run the whole script in Supabase SQL Editor.
+-- Preserves scores, accounts and the administrator whitelist; safe to run again.
 -- Run once in your Supabase project's SQL Editor. Safe to run again.
 -- The browser can call only the two named RPCs, never modify tables directly.
 begin;
@@ -166,4 +168,58 @@ revoke all on function public.rain_submit_expedition(uuid,text,integer,bigint,in
 grant execute on function public.rain_expedition_leaderboard() to anon, authenticated;
 grant execute on function public.rain_submit_expedition(uuid,text,integer,bigint,integer,jsonb) to anon, authenticated;
 
+create or replace function public.rain_admin_status()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v_counts jsonb; v_audit jsonb;
+begin
+  perform rain_private.require_admin();
+  select jsonb_object_agg(m.mode, (select count(*) from rain_private.scores s where s.mode = m.mode))
+    into v_counts from (values ('drizzle'), ('rain'), ('monsoon'), ('expedition')) m(mode);
+  select coalesce(jsonb_agg(to_jsonb(a) order by a.id desc), '[]'::jsonb) into v_audit from (
+    select id, action, mode, player_id, deleted_count, created_at
+    from rain_private.admin_audit order by id desc limit 20
+  ) a;
+  return jsonb_build_object('counts', v_counts, 'audit', v_audit);
+end;
+$$;
+
+create or replace function public.rain_admin_delete(
+  p_action text, p_mode text, p_player_id text, p_confirmation text
+) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_archive jsonb; v_count integer; v_expected text;
+begin
+  perform rain_private.require_admin();
+  if p_action is null or p_action not in ('player', 'mode', 'all') then
+    raise exception 'Invalid action' using errcode = '22023';
+  end if;
+  if p_action <> 'all' and (p_mode is null or p_mode not in ('drizzle', 'rain', 'monsoon', 'expedition')) then
+    raise exception 'Invalid mode' using errcode = '22023';
+  end if;
+  if p_action = 'player' and (p_player_id is null or char_length(p_player_id) not between 1 and 20) then
+    raise exception 'Invalid player' using errcode = '22023';
+  end if;
+  v_expected := case p_action when 'all' then 'CLEAR ALL' when 'mode' then 'CLEAR ' || p_mode else 'DELETE ' || p_player_id end;
+  if p_confirmation is distinct from v_expected then
+    raise exception 'Confirmation does not match' using errcode = '22023';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(72419022);
+  with removed as (
+    delete from rain_private.scores
+    where p_action = 'all' or (mode = p_mode and (p_action = 'mode' or player_id = p_player_id))
+    returning *
+  ) select coalesce(jsonb_agg(to_jsonb(removed)), '[]'::jsonb), count(*) into v_archive, v_count from removed;
+  -- Retain UUID tombstones: retrying a previously deleted run cannot restore it.
+  update rain_private.runs set revoked = true
+    where not revoked and (p_action = 'all' or (mode = p_mode and (p_action = 'mode' or player_id = p_player_id)));
+  insert into rain_private.admin_audit(actor, action, mode, player_id, deleted_count, archived_scores)
+    values (auth.uid(), p_action, case when p_action <> 'all' then p_mode end,
+      case when p_action = 'player' then p_player_id end, v_count, v_archive);
+  return jsonb_build_object('ok', true, 'deleted', v_count);
+end;
+$$;
+revoke all on function public.rain_admin_status() from public, anon;
+revoke all on function public.rain_admin_delete(text, text, text, text) from public, anon;
+grant execute on function public.rain_admin_status() to authenticated;
+grant execute on function public.rain_admin_delete(text, text, text, text) to authenticated;
+notify pgrst, 'reload schema';
 commit;

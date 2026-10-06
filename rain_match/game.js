@@ -4,7 +4,9 @@
   const $ = id => document.getElementById(id);
   const modal = $('modal');
   const fx = RainEffects;
-  let animating = false;
+  let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
+  const isExpedition = () => game?.mode === 'expedition';
+  const recovered = () => isExpedition() ? game.recovered : game.cleared;
   let storage;
   try { storage = window.localStorage; } catch (_) { storage = null; }
   const readPreference = key => { try { return storage?.getItem(key); } catch (_) { return null; } };
@@ -28,7 +30,7 @@
     tick = now;
   }
   function syncClock() {
-    clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open;
+    clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward;
   }
   function closeDialog() {
     updateClock(); if (modal.open) modal.close(); dialogView = null; syncClock();
@@ -81,7 +83,7 @@
     document.querySelector('.progress-track').setAttribute('aria-label', t('progress'));
     document.querySelectorAll('[data-mode]').forEach(button => {
       button.textContent = t(button.dataset.mode);
-      button.title = t('modeHint', { mode: modeName(button.dataset.mode), n: MODES[button.dataset.mode].count });
+      button.title = button.dataset.mode === 'expedition' ? t('expModeHint') : t('modeHint', { mode: modeName(button.dataset.mode), n: MODES[button.dataset.mode].count });
     });
     $('inline-ranking-tabs').setAttribute('aria-label', t('rankingModes'));
     renderRankings();
@@ -92,7 +94,8 @@
     fx.reset();
     const outgoing = game ? fx.captureBoard() : null;
     animating = !!game;
-    closeDialog(); game = new RainMatch.Game(mode); elapsed = 0; tick = performance.now();
+    closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
+    targeting = null; stageRewardClaimed = false; replacementItem = null; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
     runId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
     clearTimeout(comboTimeout); $('combo').classList.remove('show');
@@ -108,12 +111,15 @@
       fx.restart(outgoing).finally(() => {
         if (runId !== effectRun) return;
         updateClock(); animating = false; render(); syncClock();
+        if (isExpedition()) showExpeditionReward();
       });
-    }
+    } else if (isExpedition()) showExpeditionReward();
   }
   function render(enter = false) {
-    $('mode-title').textContent = modeName(game.mode);
+    $('mode-title').textContent = isExpedition() ? t('expStage', { n: game.stage }) + ' · ' + modeName(game.mode) : modeName(game.mode);
     const available = new Set(game.available().map(tile => tile.id));
+    const targets = new Set(isExpedition() && targeting ? (targeting === 'feather' ? game.featherTargets() : game.cubeTargets()).map(tile => tile.id) : []);
+    const preview = new Set(isExpedition() ? game.previewIds() : []);
     const existing = new Map([...$('board').children].map(el => [Number(el.dataset.id), el]));
     for (const tile of game.tiles) {
       let el = existing.get(tile.id);
@@ -126,8 +132,13 @@
         $('board').append(el);
       }
       const blocked = !available.has(tile.id);
-      el.disabled = blocked || game.status !== 'playing' || finalized || animating; el.classList.toggle('blocked', blocked);
-      const blind = blocked && ['left', 'right'].includes(tile.pile);
+      el.disabled = (targeting ? !targets.has(tile.id) : blocked) || game.status !== 'playing' || finalized || animating || !!game.pendingReward;
+      el.classList.toggle('blocked', blocked && !targets.has(tile.id));
+      el.classList.toggle('relic-target', targets.has(tile.id)); el.classList.toggle('feather-target', targeting === 'feather' && targets.has(tile.id));
+      el.style.zIndex = targets.has(tile.id) ? 100 + tile.z : tile.z + 1;
+      const pair = game.rack.filter(id => game.tiles[id].type === tile.type).length === 2;
+      el.classList.toggle('radar-pair', isExpedition() && game.radarActive && !blocked && pair);
+      const blind = blocked && ['left', 'right'].includes(tile.pile) && !preview.has(tile.id) && !targets.has(tile.id);
       el.classList.toggle('blind', blind);
       el.title = blind ? t('blindTile') : itemName(tile.type); el.setAttribute('aria-label', blind ? t('blindTile') : itemName(tile.type) + (blocked ? t('covered') : ''));
     }
@@ -139,7 +150,7 @@
       $('rack').append(slot);
     }
     $('reserve').replaceChildren(...game.reserve.map(id => {
-      const el = tileElement(game.tiles[id]); el.disabled = finalized || animating || game.status !== 'playing'; return el;
+      const el = tileElement(game.tiles[id]); el.disabled = finalized || animating || !!game.pendingReward || !!targeting || game.status !== 'playing'; return el;
     }));
     $('reserve-area').hidden = !game.reserve.length;
     $('capacity').innerHTML = `${game.rack.length} <span>/ 7</span>`;
@@ -153,32 +164,40 @@
     $('progress').style.width = `${progress}%`; document.querySelector('.progress-track').setAttribute('aria-valuenow', progress);
     const danger = game.rack.length >= 5;
     $('rack').classList.toggle('danger', danger); $('status').classList.toggle('danger', danger);
-    $('status').textContent = lastStatus ? t(lastStatus) : receipt ? t('statusFinal') : finalized ? t('statusPending') : game.status === 'won' ? t('statusWon')
+    $('status').textContent = lastStatus ? t(lastStatus) : receipt ? t('statusFinal') : finalized ? t('statusPending') : isExpedition() && game.finished ? t('expEnded') : game.status === 'won' ? t('statusWon')
       : game.status === 'lost' ? t('statusLost') : danger ? t('statusDanger', { n: 7 - game.rack.length }) : t('statusReady');
     for (const name of ['remove', 'undo', 'shuffle']) {
       $(name).disabled = finalized || animating || !game.canUse(name); $(name).classList.toggle('used', game.used[name]);
       $(name).querySelector('.charge').textContent = t(game.used[name] ? 'used' : 'free');
     }
-    $('result-button').hidden = game.status === 'playing';
+    $('result-button').hidden = game.status === 'playing' || (isExpedition() && game.status === 'won');
+    document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
+    document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
+    renderExpedition();
   }
   function pick(id) {
     if (finalized || animating) return;
     const before = fx.snapshot();
-    updateClock(); const result = game.pick(id); syncClock(); if (!result.ok) return;
+    updateClock();
+    if (isExpedition() && targeting === 'blackhole') { activateExpedition(id); return; }
+    const result = game.pick(id, targeting === 'feather'); syncClock(); if (!result.ok) return;
+    targeting = null;
     lastStatus = null; beep(result.matched); render();
-    fx.pick(before, id, result.type, result.matched);
+    if (!result.events?.some(event => event.kind === 'shield')) fx.pick(before, id, result.type, result.matched);
     if (result.matched) {
       $('combo').textContent = t('match', { item: itemName(result.type) });
       $('combo').classList.remove('show'); void $('combo').offsetWidth;
       $('combo').classList.add('show'); clearTimeout(comboTimeout);
       comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 1850);
     }
+    if (isExpedition()) { finishExpeditionAction(before, result.events || []); return; }
     if (game.status !== 'playing') showResult(true);
   }
   function use(name) {
     if (finalized || animating) return;
     const before = fx.snapshot();
     updateClock(); if (!game.use(name)) return;
+    targeting = null;
     const effectRun = runId;
     animating = true; closeDialog(); syncClock(); beep();
     formError = ''; lastStatus = { remove: 'removed', undo: 'undone', shuffle: 'shuffled' }[name]; render();
@@ -193,20 +212,21 @@
   }
   function showResult(animateScene = false) {
     if (game.status === 'playing') return;
+    if (isExpedition() && game.status === 'won') { showExpeditionStage(animateScene === true); return; }
     const won = game.status === 'won';
     if (won && !savedWin) {
       savedWin = true; wins++; $('wins').textContent = String(wins).padStart(2, '0'); savePreference('rain-match-wins', String(wins));
     }
     const rescue = !won && !finalized && (game.canUse('remove') || game.canUse('undo'));
     showDialog('result', `${fx.resultScene(won, t(won ? 'escapeSignal' : 'defeatSignal'), animateScene === true)}<span class="modal-eyebrow">${modeName(game.mode)}</span>
-      <h2 id="modal-title">${t(won ? 'wonTitle' : 'lostTitle')}</h2>
-      <p>${t(won ? 'wonCopy' : rescue ? 'rescueCopy' : 'lostCopy')}</p>
-      <div class="result-stats"><span>${t('recovered')}<b>${game.cleared} / ${game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t('moves')}<b>${game.moves}</b></span></div>
+      <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : 'lostTitle')}</h2>
+      <p>${t(rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
+      <div class="result-stats"><span>${t('recovered')}<b>${recovered()}${isExpedition() ? '' : ' / ' + game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t(isExpedition() ? 'expReached' : 'moves')}<b>${isExpedition() ? game.stage : game.moves}</b></span></div>${isExpedition() ? loadoutMarkup() : ''}
       ${rescue && game.canUse('remove') ? `<button class="secondary-button" data-rescue="remove">${t('rescueRemove')}</button>` : ''}
       ${rescue && game.canUse('undo') ? `<button class="secondary-button" data-rescue="undo">${t('rescueUndo')}</button>` : ''}
       <div class="score-entry"><p class="scope-note">${t('rankingScope')}</p>
       ${receipt ? `<p id="save-feedback" class="save-feedback" role="status" tabindex="-1">${t(receipt.improved ? 'saved' : 'notBest', { rank: receipt.rank })}</p>` :
-        `<form id="score-form" novalidate><label for="player-id">${t('player')}</label><div class="score-input-row"><input id="player-id" name="player-id" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="id-rules score-error" placeholder="${t('playerPlaceholder')}" required><button class="primary-button" type="submit" ${submitting || !leaderboard.configured ? 'disabled' : ''}>${t(submitting ? 'sending' : rescue ? 'submitEnd' : 'submit')}</button></div><p id="id-rules" class="input-hint">${t('idRules')}</p><p id="score-error" class="form-error" role="alert">${formError ? t(formError) : !leaderboard.configured ? t('notConfigured') : ''}</p></form>`}
+        `<form id="score-form" novalidate><label for="player-id">${t('player')}</label><div class="score-input-row"><input id="player-id" name="player-id" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="id-rules score-error" placeholder="${t('playerPlaceholder')}" required><button class="primary-button" type="submit" ${submitting || !leaderboard.configured ? 'disabled' : ''}>${t(submitting ? 'sending' : rescue ? 'submitEnd' : 'submit')}</button></div><p id="id-rules" class="input-hint">${t('idRules')}</p><p id="score-error" class="form-error" role="alert">${formError ? t(isExpedition() && formError === 'notConfigured' ? 'expDatabase' : formError) : !leaderboard.configured ? t('notConfigured') : ''}</p></form>`}
       <button class="text-button" id="view-result-rankings">${t('seeRankings')}</button></div>
       <button class="primary-button" data-new-run>${t(won && game.mode === 'drizzle' ? 'nextRain' : 'again')}</button>`);
     $('modal-content').querySelectorAll('[data-rescue]').forEach(button => button.addEventListener('click', () => use(button.dataset.rescue)));
@@ -226,7 +246,7 @@
         if (!leaderboard.configured) { formError = 'notConfigured'; showResult(); return; }
         // Freeze this run on submission, including after an ambiguous timeout.
         // A retry sends the same ID and payload, so the database can deduplicate it.
-        submissionPayload ||= { runId, playerId: playerDraft, mode: game.mode, cleared: game.cleared, elapsedMs: Math.round(elapsed) };
+        submissionPayload ||= { runId, playerId: playerDraft, mode: game.mode, cleared: recovered(), elapsedMs: Math.round(elapsed), ...(isExpedition() ? { stage: game.stage, loadout: game.loadout() } : {}) };
         const submittingRun = runId;
         finalized = true; submitting = true; formError = ''; lastStatus = null;
         syncClock(); render(); showResult();
@@ -255,7 +275,7 @@
       content.innerHTML = `<p class="empty-ranking" role="status">${t('loading')}</p>`; return;
     }
     if (rankingError) {
-      content.innerHTML = `<p class="form-error" role="status">${t(rankingError)}</p>`; return;
+      content.innerHTML = `<p class="form-error" role="status">${t(rankingMode === 'expedition' && rankingError === 'notConfigured' ? 'expDatabase' : rankingError)}</p>`; return;
     }
     const { entries = [], total = 0 } = rankingData || {};
     content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t('score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
@@ -266,6 +286,13 @@
       if (ownId === entry.playerId) row.className = 'own-score';
       for (const value of [index + 1, entry.playerId, entry.cleared, formatTime(entry.elapsedMs, true)]) {
         const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
+      }
+      if (rankingMode === 'expedition' && entry.stage) {
+        const detail = document.createElement('details'); detail.className = 'ranking-build';
+        const summary = document.createElement('summary'); summary.textContent = t('expStage', { n: entry.stage });
+        const build = document.createElement('span'); build.textContent = (entry.loadout || []).map(relic => t('relic_' + relic.id) + ' ' + relic.level).join(' · ');
+        detail.append(summary, build);
+        row.children[1].append(detail);
       }
       $('ranking-rows').append(row);
     });
@@ -300,7 +327,157 @@
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
+  function relicDescription(id, level = game.relics[id] || 1) {
+    const values = { feather: { n: Math.max(3, 6 - level) }, shield: { n: Math.max(3, 6 - level) },
+      ukulele: { n: 15 + 10 * level }, cell: { n: 1 + level, m: Math.max(3, 6 - level) },
+      blackhole: { n: level }, radar: { n: 3 + level } };
+    return t('desc_' + id, values[id]);
+  }
+  function relicIcon(id) {
+    // Safer Spaces uses an original shield glyph; other icons use the credited item art.
+    return id === 'shield' ? '<span class="shield-glyph" aria-hidden="true">◈</span>'
+      : `<img src="assets/${RainExpedition.RELICS[id].icon}.webp" alt="">`;
+  }
+  function loadoutMarkup() {
+    return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${t('relic_' + id)} ${level}`).join(' / ')}</p>`;
+  }
+  function showRelic(id = selectedRelic) {
+    selectedRelic = id;
+    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><h2 id="modal-title">${t('relic_' + id)}</h2><p>${relicDescription(id)}</p><button class="primary-button" id="relic-close">${t('expStay')}</button>`);
+    $('relic-close').addEventListener('click', closeDialog);
+  }
+  function renderExpedition() {
+    document.body.classList.toggle('expedition-run', isExpedition());
+    $('expedition-panel').hidden = !isExpedition();
+    if (!isExpedition()) return;
+    const spec = RainExpedition.stageSpec(game.stage);
+    $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
+    const relicBar = $('relic-bar'); relicBar.replaceChildren();
+    for (const { id, level } of game.loadout()) {
+      const button = document.createElement('button'); button.className = 'relic-chip';
+      button.innerHTML = `${relicIcon(id)}<span>${t('relic_' + id)}<small>${t('expLevel', { n: level })}</small></span>`;
+      button.title = relicDescription(id, level);
+      button.setAttribute('aria-label', t('relic_' + id) + ' · ' + t('expLevel', { n: level }) + ' · ' + relicDescription(id, level));
+      button.addEventListener('click', () => showRelic(id));
+      relicBar.append(button);
+    }
+    if (!game.loadout().length) relicBar.textContent = t('expNoRelics');
+    $('expedition-feather').hidden = !game.relics.feather;
+    $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${game.featherCharge ? t('expReady') : t('expCharging', { n: Math.max(3, 6 - game.relics.feather) - game.featherEnergy })}`;
+    $('expedition-feather').disabled = animating || finalized || !!game.pendingReward || game.status !== 'playing' || !game.featherTargets().length;
+    $('expedition-active').hidden = !game.equipment;
+    $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${t('relic_' + game.equipment)} · ${t('expCharge', { n: game.charge, max: game.capacity })}`;
+    $('expedition-active').disabled = animating || finalized || !game.canActivate();
+    $('expedition-active').title = game.equipment ? relicDescription(game.equipment) : '';
+    const pending = !!game.pendingReward || game.status === 'won';
+    $('expedition-continue').hidden = !pending;
+    $('expedition-continue').textContent = t(game.pendingReward ? 'expResumeReward' : 'expResumeStage');
+    $('expedition-continue').disabled = animating;
+    $('expedition-extract').disabled = animating || finalized || !!game.pendingReward || game.finished;
+    let hint = targeting ? t(targeting === 'feather' ? 'expFeatherHint' : 'expCubeHint') : game.pendingReward ? t('expRewardPending')
+      : t('expProgress', { n: game.manualMatches % 6 });
+    if (!targeting && !game.pendingReward) {
+      if (game.radarActive) hint += ' · ' + t('expRadarOn', { n: game.radarUntil - game.moves });
+      else if (game.equipment === 'blackhole' && game.charge && !game.cubeTargets().length) hint += ' · ' + t('expNeedPair');
+      else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: game.recharge - game.energy });
+      if (game.relics.shield) hint += ' · ' + t(game.shieldCooldown ? 'expShieldCharging' : 'expShieldReady', { n: game.shieldCooldown });
+    }
+    $('expedition-hint').textContent = hint;
+    $('radar-preview').hidden = !game.radarActive;
+    $('radar-preview').replaceChildren(...game.previewIds().map(id => {
+      const tile = game.tiles[id], label = document.createElement('span');
+      label.className = 'radar-preview-tile'; label.title = t(tile.pile) + ' · ' + itemName(tile.type);
+      const img = document.createElement('img'); img.src = `assets/${ITEMS[tile.type].id}.webp`; img.alt = label.title;
+      label.append(img); return label;
+    }));
+  }
+  function rewardMarkup(id) {
+    if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
+    if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
+    const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
+    return `${relicIcon(id)}<div><small>${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)}</span></div>`;
+  }
+  function showExpeditionReward() {
+    if (!isExpedition() || !game.pendingReward || animating) return;
+    targeting = null;
+    const first = !game.loadout().length;
+    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p><div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
+      const id = button.dataset.reward;
+      if (!game.choose(id)) { showReplacement(id); return; }
+      afterReward();
+    }));
+  }
+  function showReplacement(id) {
+    replacementItem = id;
+    const passives = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === 'passive');
+    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}">${relicIcon(relic.id)}<div><b>${t('relic_' + relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${t('relic_' + id)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    $('reward-back').addEventListener('click', showExpeditionReward);
+    $('modal-content').querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => {
+      if (game.choose(id, button.dataset.replace)) afterReward();
+    }));
+  }
+  function afterReward() {
+    replacementItem = null; closeDialog(); render(); syncClock();
+    if (game.status === 'won') showExpeditionStage();
+  }
+  function showExpeditionStage(animate = false) {
+    if (!isExpedition() || game.status !== 'won') return;
+    if (game.pendingReward) { showExpeditionReward(); return; }
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    $('stage-extract').addEventListener('click', showExtract);
+    $('stage-next').addEventListener('click', () => {
+      if (!stageRewardClaimed) {
+        stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
+      }
+      if (animating) return;
+      fx.reset(); const outgoing = fx.captureBoard();
+      if (!game.nextStage()) { outgoing?.remove(); return; }
+      stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;
+      closeDialog(); $('board').replaceChildren(); render(); syncClock();
+      const effectRun = runId;
+      fx.restart(outgoing).finally(() => {
+        if (runId !== effectRun) return;
+        updateClock(); animating = false; render(); syncClock();
+      });
+    });
+  }
+  function showExtract() {
+    if (!isExpedition() || game.finished || game.pendingReward || finalized || animating) return;
+    showDialog('extract', `<h2 id="modal-title">${t('expExtractTitle')}</h2><p>${t('expExtractCopy')}</p><p>${t('expTotal', { n: game.recovered })} · ${t('expStage', { n: game.stage })}</p><button class="primary-button" id="extract-confirm">${t('expEnd')}</button><button class="secondary-button" id="extract-cancel">${t('expStay')}</button>`);
+    $('extract-cancel').addEventListener('click', () => { closeDialog(); if (game.status === 'won') showExpeditionStage(); });
+    $('extract-confirm').addEventListener('click', () => { if (game.end()) { targeting = null; lastStatus = null; render(); showResult(true); } });
+  }
+  function expeditionOutcome() {
+    if (game.status !== 'playing') showResult(true);
+    else if (game.pendingReward) showExpeditionReward();
+  }
+  function finishExpeditionAction(before, events) {
+    if (!events.length) { expeditionOutcome(); return; }
+    clearTimeout(comboTimeout); $('combo').textContent = t('expFx_' + events[events.length - 1].kind);
+    $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2200);
+    animating = true; render(); syncClock(); const effectRun = runId;
+    fx.relic(events, before).finally(() => {
+      if (runId !== effectRun) return;
+      updateClock(); animating = false; render(); syncClock(); expeditionOutcome();
+    });
+  }
+  function activateExpedition(id) {
+    if (!isExpedition() || finalized || animating) return;
+    const before = fx.snapshot(); updateClock(); const result = game.activate(id);
+    if (!result.ok) return;
+    targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events);
+  }
+  $('expedition-extract').addEventListener('click', showExtract);
+  $('expedition-continue').addEventListener('click', () => game.pendingReward ? showExpeditionReward() : showExpeditionStage());
+  $('expedition-feather').addEventListener('click', () => { targeting = targeting === 'feather' ? null : 'feather'; render(); });
+  $('expedition-active').addEventListener('click', () => {
+    if (game.equipment === 'radar') activateExpedition();
+    else { targeting = targeting === 'blackhole' ? null : 'blackhole'; render(); }
+  });
+
   function showHelp() {
+    if (isExpedition()) { showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('expHelpTitle')}</h2><ol>${t('expHelpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('expHelpNote')}</p><p>${t('helpRanking')}</p>`); return; }
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
   }
   function showCredits() {
@@ -310,7 +487,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ result: showResult, help: showHelp, credits: showCredits })[dialogView]?.();
+    if (modal.open) ({ result: showResult, help: showHelp, credits: showCredits, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
@@ -351,10 +528,11 @@
   $('language').addEventListener('click', toggleLanguage); $('modal-language').addEventListener('click', toggleLanguage);
   document.addEventListener('keydown', event => {
     if (modal.open || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.target.matches('input, textarea, select, [contenteditable]')) return;
+    if (event.key === 'Escape' && targeting) { targeting = null; render(); return; }
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });
   setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); }, 250);
   document.addEventListener('visibilitychange', () => { updateClock(); syncClock(); });
-  localizePage(); start();
+  localizePage(); start(new URLSearchParams(location.search).get('mode') === 'expedition' ? 'expedition' : 'rain');
 })();

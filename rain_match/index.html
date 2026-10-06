@@ -4,17 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171c2a">
-  <meta name="description" content="羊了个羊玩法 × Risk of Rain 2 道具。免费三消叠牌小游戏，三个道具每局各用一次。">
+  <meta name="description" content="Risk of Rain 2 道具主题的免费三消叠牌小游戏。三种经典难度、装备成长的无限远征、中英双语与共享排行榜。">
   <title>Rain Match</title>
   <link rel="canonical" href="https://chendilin.com/rain_match/">
   <link rel="icon" href="assets/clover.webp">
-  <link rel="stylesheet" href="style.css?v=ecca666-top10">
-  <script defer src="core.js?v=ecca666-top10"></script>
-  <script defer src="i18n.js?v=ecca666-top10"></script>
-  <script defer src="config.js?v=ecca666-top10"></script>
-  <script defer src="leaderboard.js?v=ecca666-top10"></script>
-  <script defer src="effects.js?v=ecca666-top10"></script>
-  <script defer src="game.js?v=ecca666-top10"></script>
+  <link rel="stylesheet" href="style.css?v=expedition-v1">
+  <script defer src="core.js?v=expedition-v1"></script>
+  <script defer src="expedition.js?v=expedition-v1"></script>
+  <script defer src="i18n.js?v=expedition-v1"></script>
+  <script defer src="config.js?v=expedition-v1"></script>
+  <script defer src="leaderboard.js?v=expedition-v1"></script>
+  <script defer src="effects.js?v=expedition-v1"></script>
+  <script defer src="game.js?v=expedition-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -38,12 +39,20 @@
         <button data-mode="drizzle" aria-pressed="false" title="细雨热身 · 36 张">细雨</button>
         <button data-mode="rain" class="selected" aria-pressed="true" title="暴雨挑战 · 108 张">暴雨</button>
         <button data-mode="monsoon" aria-pressed="false" title="季风试炼 · 144 张">季风</button>
+        <button data-mode="expedition" aria-pressed="false">远征</button>
       </div>
       <div class="menu-actions"><button id="rankings" class="text-button" data-i18n="rankings">排行榜</button><button id="language" class="language-button" aria-label="Switch to English">EN</button></div>
       </div>
       <section class="game-panel" aria-label="三消游戏">
         <div class="game-topbar"><h1 id="mode-title">暴雨挑战</h1><div class="run-stats"><span><span id="cleared">0</span><span id="total"> / 108</span></span><span id="timer" aria-label="探索时间">00:00</span></div></div>
         <div class="progress-track" role="progressbar" aria-label="消除进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress"></div></div>
+        <section id="expedition-panel" class="expedition-panel" hidden aria-label="Expedition">
+          <div class="expedition-heading"><span id="expedition-stage"></span><button id="expedition-extract" class="text-button" data-i18n="expExtract">撤离结算</button></div>
+          <div id="relic-bar" class="relic-bar"></div>
+          <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-continue" class="text-button" hidden></button></div>
+          <div id="radar-preview" class="radar-preview" hidden></div>
+          <p id="expedition-hint" class="expedition-hint" role="status"></p>
+        </section>
         <div class="board-area">
           <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
           <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>
@@ -73,6 +82,7 @@
       <button data-leaderboard-mode="drizzle" data-i18n="drizzle" aria-pressed="false">细雨</button>
       <button data-leaderboard-mode="rain" data-i18n="rain" class="selected" aria-pressed="true">暴雨</button>
       <button data-leaderboard-mode="monsoon" data-i18n="monsoon" aria-pressed="false">季风</button>
+      <button data-leaderboard-mode="expedition" data-i18n="expedition" aria-pressed="false">远征</button>
     </div>
     <p class="ranking-rules" data-i18n="rankingRules">按回收数量降序，同分按用时升序。每个 ID 在各模式保留最佳成绩。</p>
     <div id="inline-ranking-content" aria-busy="true"><p class="empty-ranking" role="status" data-i18n="loading">正在加载排行榜…</p></div>
