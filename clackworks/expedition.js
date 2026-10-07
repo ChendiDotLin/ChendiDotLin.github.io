@@ -419,6 +419,12 @@
       if (choices.length < 3) choices.push('recharge');
       this.pendingReward = choices; this.previous = null;
     }
+    get canSkipReward() { return !this.finished && !!this.pendingReward && this.loadout().length > 0; }
+    skipReward() {
+      if (!this.canSkipReward) return false;
+      this.pendingReward = null; this.previous = null;
+      return true;
+    }
     choose(id, replace) {
       if (!this.pendingReward?.includes(id)) return false;
       if (id === 'recharge') {

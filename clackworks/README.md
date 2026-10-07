@@ -43,6 +43,11 @@ This asset replacement is not a trademark clearance or a legal opinion.
 
 ## Rule verification
 
+Expedition supplies can be skipped from either the offer or replacement screen.
+Skipping keeps gear and charges unchanged, consumes that offer, clears Undo and
+saves the result through the normal reward checkpoint. The initial starter choice
+is still required. Existing v3 saves and leaderboard data require no migration.
+
 Run `node ../scripts/test-rain-match.cjs` from this directory.
 
 ## Shared leaderboard setup (Supabase)

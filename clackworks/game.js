@@ -649,11 +649,22 @@
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
     return `${relicIcon(id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[id].rarity)} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicDescription(id, level + 1, id === 'shield')}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level === 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
   }
+  function rewardSkipMarkup() {
+    return game.canSkipReward ? `<button class="secondary-button" id="reward-skip">${t('expSkipReward')}</button><p class="input-hint">${t('expSkipRewardCopy')}</p>` : '';
+  }
+  function bindRewardSkip() {
+    $('reward-skip')?.addEventListener('click', () => {
+      if (animating || savePaused || !game.skipReward()) return;
+      afterReward();
+    });
+  }
   function showExpeditionReward() {
     if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
     targeting = null;
     const first = !game.loadout().length;
     showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed, evolutions: game.evolutionSlots })}<br>${t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id]?.rarity || 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
+    bindRewardSkip();
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
       const id = button.dataset.reward;
       if (!game.choose(id)) { showReplacement(id); return; }
@@ -664,6 +675,8 @@
     replacementItem = id;
     const passives = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === 'passive');
     showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.RELICS[relic.id].rarity}">${relicIcon(relic.id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[relic.id].rarity)}</small><b>${t('relic_' + relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${t('relic_' + id)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
+    bindRewardSkip();
     $('reward-back').addEventListener('click', showExpeditionReward);
     $('modal-content').querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => {
       if (game.choose(id, button.dataset.replace)) afterReward();
