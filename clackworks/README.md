@@ -452,3 +452,14 @@ catalog, actual proc feedback, icon loads, animation cleanup, mobile layout and
 resume. Score RPCs and Presence are mocked in browser tests. The PostgreSQL test
 `test-rain-boss-sql.cjs` reruns the standalone migration and checks new submissions,
 duplicate/passive-slot rejection, prior scores, privileges and admin tombstones.
+
+### Stable in-run layout
+
+Equipment cards use fixed grid cells with reserved name/rarity/progress lines.
+Owned-but-sealed controls and Coil/Scanner readouts keep their space during Boss
+restoration. Dynamic hints have fixed-height, scrollable regions; full equipment
+state is also available in the detail dialog. The fixed-height chain log lives
+below the playfield and tools. Updates no longer move the board or tray when a
+label wraps, a fuse arms, scanning ends, or a burst adds more item summaries.
+`test-clackworks-layout-browser.cjs` measures document and viewport positions
+through 96 status changes in both languages at four widths, plus Boss restores.

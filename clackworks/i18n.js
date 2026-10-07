@@ -2,6 +2,7 @@
   'use strict';
   const messages = {
     zh: {
+      "expProcEmpty": "连锁明细 · 装备触发后，在这里查看各自的回收贡献。",
       "expLightningMini": "闪电 {n}/{max}", "expLightningMiniReady": "闪电待命",
       "expCatalog": "装备图鉴 · 16",
       "expCatalogTitle": "工坊装备图鉴",
@@ -277,6 +278,7 @@
       "expFx_reclaim": "装备重启"
     },
     en: {
+      "expProcEmpty": "Chain details · Each item’s recoveries will appear here when it triggers.",
       "expLightningMini": "Coil {n}/{max}", "expLightningMiniReady": "Coil ready",
       "expCatalog": "Equipment · 16",
       "expCatalogTitle": "Workshop equipment",

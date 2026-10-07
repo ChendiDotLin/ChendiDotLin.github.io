@@ -577,3 +577,26 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 
 .catalog-item .relic-portrait img { width: 100%; height: 100%; object-fit: contain; }
 .catalog-item:focus-visible { outline: 2px solid #fff5d7; outline-offset: 2px; }
+
+
+/* Keep the playfield stationary while text/counters change during a turn. */
+.relic-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 78px; }
+.relic-chip { width: 100%; height: 78px; padding: 5px; overflow: hidden; }
+.relic-chip .relic-portrait { width: 28px; height: 30px; }
+.relic-chip .relic-copy { flex: 1; overflow: hidden; }
+.relic-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; height: 28px; line-height: 14px; font-weight: 500; }
+.relic-chip .relic-copy small { height: 14px; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.expedition-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 46px; }
+.expedition-controls button { min-width: 0; height: 46px; line-height: 15px; padding: 5px; overflow: auto; }
+#expedition-hint { height: 51px; overflow: auto; scrollbar-width: thin; }
+#lightning-status { height: 50px; overflow: auto; scrollbar-width: thin; }
+#expedition-save-status { height: 29px; line-height: 14px; overflow: auto; }
+#radar-preview { height: 32px; }
+#radar-preview.inactive { visibility: hidden; }
+.boss-status { height: 94px; overflow: auto; }
+.proc-log { height: 90px; margin: 20px 4px 0; padding: 9px; overflow: auto; border: 1px solid #91c9cb32; border-radius: 6px; scrollbar-width: thin; overflow-anchor: none; }
+.proc-log-title { display: block; font-weight: 500; color: #c6d9df; }
+.status { height: 30px; overflow: auto; }
+@media (max-width: 360px) {
+  .relic-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

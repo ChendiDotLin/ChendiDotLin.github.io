@@ -8,18 +8,18 @@
   <title>咔嗒工坊 · Clackworks</title>
   <link rel="canonical" href="https://chendilin.com/clackworks/">
   <link rel="icon" href="assets/flat/favicon-battery.png">
-  <link rel="stylesheet" href="style.css?v=clackworks-arsenal-v1">
+  <link rel="stylesheet" href="style.css?v=clackworks-stable-hud-v1">
   <script defer src="core.js?v=clackworks-jazz-v1"></script>
   <script defer src="expedition.js?v=clackworks-arsenal-v1"></script>
   <script defer src="expedition-save.js?v=sealer-levels-v1"></script>
-  <script defer src="i18n.js?v=clackworks-arsenal-v1"></script>
+  <script defer src="i18n.js?v=clackworks-stable-hud-v1"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
   <script defer src="presence.js?v=presence-v1"></script>
   <script defer src="leaderboard.js?v=clackworks-arsenal-v1"></script>
   <script defer src="effects.js?v=clackworks-arsenal-v1"></script>
   <script defer src="music.js?v=clackworks-arsenal-v1"></script>
-  <script defer src="game.js?v=clackworks-arsenal-v1"></script>
+  <script defer src="game.js?v=clackworks-stable-hud-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -64,7 +64,6 @@
           <div id="relic-bar" class="relic-bar"></div>
           <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>
           <p id="lightning-status" class="lightning-status" role="status" hidden></p>
-          <details id="proc-log" class="proc-log" hidden open></details>
           <div id="radar-preview" class="radar-preview" hidden></div>
           <p id="expedition-save-status" class="save-status" role="status"></p>
           <p id="expedition-hint" class="expedition-hint" role="status"></p>
@@ -86,6 +85,7 @@
           <button class="tool" id="shuffle" title="打乱主牌区及两侧补给堆的剩余图案"><span class="tool-icon">⤨</span><b data-i18n="shuffle">重新洗牌</b><span class="charge">免费 ×1</span></button>
         </div>
         <button id="result-button" class="text-button result-button" data-i18n="result" hidden>本局成绩</button>
+        <div id="proc-log" class="proc-log" hidden tabindex="0"></div>
         <p class="free-note" data-i18n="freeNote">每局各免费一次 · 重新开局全部恢复</p>
       </section>
     </main>

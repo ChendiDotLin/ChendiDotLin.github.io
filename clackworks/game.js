@@ -490,9 +490,13 @@
   }
   function renderProcLog() {
     const log = $('proc-log'); log.replaceChildren();
-    log.hidden = !lastProc || lastProc.run !== runId || lastProc.stage !== game.stage;
+    log.hidden = !isExpedition();
     if (log.hidden) return;
-    const title = document.createElement('summary'); title.textContent = t('expProcLog') + ' · ' + t('expProcCount', { n: lastProc.total }); log.append(title);
+    log.setAttribute('aria-label', t('expProcLog'));
+    if (!lastProc || lastProc.run !== runId || lastProc.stage !== game.stage) {
+      log.textContent = t('expProcEmpty'); return;
+    }
+    const title = document.createElement('strong'); title.className = 'proc-log-title'; title.textContent = t('expProcLog') + ' · ' + t('expProcCount', { n: lastProc.total }); log.append(title);
     const totals = new Map();
     for (const event of lastProc.events) if (RainExpedition.RELICS[event.kind] && (event.ids.length === 3 || event.kind === 'turbine')) {
       const value = totals.get(event.kind) || 0; totals.set(event.kind, value + (event.kind === 'turbine' ? event.amount : event.ids.length));
@@ -514,14 +518,14 @@
     selectedRelic = id;
     const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })} · ${t(game.relics[id] ? 'expPartialHint' : 'expSealedHint')}</p>` : '';
     const rarity = RainExpedition.RELICS[id].rarity;
-    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}<p>${relicDescription(id)}</p><p class="relic-synergy"><b>${t('expSynergy')}</b><br>${t('synergy_' + id)}</p>${(game.relics[id] || 1) < 3 ? `<p class="relic-next"><b>${t('expNextLevel')}</b><br>${relicDescription(id, (game.relics[id] || 1) + 1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
+    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id)}</p><p class="relic-synergy"><b>${t('expSynergy')}</b><br>${t('synergy_' + id)}</p>${(game.relics[id] || 1) < 3 ? `<p class="relic-next"><b>${t('expNextLevel')}</b><br>${relicDescription(id, (game.relics[id] || 1) + 1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
     $('relic-catalog').addEventListener('click', showCatalog);
     $('relic-close').addEventListener('click', closeDialog);
   }
   function renderExpedition() {
     document.body.classList.toggle('expedition-run', isExpedition());
     $('expedition-panel').hidden = !isExpedition();
-    if (!isExpedition()) { document.body.classList.remove('boss-run'); return; }
+    if (!isExpedition()) { document.body.classList.remove('boss-run'); $('proc-log').hidden = true; return; }
     const spec = RainExpedition.stageSpec(game.stage);
     $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
     captureTen();
@@ -545,18 +549,20 @@
       const sealed = Object.hasOwn(game.sealed, id), current = game.relics[id] || 0;
       button.classList.toggle('sealed', sealed && !current); button.classList.toggle('partial', sealed && !!current);
       const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level });
-      button.innerHTML = `${relicIcon(id)}<span class="relic-copy">${t('relic_' + id)}<small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small>${relicMeter(id) ? `<small class="relic-meter">${id === 'ukulele' ? t(game.lightningReady ? 'expLightningMiniReady' : 'expLightningMini', { n: game.spark, max: game.lightningLimit }) : relicMeter(id)}</small>` : ''}</span>`;
+      button.innerHTML = `${relicIcon(id)}<span class="relic-copy"><span class="relic-name">${t('relic_' + id)}</span><small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small><small class="relic-meter">${id === 'ukulele' && current ? t(game.lightningReady ? 'expLightningMiniReady' : 'expLightningMini', { n: game.spark, max: game.lightningLimit }) : relicMeter(id) || '&nbsp;'}</small></span>`;
       button.title = t('expRarity_' + button.dataset.rarity) + ' · ' + label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
+      button.title += relicMeter(id) ? ' · ' + relicMeter(id) : '';
       button.setAttribute('aria-label', t('relic_' + id) + ' · ' + button.title);
       button.addEventListener('click', () => showRelic(id));
       relicBar.append(button);
     }
     if (!game.loadout().length) relicBar.textContent = t('expNoRelics');
-    $('expedition-feather').hidden = !game.relics.feather;
-    $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${game.featherCharge ? t('expReady') : t('expCharging', { n: game.featherRecharge - game.featherEnergy })}`;
+    const owned = game.ownedRelics(), ownedActive = Object.keys(owned).find(id => RainExpedition.RELICS[id].kind === 'active');
+    $('expedition-feather').hidden = !owned.feather;
+    $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${!game.relics.feather ? t('expSealed') : game.featherCharge ? t('expReady') : t('expCharging', { n: game.featherRecharge - game.featherEnergy })}`;
     $('expedition-feather').disabled = animating || finalized || savePaused || !!game.pendingReward || game.status !== 'playing' || !game.featherTargets().length;
-    $('expedition-active').hidden = !game.equipment;
-    $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${t('relic_' + game.equipment)} · ${t('expCharge', { n: game.charge, max: game.capacity })}`;
+    $('expedition-active').hidden = !ownedActive;
+    $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${t('relic_' + ownedActive)} · ${!game.equipment ? t('expSealed') : t('expCharge', { n: game.charge, max: game.capacity })}`;
     $('expedition-active').disabled = animating || finalized || savePaused || !game.canActivate();
     $('expedition-active').title = game.equipment ? relicDescription(game.equipment) : '';
     const pending = !!game.pendingReward || game.status === 'won';
@@ -577,12 +583,13 @@
     if (game.bossActive && !targeting) hint = t(sealedCount ? 'expBossHint' : 'expBossFinish');
     if (!game.competitive) hint += ' · ' + t('expLegacyRun');
     $('expedition-hint').textContent = hint;
-    $('lightning-status').hidden = !game.relics.ukulele;
+    $('lightning-status').hidden = !owned.ukulele;
     $('lightning-status').classList.toggle('charged', game.lightningReady);
-    $('lightning-status').textContent = relicMeter('ukulele');
+    $('lightning-status').textContent = game.relics.ukulele ? relicMeter('ukulele') : t('relic_ukulele') + ' · ' + t('expSealed');
     $('lightning-status').title = t('expLightningExplain');
     renderProcLog();
-    $('radar-preview').hidden = !game.radarActive;
+    $('radar-preview').hidden = !owned.radar;
+    $('radar-preview').classList.toggle('inactive', !game.radarActive);
     $('radar-preview').replaceChildren(...game.previewIds().map(id => {
       const tile = game.tiles[id], label = document.createElement('span');
       label.className = 'radar-preview-tile'; label.title = t(tile.pile) + ' · ' + itemName(tile.type);
