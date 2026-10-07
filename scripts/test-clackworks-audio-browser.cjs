@@ -105,7 +105,7 @@ const fs = require('node:fs');
   const [keys, guitar] = rendered.fingerprints.slice(5);
   assert.ok(keys.energy > .001 && guitar.energy > .001, 'both lead instruments are audible');
   assert.notEqual(keys.crossings, guitar.crossings, 'keys and guitar have distinct timbres at the same pitch');
-  assert.ok(rendered.guitarPitches > 1 && rendered.guitarPitches <= 12, 'string buffers are reused across the full arrangement');
+  assert.equal(rendered.guitarPitches, 0, 'the score no longer schedules the fixed two-note replies');
   fs.writeFileSync('/tmp/clackworks-audio-preview.wav', Buffer.from(rendered.wav, 'base64'));
   // Sample failures and cancellation while loading must not break controls.
   await page.route('**/assets/audio/piano/*.mp3', route => route.abort());

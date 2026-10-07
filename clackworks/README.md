@@ -126,8 +126,8 @@ reproduce the original game's private generation algorithm.
 The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 32-bar,
 96 BPM score in `music.js` (80 seconds per loop). A rising F-major keyboard hook
 moves through F, D minor, Bb and C, with higher-register answers and a restrained
-second-chorus variation. Guitar replies stay short; each phrase ends with a bar
-of space. Leads stay on the beat, with two small straight eighth-note ornaments.
+second-chorus variation. Each piano phrase resolves into space for the bass and
+drums, with no fixed two-note reply. Leads stay on the beat, with two small straight eighth-note ornaments.
 
 The piano uses five locally hosted Salamander Grand Piano recordings by Alexander
 Holm (about 301 KiB total), transposed by at most one semitone in this score.
@@ -138,7 +138,7 @@ attacks. A five-second loading bound, FM fallback and generation checks preserve
 play/pause/mute behavior when assets fail or playback is cancelled during loading.
 The recordings provide stereo body and natural decay, with a short damping tail.
 
-Guitar, bass, percussion, sound effects and a subtle piano room are synthesized
+Bass, percussion, sound effects and a subtle piano room are synthesized
 locally. The bass keeps its plucked tone and walking rhythm, following the new
 major-key progression.
 A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
