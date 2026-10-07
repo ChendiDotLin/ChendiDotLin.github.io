@@ -512,7 +512,7 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .relic-chip[data-rarity="legendary"], .reward-choice[data-rarity="legendary"] { box-shadow: inset 0 0 16px #ef627a15; }
 .relic-chip[data-rarity]:hover, .reward-choice[data-rarity]:hover { background-color: var(--gear-tint); }
 .relic-chip:focus-visible, .reward-choice:focus-visible { outline: 2px solid #fff5d7; outline-offset: 3px; }
-.relic-chip .relic-portrait, .reward-choice .relic-portrait, .relic-large .relic-portrait {
+.relic-chip .relic-portrait, .reward-choice .relic-portrait, .relic-large .relic-portrait, .catalog-item .relic-portrait {
   display: grid; place-items: center; position: relative; flex-shrink: 0;
   width: 36px; height: 36px; border: 1px solid var(--gear-color);
   border-radius: 7px; background: var(--gear-tint); overflow: visible;
@@ -540,3 +540,40 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-blast-wave { border-width: 3px; box-shadow: 0 0 10px #ffc36b65, inset 0 0 7px #ffe3a940; }
 .fx-chain-count { font-weight: 800; font-size: 20px; color: #ffe2a6; text-shadow: 0 2px 0 #172a32, 0 0 12px #ffbf6c70; }
 @keyframes relic-proc { 22% { border-color: var(--gear-color, #e7d3ff); box-shadow: 0 0 16px var(--gear-color, #bbaaef66); background: var(--gear-tint, #bfa8ec2e); } }
+
+/* Arsenal: readable triggers stay above the board, never over playable tiles. */
+.equipment-library { margin-top: 7px; font-size: 11px; color: #9bded2; }
+.relic-chip { max-width: 100%; min-width: 0; }
+.relic-chip .relic-meter { color: #a7e9e6; font-size: 9px; max-width: 210px; white-space: normal; line-height: 1.5; }
+.lightning-status { margin: 8px 0 0; padding: 7px 9px; border-left: 2px solid #70c7dc; background: #58b3c312; color: #bdeef2; font-size: 11px; line-height: 1.6; }
+.lightning-status.charged { border-color: #edcf78; color: #f4dda0; }
+.proc-log { margin: 7px 0 0; font-size: 10px; color: #a8bcca; line-height: 1.8; }
+.proc-log summary { cursor: pointer; color: #c6d9df; }
+.proc-entry { display: inline-block; margin: 3px 5px 0 0; padding: 1px 6px; border: 1px solid #91c9cb32; border-radius: 4px; background: #8acbc40a; }
+.proc-entry[data-proc=ukulele], .proc-entry[data-proc=capacitor] { color: #a6eaf7; }
+.proc-entry[data-proc=resin], .proc-entry[data-proc=behemoth] { color: #ffc991; }
+.proc-entry[data-proc=echo] { color: #d4b5ff; }
+.equipment-catalog { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0; }
+.catalog-item { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid #afc5cd38; border-radius: 9px; background: #2a45455e; color: #e5efeb; text-align: left; font-size: 12px; min-width: 0; }
+.catalog-item .relic-portrait { width: 48px; height: 48px; flex-shrink: 0; }
+.catalog-item small { display: block; margin-top: 3px; color: #a7c6bc; font-size: 10px; }
+.relic-synergy, .relic-next { padding: 10px 13px; border-left: 2px solid #bba169; background: #bba1690e; font-size: 12px !important; }
+.relic-next { border-color: #77b7a8; }
+.reward-synergy { display: block; margin-top: 7px; color: #a8ccb9; font-size: 11px; font-style: normal; }
+.tile.lightning-mark { box-shadow: inset 0 0 0 3px #84e9ff, 0 0 9px #54cde09c; }
+.tile.fuse-mark { outline: 2px dashed #ffad68; outline-offset: -3px; }
+.fuse-count { position: absolute; top: 1px; right: 2px; border-radius: 4px; padding: 0 3px; background: #703b20; color: #fff0c2; font: 700 11px/16px system-ui; z-index: 2; }
+.fx-critical { width: 55px; height: 55px; border: 3px solid #fff1ad; box-shadow: 0 0 18px #ffce74; border-radius: 4px; }
+.fx-seeker { width: 30px; height: 15px; background: #fff0cf; clip-path: polygon(0 0,100% 50%,0 100%,25% 50%); filter: drop-shadow(0 0 6px #ffab73); }
+.fx-echo { width: 50px; height: 50px; border: 3px double #d9adff; border-radius: 50%; box-shadow: 0 0 13px #b994ec80; }
+.fx-press { width: 58px; height: 8px; border-radius: 3px; background: #e6c38e; box-shadow: 0 0 15px #f1be8570; }
+.lightning-status[hidden], .proc-log[hidden] { display: none; }
+@media (max-width: 480px) {
+  .catalog-item { gap: 6px; padding: 7px; font-size: 11px; }
+  .catalog-item .relic-portrait { width: 37px; height: 40px; }
+  .equipment-catalog { gap: 6px; }
+  .relic-chip .relic-meter { max-width: 150px; }
+}
+
+.catalog-item .relic-portrait img { width: 100%; height: 100%; object-fit: contain; }
+.catalog-item:focus-visible { outline: 2px solid #fff5d7; outline-offset: 2px; }

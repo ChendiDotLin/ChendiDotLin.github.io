@@ -1,6 +1,6 @@
 # Clackworks workshop artwork
 
-The game uses the original faceless flat workshop set: 12 part icons and nine
+The game uses the original faceless flat workshop set: 12 part icons and sixteen
 machine icons. Rounded silhouettes, dark-teal outlines and warm color blocks
 provide character without eyes, mouths or limbs. The glove and bulb have been
 replaced with a pocket tape measure and a mini battery in the same style.
@@ -45,3 +45,20 @@ This provenance does not claim project names or artwork have undergone trademark
 The plug now uses `flat/part-plug-side.webp`: a horizontal lavender-blue body,
 gold pins and a left-side cord, distinct from the red U-shaped magnet. Built-in
 image_gen edit prompt: `flat/part-plug-side.prompt.json`. Saved item IDs are unchanged.
+
+## Arsenal expansion
+
+Seven additional original icons were generated with the built-in image_gen tool
+as individual transparent illustrations. `flat/arsenal-prompts.json` records
+each exact prompt and output filename. The delivery WebPs preserve alpha and
+use the same faceless 2D workshop palette, outline and readable silhouettes.
+
+| Save/API ID | English | 中文 | Asset (in flat/) |
+| --- | --- | --- | --- |
+| prism | Focus Prism | 聚焦棱镜 | module-prism.webp |
+| seeker | Seeking Paper Rocket | 追踪纸火箭 | module-seeker.webp |
+| resin | Clockwork Blast Can | 发条爆破罐 | module-resin.webp |
+| turbine | Reflux Turbine | 回流涡轮 | module-turbine.webp |
+| capacitor | Afterglow Capacitor | 余火电容 | module-capacitor.webp |
+| echo | Echo Record | 复写唱片 | module-echo.webp |
+| recycler | Cleanup Press | 清场压机 | module-recycler.webp |

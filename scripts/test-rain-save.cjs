@@ -13,7 +13,7 @@ function roundtrip(game) {
 }
 function choose(game) {
   // Keep the witness intact: these passives/actives do not automatically clear cards.
-  let id = game.pendingReward.find(id => !['ukulele','gasoline','behemoth'].includes(id) && !id.startsWith('restore_'));
+  let id = game.pendingReward.find(id => ['feather','shield','cell','clover','blackhole','radar','turbine','recharge'].includes(id) && !id.startsWith('restore_'));
   // A controlled recharge supply avoids changing the deal witness in this serialization test.
   if (!id) { game.pendingReward = ['recharge']; id = 'recharge'; }
   const replacement = Object.keys(game.relics).find(id => ['shield', 'cell', 'feather'].includes(id));

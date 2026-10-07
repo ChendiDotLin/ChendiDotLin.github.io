@@ -4,7 +4,7 @@
   const normalizeId = value => String(value ?? '').normalize('NFKC').trim();
   const validId = value => /^[\p{L}\p{N}_-]{1,20}$/u.test(value);
   const compare = (a, b) => b.cleared - a.cleared || a.elapsedMs - b.elapsedMs || a.createdAt - b.createdAt || a.playerId.localeCompare(b.playerId);
-  const relicIds = new Set(['feather', 'shield', 'ukulele', 'cell', 'blackhole', 'radar', 'gasoline', 'behemoth', 'clover']);
+  const relicIds = new Set(['feather', 'shield', 'ukulele', 'cell', 'blackhole', 'radar', 'gasoline', 'behemoth', 'clover', 'prism', 'seeker', 'resin', 'turbine', 'capacitor', 'echo', 'recycler']);
   function validLoadout(loadout) {
     return Array.isArray(loadout) && loadout.length >= 1 && loadout.length <= 7 &&
       loadout.every(item => item && relicIds.has(item.id) && Number.isInteger(item.level) && item.level >= 1 && item.level <= 3) &&

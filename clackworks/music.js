@@ -144,7 +144,7 @@
       const stride = Math.max(1, Math.ceil(audible.length / 10));
       audible.filter((_, i) => i % stride === 0).forEach((event, i) => {
         const delay = reducedMotion ? Math.min(i * .045, .3) : event.index * step + (event.kind === 'behemoth' ? .26 : event.kind === 'ukulele' ? .2 : .08);
-        this.sound(event.kind, delay, audible.length > 8 ? .65 : .85, i);
+        this.sound(({ prism: 'match', seeker: 'blackhole', resin: 'behemoth', turbine: 'radar', capacitor: 'ukulele', echo: 'radar', recycler: 'behemoth' })[event.kind] || event.kind, delay, audible.length > 8 ? .65 : .85, i);
       });
     }
     cancelEffects() {

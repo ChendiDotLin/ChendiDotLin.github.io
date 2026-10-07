@@ -25,7 +25,7 @@ function sample(stage, saturated = false, noEquipment = false) {
   }
   const rate = offers / trials, behemothShare = counts.behemoth / offers;
   assert.ok(Math.abs(rate - game.legendaryChance) < .012, `red rate ${rate}`);
-  assert.ok(Math.abs(behemothShare - .6) < .035, `Behemoth share ${behemothShare}`);
+  assert.ok(Math.abs(behemothShare - 60 / 145) < .035, `Behemoth share ${behemothShare}`);
   return { rate, counts };
 }
 const normal = sample(3);
@@ -40,7 +40,7 @@ for (const [roll, expected] of [[.179999, true], [.18, false]]) {
   assert.equal(game.pendingReward.some(red), expected);
 }
 {
-  const game = fresh(); game.stage = 6; game.relics = { behemoth: 2, clover: 3, blackhole: 1 }; game.equipment = 'blackhole'; game.random = () => 0;
+  const game = fresh(); game.stage = 11; game.relics = { behemoth: 2, clover: 3, echo: 3, blackhole: 1 }; game.equipment = 'blackhole'; game.random = () => 0;
   game.offerReward(); assert.ok(game.pendingReward.includes('behemoth')); assert.ok(!game.pendingReward.includes('clover'));
   assert.ok(game.choose('behemoth')); assert.equal(game.relics.behemoth, 3);
   game.offerReward(); assert.ok(!game.pendingReward.some(red));

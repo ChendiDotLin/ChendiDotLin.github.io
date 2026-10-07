@@ -25,7 +25,7 @@ The optional shared leaderboard requires the public Supabase configuration below
 ## Workshop presentation
 
 The workshop edition replaces the former third-party item pictures and soundtrack
-with 12 original part icons, nine original machine icons and an
+with 12 original part icons, sixteen original machine icons and a
 licensed jazz soundtrack. See `assets/README.md` for the asset map.
 Names, descriptions, effects labels, home-page promotion and credits are bilingual.
 The artwork uses the original faceless flat workshop objects. The former glove
@@ -33,11 +33,12 @@ and bulb are replaced by a pocket tape measure and a mini battery in the same st
 Production images retain transparent backgrounds and are compressed as WebP;
 full prompts are recorded in the assets.
 
-This is a presentation-only update: the layered matching rules, seven-slot tray,
+The initial workshop reskin was a presentation-only update: the layered matching rules, seven-slot tray,
 gear interactions, drop weights, growth gates, Boss energy and all score timing
 remain unchanged. Legacy internal IDs are deliberately retained in saves and
 leaderboard payloads; existing runs/records display the new names automatically.
-No database migration, save reset or leaderboard reset is required.
+That reskin required no database migration or reset. The Arsenal expansion below
+requires a small additive API migration before publishing.
 This asset replacement is not a trademark clearance or a legal opinion.
 
 ## Rule verification
@@ -401,3 +402,53 @@ license. This separate client disables auth storage and session detection.
 test real joins/leaves, browser deduplication, visibility, mode changes and
 offline recovery. Other browser tests block the Presence socket to avoid
 changing public counts. All leaderboard requests in these tests are mocked.
+
+## Arsenal expansion (16 equipment types)
+
+Apply `../scripts/clackworks-arsenal.sql` to the existing Supabase project before
+publishing this client. It only expands the v3 submission function's equipment
+allowlist; existing records, RLS, admin permissions and ranking rules remain.
+Fresh installs can use the updated Boss migration, which has the same allowlist.
+Version 3 checkpoints receive additive defaults for new counters and fuse data,
+including their Undo snapshot. Existing saved offers and gear IDs remain valid.
+
+New passives (all levels 1–3):
+
+| Item | Trigger / effect | Main combination |
+| --- | --- | --- |
+| Focus Prism, common | Manual match: 20/30/40% critical; one extra triple through 1/2/3 covers. Calibrator adds chance. | Critical → Echo → Boiler |
+| Seeking Paper Rocket, uncommon | Every 4/3/2 manual matches, finish up to 1/2/3 tray pairs through any cover. Holds a ready shot without pairs. | Tray relief → Capacitor |
+| Clockwork Blast Can, common | Mark a buried triple; detonate after 3/2/1 more manual matches. Level 3 adds a second triple through two covers. | Delayed deep-layer opening → Echo |
+| Reflux Turbine, uncommon | Every three gear-cleared triples give 1/2/3 active energy and Grabber recharge progress. Offered only with an active or Grabber. | Lightning → energy → active cast |
+| Afterglow Capacitor, uncommon | Every 4/3/2 gear-cleared triples trigger one piercing triple and bank lightning. Once per action; progress can bank up to one full charge. | Lightning → relay → next lightning |
+| Echo Record, legendary | First gear recovery per action adds up to 1/2/3 triples through 1/2/3 covers. Does not repeat itself or Cleanup Press. | Extends every offensive build |
+| Cleanup Press, uncommon | After a manual match / Vacuum chain, sweep when ≤9/12/15 tiles remain. | Finish buried leftovers |
+
+Arc Coil keeps its chance plus guaranteed-charge rule. Level 2 now recovers up to
+two groups (levels 1/3 recover one/three). The UI shows progress, held-charge reason,
+reachable targets and per-equipment recovery totals. Discharges originate at the
+Coil chip. Relic details and reward cards show concrete combinations; the bilingual
+catalog lists all sixteen items. Each new effect has its own visual cue.
+
+All proc recoveries feed existing Boiler/Torch and new relay/recharge rules.
+Echo, Capacitor and lightning each have a per-action guard, alongside the existing
+burst budget (Cleanup Press reserves at most five final triples). Six passive slots, one active slot, growth gates, and red-slot odds
+(18% before stage 11, 25% thereafter) remain. More red item types share that slot;
+adding items does not increase the chance of a red offer. Boss sealing resets new
+counters and fuses; restoring a level enables only that level's effect. Shuffle
+retargets the fuse to matching tiles without resetting its countdown.
+
+Mechanic references, consulted 2026-10-06: RoR2 community documentation on
+[proc coefficients](https://riskofrain2.wiki.gg/wiki/Proc_Coefficient),
+[chain lightning](https://riskofrain2.wiki.gg/wiki/Ukulele), and
+[homing missiles](https://riskofrain2.wiki.gg/wiki/AtG_Missile_Mk._1).
+This adapts trigger-chain ideas to matching triples, with original item identities,
+illustrations and rule implementation; it does not copy those games' assets.
+
+Regression checks: `test-clackworks-arsenal.cjs` covers all seven effects, bounded
+synergies, deterministic saves/Undo, fuse Shuffle behavior, Boss transitions and
+random-board play. `test-clackworks-arsenal-browser.cjs` checks the bilingual
+catalog, actual proc feedback, icon loads, animation cleanup, mobile layout and
+resume. Score RPCs and Presence are mocked in browser tests. The PostgreSQL test
+`test-rain-boss-sql.cjs` reruns the standalone migration and checks new submissions,
+duplicate/passive-slot rejection, prior scores, privileges and admin tombstones.

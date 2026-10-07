@@ -222,14 +222,14 @@
     const rack = document.getElementById('rack').getBoundingClientRect();
     const pending = [];
     const step = events.length > 1 ? Math.min(180, 1600 / (events.length - 1)) : 0;
-    const heavy = events.filter(event => ['behemoth', 'gasoline'].includes(event.kind));
+    const heavy = events.filter(event => ['behemoth', 'gasoline', 'resin'].includes(event.kind));
     const accentEvery = Math.max(1, Math.ceil(heavy.length / 10));
     let impactIndex = 0;
     for (const [index, event] of events.entries()) {
       const delay = index * step;
       // Show the actual recovered cards, including radar and shield follow-ups.
-      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth'].includes(event.kind)) {
-        event.ids.forEach((id, i) => { if (before.has(id)) pending.push(ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay + (event.kind === 'ukulele' ? 180 + i * 150 : 0))); });
+      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth', 'resin'].includes(event.kind)) {
+        event.ids.forEach((id, i) => { if (before.has(id)) pending.push(ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay + (['ukulele', 'capacitor'].includes(event.kind) ? 180 + i * 150 : event.kind === 'seeker' ? 450 + i * 100 : ['prism', 'echo', 'recycler'].includes(event.kind) ? 200 + i * 100 : 0))); });
       }
       if (event.kind === 'shield') {
         const shield = node('fx-shield', { x: rack.left - 5, y: rack.top - 5 });
@@ -242,8 +242,9 @@
         const point = center(rack), portal = node('fx-portal', point, '#c7a5fa');
         for (const id of event.ids) if (before.has(id)) pending.push(ghost(before.get(id).rect, point, before.get(id).type, true, delay));
         pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
-      } else if (event.kind === 'ukulele') {
-        let origin = center(rack);
+      } else if (['ukulele', 'capacitor'].includes(event.kind)) {
+        const chip = document.querySelector(`[data-relic="${event.kind}"]`);
+        let origin = chip ? center(chip.getBoundingClientRect()) : center(rack);
         event.ids.forEach((id, i) => {
           if (!before.has(id)) return;
           const point = center(before.get(id).rect), dx = point.x - origin.x, dy = point.y - origin.y;
@@ -254,15 +255,55 @@
           pending.push(animate(hit, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { opacity: 1, offset: .2 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: 0 }], { duration: 650, delay: delay + i * 150 + 160, fill: 'backwards' }, true));
           origin = point;
         });
-      } else if (['gasoline', 'behemoth'].includes(event.kind)) {
+      } else if (['gasoline', 'behemoth', 'resin'].includes(event.kind)) {
         const accented = impactIndex++ % accentEvery === 0;
         event.ids.forEach((id, i) => {
           const from = before.get(id); if (!from) return;
           const stagger = delay + i * 75;
-          pending.push(detonate(from, event.kind, stagger, index + i));
-          if (accented) pending.push(impact(center(from.rect), event.kind, stagger,
+          pending.push(detonate(from, event.kind === 'resin' ? 'behemoth' : event.kind, stagger, index + i));
+          if (accented) pending.push(impact(center(from.rect), event.kind === 'resin' ? 'behemoth' : event.kind, stagger,
             from.rect.width * (event.kind === 'behemoth' ? 2.2 : 1.15), events.length > 12 ? (i ? 0 : 5) : (i ? 3 : 9)));
         });
+      } else if (['prism', 'seeker', 'echo', 'recycler'].includes(event.kind)) {
+        const chip = document.querySelector(`[data-relic="${event.kind}"]`);
+        const origin = chip ? center(chip.getBoundingClientRect()) : center(rack);
+        event.ids.forEach((id, i) => {
+          if (!before.has(id)) return;
+          const point = center(before.get(id).rect), at = delay + i * 100;
+          if (event.kind === 'seeker') {
+            const rocket = node('fx-seeker', origin);
+            const rotation = Math.atan2(point.y - origin.y, point.x - origin.x);
+            pending.push(animate(rocket, [
+              { transform: `translate(-50%,-50%) rotate(${rotation}rad)`, opacity: 0 },
+              { opacity: 1, offset: .12 },
+              { transform: `translate(${point.x - origin.x}px,${point.y - origin.y}px) rotate(${rotation}rad)`, opacity: 1 },
+              { opacity: 0 }
+            ], { duration: 650, delay: at, fill: 'backwards' }, true));
+          }
+          if (event.kind === 'recycler') {
+            for (const side of [-1, 1]) {
+              const press = node('fx-press', point);
+              pending.push(animate(press, [
+                { transform: `translate(-50%,${side * 36}px)`, opacity: 0 },
+                { opacity: 1, offset: .15 },
+                { transform: `translate(-50%,${side * 3}px)`, opacity: 1, offset: .6 },
+                { transform: 'translate(-50%,0) scaleX(.2)', opacity: 0 }
+              ], { duration: 900, delay: at, fill: 'backwards' }, true));
+            }
+          } else {
+            const ring = node(event.kind === 'prism' ? 'fx-critical' : event.kind === 'echo' ? 'fx-echo' : 'fx-electric-hit', point, '#ffd99a');
+            pending.push(animate(ring, [
+              { transform: 'translate(-50%,-50%) scale(.2) rotate(45deg)', opacity: 0 },
+              { opacity: 1, offset: .2 },
+              { transform: 'translate(-50%,-50%) scale(1.6) rotate(90deg)', opacity: 0 }
+            ], { duration: 900, delay: at + (event.kind === 'seeker' ? 450 : 0), fill: 'backwards' }, true));
+          }
+        });
+      } else if (event.kind === 'turbine') {
+        const chip = document.querySelector('[data-relic="turbine"]');
+        const point = chip ? center(chip.getBoundingClientRect()) : center(rack);
+        const ring = node('fx-echo', point);
+        pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(1.4)', opacity: 0 }, { opacity: .9, offset: .25 }, { transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }], { duration: 850, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'sealEnergy') {
         const meter = document.getElementById('boss-meter');
         const meterRect = meter.getBoundingClientRect();

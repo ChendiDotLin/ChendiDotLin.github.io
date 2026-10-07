@@ -165,8 +165,8 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
 // Evolved radar marks after the entire chain, never a type lightning just removed.
 {
   const game = fresh(); game.relics = { radar: 3, ukulele: 2 }; game.equipment = 'radar';
-  fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4], [0,1]);
+  fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5], [0,1]);
   game.radarUntil = 6; game.radarMark = 0;
-  assert.equal(game.pick(2).recovered, 12); assert.equal(game.radarMark, 4); counts(game);
+  assert.equal(game.pick(2).recovered, 15); assert.equal(game.radarMark, 5); counts(game);
 }
 console.log('PASS: growth gates, stage-based evolution slots, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');

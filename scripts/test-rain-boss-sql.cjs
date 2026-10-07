@@ -5,6 +5,7 @@ await db.exec(`create role anon;create role authenticated;create schema auth;cre
 await db.query('insert into auth.users values ($1)',[admin]);await db.exec(readFileSync(join(__dirname,'fixtures/rain-admin-before-expedition.sql'),'utf8'));await db.exec(readFileSync(join(__dirname,'rain-expedition.sql'),'utf8'));
 await db.query("select public.rain_submit_expedition($1,'legacy',36,1000,1,'[{\"id\":\"feather\",\"level\":1}]')",[randomUUID()]);
 const migration=readFileSync(join(__dirname,'rain-expedition-boss.sql'),'utf8');await db.exec(migration);await db.exec(migration);
+const arsenal=readFileSync(join(__dirname,'clackworks-arsenal.sql'),'utf8');await db.exec(arsenal);await db.exec(arsenal);
 for(const stage of [1,2,5,9,10,11,12,13,40,1000000])assert.equal(Number((await db.query('select rain_private.expedition_banked($1) n',[stage])).rows[0].n),bankedBefore(stage));
 await db.exec('set role anon');const list=async board=>(await db.query('select public.rain_expedition_v3_leaderboard($1) r',[board])).rows[0].r;
 const gear=[{id:'feather',level:3},{id:'shield',level:2},{id:'ukulele',level:3},{id:'gasoline',level:3},{id:'behemoth',level:3},{id:'clover',level:3},{id:'radar',level:3}];
@@ -21,4 +22,10 @@ await db.exec('reset role');await db.query("select set_config('request.jwt.claim
 assert.equal((await db.query('select public.rain_admin_status() r')).rows[0].r.counts.expedition_speed,3);
 await db.query("select public.rain_admin_delete('player','expedition_speed','player','DELETE player')");assert.equal((await list('distance')).entries[0].playerId,'player');await assert.rejects(()=>submit('player',11,10,1600,1400,run),/Run removed/);
 await submit('player',10,10,1200,1200);assert.equal((await list('speed')).entries.length,3);
+await db.exec('reset role;set role anon');
+for(const id of ['prism','seeker','resin','turbine','capacitor','echo','recycler']) {
+  const result=await submit('gear_'+id,1,0,100,null,randomUUID(),[{id,level:1}],0);assert.ok(result.ok);
+}
+await assert.rejects(()=>submit('bad',1,0,100,null,randomUUID(),[{id:'prism',level:1},{id:'prism',level:2}],0),/Invalid/);
+await assert.rejects(()=>submit('bad',1,0,100,null,randomUUID(),['prism','seeker','resin','turbine','capacitor','echo','recycler'].map(id=>({id,level:1})),0),/Invalid/);
 console.log('PASS: repeat migration preserves legacy; exact stage bounds; distinct distance/speed bests; ten-stage gating; immutable retries; seven-item loadouts; RLS and scoped admin tombstones.');await db.close();})().catch(e=>{console.error(e);process.exit(1)});

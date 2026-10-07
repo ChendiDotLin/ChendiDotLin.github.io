@@ -32,6 +32,14 @@ const { messages } = require('../clackworks/i18n.js');
  const bossScore={runId:'new',playerId:'玩家',mode:'expedition',rules:3,cleared:1080,elapsedMs:10000,stage:10,completedStages:10,tenMs:10000,loadout:[{id:'gasoline',level:3},{id:'clover',level:3},{id:'behemoth',level:3}]};
  assert.ok((await modern.submit(bossScore)).ok);assert.ok(call.url.endsWith('rain_submit_expedition_v3'));assert.equal(JSON.parse(call.body).p_ten_ms,10000);
  assert.equal((await modern.submit({...bossScore,tenMs:null})).ok,false);assert.equal((await modern.submit({...bossScore,completedStages:9})).ok,false);
+ for(const id of Object.keys(require('../clackworks/expedition.js').RELICS)) {
+  const loadout=[{id,level:1}];assert.ok((await modern.submit({...bossScore,loadout})).ok,id);
+  assert.deepEqual(JSON.parse(call.body).p_loadout,loadout);
+  const row={playerId:'玩家',mode:'expedition_distance',stage:10,completedStages:10,cleared:1080,elapsedMs:10000,tenMs:10000,createdAt:1,loadout};
+  const reader=new Leaderboard(config,async()=>({ok:true,json:async()=>({entries:[row],total:1})}));
+  assert.deepEqual((await reader.list('expedition_distance')).entries,[row]);
+ }
+ assert.equal((await modern.submit({...bossScore,loadout:[{id:'fake',level:1}]})).ok,false);
  assert.equal((await client.submit(bossScore)).error,'networkError'); // Missing speed rank must not become a saved receipt.
  let requested;
  const boardClient=new Leaderboard(config,async(url,options)=>{requested={url,payload:JSON.parse(options.body)};return {ok:true,json:async()=>({entries:[],total:0})}});

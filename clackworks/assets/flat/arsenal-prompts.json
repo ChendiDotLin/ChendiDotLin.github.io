@@ -1,0 +1,41 @@
+{
+  "generator": "Built-in image_gen",
+  "style": "Original faceless 2D workshop objects",
+  "items": [
+    {
+      "id": "prism",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a chunky triangular turquoise glass prism in a golden brass cradle, a tiny warm coral refracted ray, one iconic triangular silhouette. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-prism.webp"
+    },
+    {
+      "id": "seeker",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a playful cream and coral paper rocket with teal tail fins, tiny brass nozzle and short golden exhaust, tilted upwards, clearly a paper rocket not a weapon. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-seeker.webp"
+    },
+    {
+      "id": "resin",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a squat orange wind-up timer bomb, navy circular body with brass winding key, large cream clock dial and short curled teal fuse, no numbers. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-resin.webp"
+    },
+    {
+      "id": "turbine",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a compact mint green four-blade turbine in an open dark teal round housing, orange central hub and a short cream outlet pipe. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-turbine.webp"
+    },
+    {
+      "id": "capacitor",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a lavender ceramic two-terminal electrical capacitor, two chunky brass terminals on top with a small teal arc between them, cream lightning symbol on body. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-capacitor.webp"
+    },
+    {
+      "id": "echo",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a deep berry-red vinyl record in a compact cream and teal record player, large golden central spindle, short coral tonearm, clearly a musical record player. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-echo.webp"
+    },
+    {
+      "id": "recycler",
+      "prompt": "Use case: stylized-concept. Asset: one original Clackworks game equipment icon. Subject: a cheerful orange recycling press with wide squared teal frame, cream horizontal cutting bar and one small golden scrap underneath, no sharp threatening blade. Style matching the established cozy workshop icons: bold rounded dark navy outlines, flat 2D hand-drawn illustration, warm cream highlights, simple solid shapes with only one flat shadow tone. Cute object with NO face, eyes, limbs or expression. Centered isolated single object filling 80% of a square canvas. Transparent background. Readable silhouette at 48px. No text, no words, no realistic lighting, no gradients, no 3D render, no scene, no border or card, no copyrighted game objects. Palette teal, warm mustard, coral and cream, with specified subject accents.",
+      "file": "module-recycler.webp"
+    }
+  ]
+}

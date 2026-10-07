@@ -8,18 +8,18 @@
   <title>咔嗒工坊 · Clackworks</title>
   <link rel="canonical" href="https://chendilin.com/clackworks/">
   <link rel="icon" href="assets/flat/favicon-battery.png">
-  <link rel="stylesheet" href="style.css?v=clackworks-jazz-v1">
+  <link rel="stylesheet" href="style.css?v=clackworks-arsenal-v1">
   <script defer src="core.js?v=clackworks-jazz-v1"></script>
-  <script defer src="expedition.js?v=workshop-v1"></script>
+  <script defer src="expedition.js?v=clackworks-arsenal-v1"></script>
   <script defer src="expedition-save.js?v=sealer-levels-v1"></script>
-  <script defer src="i18n.js?v=clackworks-george-v1"></script>
+  <script defer src="i18n.js?v=clackworks-arsenal-v1"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
   <script defer src="presence.js?v=presence-v1"></script>
-  <script defer src="leaderboard.js?v=expedition-v3-boss"></script>
-  <script defer src="effects.js?v=clackworks-jazz-v1"></script>
-  <script defer src="music.js?v=clackworks-george-v1"></script>
-  <script defer src="game.js?v=clackworks-george-v1"></script>
+  <script defer src="leaderboard.js?v=clackworks-arsenal-v1"></script>
+  <script defer src="effects.js?v=clackworks-arsenal-v1"></script>
+  <script defer src="music.js?v=clackworks-arsenal-v1"></script>
+  <script defer src="game.js?v=clackworks-arsenal-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -60,8 +60,11 @@
               <div id="boss-meter" class="boss-meter" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><i></i><i></i><i></i></div>
             </div>
           </div><p id="relic-slots" class="expedition-hint"></p>
+          <button id="equipment-catalog" class="text-button equipment-library" data-i18n="expCatalog">装备图鉴 · 16</button>
           <div id="relic-bar" class="relic-bar"></div>
           <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>
+          <p id="lightning-status" class="lightning-status" role="status" hidden></p>
+          <details id="proc-log" class="proc-log" hidden open></details>
           <div id="radar-preview" class="radar-preview" hidden></div>
           <p id="expedition-save-status" class="save-status" role="status"></p>
           <p id="expedition-hint" class="expedition-hint" role="status"></p>
