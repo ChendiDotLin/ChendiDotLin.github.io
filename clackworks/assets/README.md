@@ -35,10 +35,12 @@ Internal IDs remain stable for browser saves, Undo snapshots and database
 whitelists. These IDs are not player-facing names. `core.js` maps the unchanged
 ordinary tile IDs/type indices to their new part names and asset filenames.
 
-`../music.js` contains Assembly After Hours, an original score using locally hosted
-Salamander Grand Piano recordings and synthesized accompaniment/effects. Piano
-source, license history and checksums are in `audio/piano/NOTICE.txt`. This provenance records the implementation; it does not claim that
-project names or artwork have undergone legal or trademark clearance.
+`../music.js` plays the licensed, locally hosted recording
+`audio/george-street-shuffle.mp3` by Kevin MacLeod and synthesizes game effects.
+Its CC BY 4.0 attribution, original source and checksum are recorded in
+`audio/george-street-shuffle-NOTICE.txt` and linked from the in-game credits.
+The `audio/piano/` samples remain as unused history of the retired generated score.
+This provenance does not claim project names or artwork have undergone trademark clearance.
 
 The plug now uses `flat/part-plug-side.webp`: a horizontal lavender-blue body,
 gold pins and a left-side cord, distinct from the red U-shaped magnet. Built-in

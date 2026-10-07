@@ -5,6 +5,7 @@
   const modal = $('modal');
   const fx = RainEffects;
   const music = new RainMusic();
+  music.onError = () => { $('music-error').hidden = false; localizePage(); };
   let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
   let activeEffect = null;
   const isExpedition = () => game?.mode === 'expedition';
@@ -666,7 +667,7 @@
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
   }
   function showCredits() {
-    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')}</p><p>${t('creditsMusic')}</p><p><a href="assets/audio/piano/NOTICE.txt" target="_blank" rel="noopener">${t('creditsPiano')}</a></p><p>${t('creditsThanks')}</p>`);
+    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')}</p><p>${t('creditsMusic')}</p><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300035" target="_blank" rel="noopener">George Street Shuffle — Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p><p><a href="assets/audio/george-street-shuffle-NOTICE.txt" target="_blank" rel="noopener">${t('creditsMusicSource')}</a></p><p>${t('creditsThanks')}</p>`);
   }
   function toggleLanguage() {
     if ($('player-id')) playerDraft = $('player-id').value;
@@ -697,7 +698,8 @@
     if (music.playing) music.stop();
     else {
       try {
-        if (!await music.play()) return;
+        const playing = music.play(); localizePage();
+        if (!await playing) return;
         if (readPreference('rain-match-effects') === null) { sound = true; music.setEffects(true); }
       }
       catch (_) { $('music-error').hidden = false; }

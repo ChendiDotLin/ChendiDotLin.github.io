@@ -26,7 +26,7 @@ The optional shared leaderboard requires the public Supabase configuration below
 
 The workshop edition replaces the former third-party item pictures and soundtrack
 with 12 original part icons, nine original machine icons and an
-original browser-played music loop. See `assets/README.md` for the asset map.
+licensed jazz soundtrack. See `assets/README.md` for the asset map.
 Names, descriptions, effects labels, home-page promotion and credits are bilingual.
 The artwork uses the original faceless flat workshop objects. The former glove
 and bulb are replaced by a pocket tape measure and a mini battery in the same style.
@@ -121,36 +121,28 @@ reserves and blind stacks](https://www.18183.com/zqnews/202209/4162031.html).
 This is an original implementation informed by visible gameplay, not a claim to
 reproduce the original game's private generation algorithm.
 
-## Original music
+## Music and sound effects
 
-The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 32-bar,
-96 BPM score in `music.js` (80 seconds per loop). A rising F-major keyboard hook
-moves through F, D minor, Bb and C, with higher-register answers and a restrained
-second-chorus variation. Each piano phrase resolves into space for the bass and
-drums, with no fixed two-note reply. Leads stay on the beat, with two small straight eighth-note ornaments.
+The ♪ player uses **George Street Shuffle** by **Kevin MacLeod (incompetech.com)**,
+licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+[Original track](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300035),
+ISRC USUAN1300035. The author's original MP3 is hosted locally, unedited;
+`assets/audio/george-street-shuffle-NOTICE.txt` records attribution, provenance
+and its SHA-256. Both language versions of the credits provide artist/source,
+license and notice links.
 
-The piano uses five locally hosted Salamander Grand Piano recordings by Alexander
-Holm (about 301 KiB total), transposed by at most one semitone in this score.
-The author's public-domain declaration, original CC BY 3.0 notice and file hashes
-are recorded in `assets/audio/piano/NOTICE.txt`, also linked from the credits.
-Samples are fetched only after Play, decoded once and aligned to their hammer
-attacks. A five-second loading bound, FM fallback and generation checks preserve
-play/pause/mute behavior when assets fail or playback is cancelled during loading.
-The recordings provide stereo body and natural decay, with a short damping tail.
+Playback is opt-in. The recording streams only after Play, loops, and resumes
+from its paused position. Music and synthesized effects retain independent
+volume/mute controls. Backgrounding pauses the recording and audio context;
+closing the player stops music. Failed loads show a retryable player error,
+and cancelled play promises cannot restart music. The retired generated score
+and piano sample bank are not requested or played.
 
-Bass, percussion, sound effects and a subtle piano room are synthesized
-locally. The bass keeps its plucked tone and walking rhythm, following the new
-major-key progression.
-A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
-leave space for gameplay sounds. Stages and chains increase drum strength without
-adding melody, arpeggios, octave doubles or delay echoes. First Play also enables effects unless the player explicitly muted them;
-volume and mute are independent. Nothing autoplays on page load.
-
-Clicks, matches, blasts, arcs, suction and results have distinct synthesized
-sounds. Chain cues follow the visual timeline and are capped to avoid stacking
-hundreds of voices. A compressor provides headroom; pending cues are cancelled
-on mute, restart, backgrounding or interrupted animation. Background tabs suspend
-audio; closing the player stops music. No runtime requests to third-party audio hosts are made.
+Clicks, matches, blasts, arcs, suction and results keep their existing sounds.
+Chain cues follow the visual timeline and are capped to avoid stacking hundreds
+of voices. A compressor provides mix headroom; pending effects are cancelled
+on mute, restart, backgrounding or interrupted animation. No third-party audio
+host is contacted during gameplay.
 
 ## Developer administration
 

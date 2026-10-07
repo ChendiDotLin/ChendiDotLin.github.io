@@ -1,0 +1,21 @@
+"George Street Shuffle" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+
+Original track and attribution:
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300035
+ISRC: USUAN1300035
+Author: Kevin MacLeod
+Copyright retained by the author.
+
+Original download:
+https://incompetech.com/music/royalty-free/mp3-royaltyfree/George%20Street%20Shuffle.mp3
+Downloaded and license verified October 6, 2026.
+
+The MP3 recording is bundled unchanged: no editing or re-encoding.
+The game repeats it and adjusts playback volume. Separate game sound effects
+are synthesized by Clackworks; they are not part of the original composition.
+No artist endorsement is implied. The file is hosted locally for playback.
+
+SHA-256:
+15ee9995e01ffe91678db6ba072ec13cf0bf258f17c01677c5367009932b9c07  george-street-shuffle.mp3
