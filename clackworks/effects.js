@@ -4,7 +4,7 @@
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const active = new Set();
   const layer = document.createElement('div');
-  layer.className = 'fx-layer'; layer.setAttribute('aria-hidden', 'true'); document.body.append(layer);
+  layer.className = 'fx-layer'; layer.inert = true; layer.setAttribute('aria-hidden', 'true'); document.body.append(layer);
   const center = rect => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
   function animate(el, frames, options, temporary = false) {
     if (motion.matches || !el.animate) { if (temporary) el.remove(); return Promise.resolve(); }
@@ -29,6 +29,37 @@
   }
   function reset() { active.forEach(finish => finish()); layer.replaceChildren(); }
   motion.addEventListener('change', reset);
+  function surface(el, play) {
+    // Keep hit regions independent from animated transforms and disabled-state
+    // changes by moving a noninteractive picture, never the live button surface.
+    const copy = el.cloneNode(true);
+    copy.removeAttribute('id'); copy.classList.add('fx-surface');
+    copy.inert = true; copy.setAttribute('aria-hidden', 'true');
+    copy.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+    copy.querySelectorAll('.fresh').forEach(node => node.classList.remove('fresh'));
+    const position = () => {
+      const rect = el.getBoundingClientRect();
+      Object.assign(copy.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+    };
+    Object.assign(copy.style, { position: 'absolute', margin: '0', transform: 'none', opacity: '1' });
+    position();
+    root.addEventListener('scroll', position, { capture: true, passive: true });
+    root.addEventListener('resize', position);
+    layer.append(copy);
+    const opacity = el.style.getPropertyValue('opacity'), priority = el.style.getPropertyPriority('opacity');
+    el.style.setProperty('opacity', '0');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true; active.delete(finish); copy.remove();
+      root.removeEventListener('scroll', position, true); root.removeEventListener('resize', position);
+      if (opacity) el.style.setProperty('opacity', opacity, priority);
+      else el.style.removeProperty('opacity');
+    };
+    active.add(finish);
+    try { return Promise.resolve(play(copy)).finally(finish); }
+    catch (error) { finish(); throw error; }
+  }
   function node(className, point, color) {
     const el = document.createElement('i'); el.className = className;
     el.style.left = `${point.x}px`; el.style.top = `${point.y}px`;
@@ -346,7 +377,8 @@
         { transform: `translate(${strength}px,${-strength / 2}px)`, offset: .4 },
         { transform: `translate(${-strength / 2}px,0)`, offset: .62 }, { transform: 'translate(0,0)' }
       ];
-      for (const id of ['board', 'rack']) pending.push(animate(document.getElementById(id), kick, { duration: 420, delay: firstBlast * step + 260 }));
+      for (const id of ['board', 'rack']) pending.push(surface(document.getElementById(id), copy =>
+        animate(copy, kick, { duration: 420, delay: firstBlast * step + 260 })));
     }
     const recovered = new Set(events.filter(event => event.ids.length === 3).flatMap(event => event.ids)).size;
     const total = recoveredCount ?? recovered;
@@ -404,18 +436,21 @@
       { transform: 'scale(.75) rotate(-4deg)', opacity: .85, offset: .45 },
       { transform: 'scale(.06) rotate(16deg)', opacity: 0 }
     ], { duration: 700, easing: 'cubic-bezier(.55,0,.75,.45)', fill: 'both' }, true));
-    pending.push(animate(board, [
-      { transform: 'translateY(-32px) scale(.94)', opacity: 0 },
-      { transform: 'translateY(-32px) scale(.94)', opacity: 0, offset: .4 },
-      { transform: 'translateY(3px) scale(1.01)', opacity: 1, offset: .85 },
-      { transform: 'translateY(0) scale(1)', opacity: 1 }
-    ], { duration: 1500, fill: 'both' }));
-    board.querySelectorAll('.tile:not(.blocked)').forEach((el, i) => {
-      pending.push(animate(el, [
-        { transform: 'translateY(-26px) rotate(-4deg)', opacity: 0 },
-        { transform: 'translateY(0) rotate(0deg)', opacity: 1 }
-      ], { duration: 650, delay: 650 + (i % 5) * 45, fill: 'both' }));
-    });
+    pending.push(surface(board, copy => {
+      const landing = [animate(copy, [
+        { transform: 'translateY(-32px) scale(.94)', opacity: 0 },
+        { transform: 'translateY(-32px) scale(.94)', opacity: 0, offset: .4 },
+        { transform: 'translateY(3px) scale(1.01)', opacity: 1, offset: .85 },
+        { transform: 'translateY(0) scale(1)', opacity: 1 }
+      ], { duration: 1500, fill: 'both' })];
+      copy.querySelectorAll('.tile:not(.blocked)').forEach((el, i) => {
+        landing.push(animate(el, [
+          { transform: 'translateY(-26px) rotate(-4deg)', opacity: 0 },
+          { transform: 'translateY(0) rotate(0deg)', opacity: 1 }
+        ], { duration: 650, delay: 650 + (i % 5) * 45, fill: 'both' }));
+      });
+      return Promise.all(landing);
+    }));
     return Promise.all(pending);
   }
   function resultScene(won, label, animateScene) {

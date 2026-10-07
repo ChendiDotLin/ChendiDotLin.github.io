@@ -200,6 +200,11 @@ isolated temporary database, never the live leaderboard.
   reward/result presentation get one guarded retry without replaying game actions.
   `scripts/test-clackworks-effect-lifecycle-browser.cjs` covers these failures,
   including a real lightning chain that reaches a supply reward.
+- Blast shakes and incoming stage boards animate inert visual copies. The live
+  board keeps fixed hit regions; copies follow scrolling/resizing and reveal the
+  original on completion, cancellation or reduced-motion changes. The entire FX
+  layer ignores pointer input. `scripts/test-clackworks-surface-input-browser.cjs`
+  checks first-click mouse response after repeated explosions and stage entries.
 - System `prefers-reduced-motion` disables movement, including JavaScript effects,
   and removes the transition wait. Temporary visual overlays ignore pointer input
   and are removed after finishing. No extra animation or graphics library is used.
