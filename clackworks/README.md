@@ -195,6 +195,11 @@ isolated temporary database, never the live leaderboard.
 - Power transitions briefly guard input and pause the active-play clock; ordinary
   pickups stay responsive. A restart cancels effects and ignores old completion
   callbacks. Result scenes do not replay during translation or score submission.
+- Recovery is armed before the locked HUD renders. A failed startup, completion
+  render or effect cleanup cannot strand the animation input gate. HUD and
+  reward/result presentation get one guarded retry without replaying game actions.
+  `scripts/test-clackworks-effect-lifecycle-browser.cjs` covers these failures,
+  including a real lightning chain that reaches a supply reward.
 - System `prefers-reduced-motion` disables movement, including JavaScript effects,
   and removes the transition wait. Temporary visual overlays ignore pointer input
   and are removed after finishing. No extra animation or graphics library is used.

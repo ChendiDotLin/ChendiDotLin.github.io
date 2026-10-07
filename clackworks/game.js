@@ -46,23 +46,46 @@
   }
   function cancelEffects() {
     clearTimeout(activeEffect?.timer); activeEffect = null;
-    fx.reset(); music.cancelEffects(); animating = false;
+    animating = false;
+    resetEffects();
+  }
+  function resetEffects() {
+    // Cleanup is optional presentation work too: neither renderer may keep input locked.
+    for (const reset of [() => fx.reset(), () => music.cancelEffects()]) {
+      try { reset(); } catch (error) { console.warn('Clackworks effect cleanup skipped:', error); }
+    }
   }
   function playEffect(play, after = () => {}) {
     const effect = { run: runId };
-    activeEffect = effect; animating = true; render(); syncClock();
+    activeEffect = effect; animating = true;
     const finish = () => {
       if (activeEffect !== effect || effect.run !== runId) return;
       clearTimeout(effect.timer); activeEffect = null;
-      updateClock(); animating = false; render(); syncClock(); after();
+      updateClock(); animating = false;
+      // A HUD failure must not suppress the reward/result transition. Retry the
+      // presentation once in the next microtask, without replaying the action.
+      for (const complete of [() => render(), after]) {
+        try { complete(); }
+        catch (error) {
+          console.warn('Clackworks effect completion retry:', error);
+          queueMicrotask(() => {
+            if (effect.run !== runId || activeEffect) return;
+            try { complete(); } catch (retryError) { console.warn('Clackworks effect completion skipped:', retryError); }
+            syncClock();
+          });
+        }
+      }
+      syncClock();
     };
-    effect.skip = () => { if (activeEffect === effect) { fx.reset(); music.cancelEffects(); finish(); } };
-    // All current scenes finish within 3.1 s. A broken renderer must never own
-    // the input lock forever; game state was already committed before the FX.
+    effect.skip = () => { if (activeEffect === effect) { resetEffects(); finish(); } };
+    // Arm recovery BEFORE rendering the locked HUD; startup and completion
+    // errors need the same protection as a rejected native animation promise.
     effect.timer = setTimeout(effect.skip, 4500);
+    try { render(); syncClock(); }
+    catch (error) { console.warn('Clackworks effect startup skipped:', error); effect.skip(); return; }
     Promise.resolve().then(() => activeEffect === effect ? play() : undefined)
-      .catch(error => { console.warn('Clackworks effect skipped:', error); if (activeEffect === effect) { fx.reset(); music.cancelEffects(); } })
-      .finally(finish);
+      .catch(error => { console.warn('Clackworks effect skipped:', error); if (activeEffect === effect) resetEffects(); })
+      .then(finish);
     if (document.hidden) effect.skip();
   }
   function beep(matched = false) { music.sound(matched ? 'match' : 'pick'); }
@@ -235,13 +258,15 @@
       const selected = button.dataset.mode === game.mode;
       button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
     });
-    render(!animating); syncClock();
     refreshRankings(game.mode);
     if (animating) {
       playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (isExpedition()) showExpeditionReward();
       });
-    } else if (isExpedition()) showExpeditionReward();
+    } else {
+      render(true); syncClock();
+      if (isExpedition()) showExpeditionReward();
+    }
   }
   function render(enter = false) {
     lightningMarks = new Set(isExpedition() ? game.lightningTarget || [] : []);
@@ -642,7 +667,7 @@
       cancelEffects(); const outgoing = fx.captureBoard();
       if (!game.nextStage()) { outgoing?.remove(); return; }
       stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;
-      closeDialog(); $('board').replaceChildren(); render(); syncClock();
+      closeDialog(); $('board').replaceChildren();
       playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (game.bossActive) showBossIntro();
       });
