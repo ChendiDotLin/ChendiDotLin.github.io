@@ -26,7 +26,7 @@ The optional shared leaderboard requires the public Supabase configuration below
 
 The workshop edition replaces the former third-party item pictures and soundtrack
 with 12 original part icons, nine original machine icons and an
-original browser-synthesized music loop. See `assets/README.md` for the asset map.
+original browser-played music loop. See `assets/README.md` for the asset map.
 Names, descriptions, effects labels, home-page promotion and credits are bilingual.
 The artwork uses the original faceless flat workshop objects. The former glove
 and bulb are replaced by a pocket tape measure and a mini battery in the same style.
@@ -124,19 +124,23 @@ reproduce the original game's private generation algorithm.
 ## Original music
 
 The ♪ button opens **Assembly After Hours / 夜班流水线**, an original 32-bar,
-96 BPM score in `music.js` (80 seconds per loop). A keyboard theme follows a
-repeated anchor note, a falling line and a chord-tone cadence. The same contour
-moves through D minor, Bb, F and C; the second chorus changes just a few endings
-and note lengths. Each complete keyboard sentence has a sparse two-note guitar
-reply, then a bar of melodic rest. Leads land on quarter-note beats, apart from
-two brief neighbor-note turns across the loop. Keys mix short articulations with
-sustained one- and two-beat notes; only bass and ride use swing timing.
-The guitar uses cached, tuned string partials with faster upper-harmonic decay;
-the electric piano uses touch-sensitive FM tines: a brighter struck attack settles
-into a warm sustained body, followed by damping. A quiet 240 ms stereo room is
-confined to the piano; all modulation oscillators stop with playback. The room
-impulse is synthesized locally, with no recorded samples. Warm plucked bass alternates
-sparse plucks and quarter-note walking lines, with chromatic approaches into chord changes.
+96 BPM score in `music.js` (80 seconds per loop). A rising F-major keyboard hook
+moves through F, D minor, Bb and C, with higher-register answers and a restrained
+second-chorus variation. Guitar replies stay short; each phrase ends with a bar
+of space. Leads stay on the beat, with two small straight eighth-note ornaments.
+
+The piano uses five locally hosted Salamander Grand Piano recordings by Alexander
+Holm (about 301 KiB total), transposed by at most one semitone in this score.
+The author's public-domain declaration, original CC BY 3.0 notice and file hashes
+are recorded in `assets/audio/piano/NOTICE.txt`, also linked from the credits.
+Samples are fetched only after Play, decoded once and aligned to their hammer
+attacks. A five-second loading bound, FM fallback and generation checks preserve
+play/pause/mute behavior when assets fail or playback is cancelled during loading.
+The recordings provide stereo body and natural decay, with a short damping tail.
+
+Guitar, bass, percussion, sound effects and a subtle piano room are synthesized
+locally. The bass keeps its plucked tone and walking rhythm, following the new
+major-key progression.
 A quiet 2:1 swing ride, brushes on beats 2 and 4, soft kick and two-note harmony
 leave space for gameplay sounds. Stages and chains increase drum strength without
 adding melody, arpeggios, octave doubles or delay echoes. First Play also enables effects unless the player explicitly muted them;
@@ -146,7 +150,7 @@ Clicks, matches, blasts, arcs, suction and results have distinct synthesized
 sounds. Chain cues follow the visual timeline and are capped to avoid stacking
 hundreds of voices. A compressor provides headroom; pending cues are cancelled
 on mute, restart, backgrounding or interrupted animation. Background tabs suspend
-audio; closing the player stops music. No external music or samples are used.
+audio; closing the player stops music. No runtime requests to third-party audio hosts are made.
 
 ## Developer administration
 

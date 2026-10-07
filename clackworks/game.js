@@ -666,7 +666,7 @@
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
   }
   function showCredits() {
-    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')}</p><p>${t('creditsMusic')}</p><p>${t('creditsThanks')}</p>`);
+    showDialog('credits', `<div class="modal-symbol">✧</div><h2 id="modal-title">${t('creditsTitle')}</h2><p>${t('creditsCopy')}</p><p>${t('creditsArt')}</p><p>${t('creditsMusic')}</p><p><a href="assets/audio/piano/NOTICE.txt" target="_blank" rel="noopener">${t('creditsPiano')}</a></p><p>${t('creditsThanks')}</p>`);
   }
   function toggleLanguage() {
     if ($('player-id')) playerDraft = $('player-id').value;
@@ -697,7 +697,7 @@
     if (music.playing) music.stop();
     else {
       try {
-        await music.play();
+        if (!await music.play()) return;
         if (readPreference('rain-match-effects') === null) { sound = true; music.setEffects(true); }
       }
       catch (_) { $('music-error').hidden = false; }

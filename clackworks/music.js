@@ -1,51 +1,51 @@
 /* Assembly After Hours — original adaptive score and mechanical sound design.
-   Synthesized locally; no recordings or external samples. Audio is opt-in. */
+   Original score; locally hosted piano samples and synthesized accompaniment. Audio is opt-in. */
 (function (root) {
   'use strict';
   const STEP = 60 / 96 / 4;
-  const CHORDS = [[50,65,69], [46,62,65], [53,60,65], [48,64,67]];
-  const THIRDS = [3, 4, 4, 4];
+  const CHORDS = [[53,65,69], [50,65,69], [46,62,65], [48,64,67]];
+  const THIRDS = [4, 3, 4, 4];
   // A 2:1 eighth-note swing for bass and ride only. Leads use straight timing.
   const SWING = STEP * 2 / 3;
   const LOOP_STEPS = 512;
-  // [sixteenth, MIDI note, duration in steps, touch]. One composed keyboard
-  // theme: repeated anchor, falling third, neighbor-note turn, chord-tone close.
-  // Guitar answers after the completed sentence; the last bar can breathe.
+  const PIANO_SAMPLES = [[66, 'Fs4.mp3'], [69, 'A4.mp3'], [72, 'C5.mp3'], [75, 'Ds5.mp3'], [78, 'Fs5.mp3']];
+  const PIANO_BASE = root.document ? new URL('assets/audio/piano/', root.document.currentScript?.src || root.document.baseURI).href : null;
+  // [sixteenth, MIDI note, duration in steps, touch]. A rising F-major hook,
+  // mostly on quarter-note beats, with small replies and room for the bass.
   const phrase = (keys, guitar) => new Map([
     ...keys.map(([at, ...note]) => [at, ['keys', ...note]]),
     ...guitar.map(([at, ...note]) => [at, ['guitar', ...note]])
   ]);
   const PHRASES = [
-    // Dm: A–A–G–F / E–F–D. The short neighbor turn leads home to D.
-    phrase([[0,69,7.5,.86], [8,69,3.8,.73], [12,67,3.8,.76], [16,65,7.5,.82],
-      [24,64,1.8,.65], [26,65,1.8,.72], [28,62,7.5,.8]],
-      [[40,57,3.5,.64], [44,62,3.5,.7]]),
-    // Bb: same rhythm and contour, landing on the third before a tonic reply.
-    phrase([[0,65,7.5,.84], [8,65,3.8,.72], [12,64,3.8,.7], [16,62,7.5,.82],
-      [24,60,3.8,.67], [28,62,7.5,.78]],
-      [[40,60,3.5,.62], [44,58,3.5,.7]]),
-    // F: the theme opens upward to its only high point, then returns to F.
-    phrase([[0,72,7.5,.88], [8,72,3.8,.75], [12,70,3.8,.76], [16,69,7.5,.84],
-      [24,67,3.8,.7], [28,65,7.5,.8]],
-      [[40,64,3.5,.62], [44,65,3.5,.7]]),
-    // C: a falling answer with a clear C cadence, not an unrelated new riff.
-    phrase([[0,67,7.5,.84], [8,67,3.8,.72], [12,65,3.8,.73], [16,64,7.5,.8],
-      [24,62,3.8,.68], [28,60,7.5,.78]],
-      [[40,59,3.5,.6], [44,60,3.5,.68]]),
-    // Second chorus keeps the hook. Small changes in note length and the final
-    // answer develop it without replacing the melody every four bars.
-    phrase([[0,69,3.8,.85], [4,69,3.8,.72], [8,67,7.5,.78], [16,65,7.5,.82],
-      [24,64,3.8,.66], [28,62,7.5,.79]],
-      [[40,64,3.5,.63], [44,65,3.5,.7]]),
-    phrase([[0,65,7.5,.84], [8,65,3.8,.72], [12,64,3.8,.7], [16,62,7.5,.8],
-      [24,65,3.8,.77], [28,62,7.5,.78]],
-      [[40,60,3.5,.62], [44,58,3.5,.7]]),
-    phrase([[0,72,7.5,.88], [8,72,3.8,.75], [12,70,3.8,.76], [16,69,7.5,.83],
-      [24,67,1.8,.68], [26,69,1.8,.74], [28,65,7.5,.8]],
+    // F: F–G–A opens upward; C answers and the phrase rests on the major third.
+    phrase([[0,65,3.8,.8], [4,67,3.8,.75], [8,69,7.5,.87], [16,72,3.8,.88],
+      [20,69,3.8,.76], [24,67,3.8,.72], [28,69,7.5,.82]],
       [[40,67,3.5,.63], [44,65,3.5,.69]]),
-    phrase([[0,67,3.8,.83], [4,67,3.8,.71], [8,65,7.5,.76], [16,64,7.5,.8],
-      [24,62,3.8,.67], [28,60,7.5,.77]],
-      [[40,59,3.5,.6], [44,60,3.5,.67]])
+    // Dm is a passing color: keep the opening hook and reach up to D5.
+    phrase([[0,65,3.8,.79], [4,67,3.8,.74], [8,69,7.5,.85], [16,74,7.5,.87],
+      [24,72,3.8,.75], [28,69,7.5,.8]],
+      [[40,67,3.5,.62], [44,69,3.5,.68]]),
+    // Bb: the same ascending gesture, a high D rather than a low tonic ending.
+    phrase([[0,65,3.8,.79], [4,67,3.8,.75], [8,70,7.5,.86], [16,74,3.8,.88],
+      [20,72,3.8,.76], [24,70,3.8,.73], [28,74,7.5,.82]],
+      [[40,72,3.5,.62], [44,70,3.5,.68]]),
+    // C: a higher-register turnaround opens space for the next F-major phrase.
+    phrase([[0,67,3.8,.79], [4,69,3.8,.74], [8,72,7.5,.85], [16,71,3.8,.77],
+      [20,67,3.8,.73], [24,69,3.8,.75], [28,67,7.5,.8]],
+      [[40,64,3.5,.61], [44,67,3.5,.68]]),
+    // Second chorus: keep the recognizable opening; brighten the answers.
+    phrase([[0,65,3.8,.8], [4,67,3.8,.75], [8,69,7.5,.87], [16,72,3.8,.86],
+      [20,74,3.8,.89], [24,72,3.8,.76], [28,69,7.5,.82]],
+      [[40,67,3.5,.63], [44,69,3.5,.68]]),
+    phrase([[0,65,3.8,.79], [4,67,3.8,.74], [8,69,7.5,.85], [16,74,7.5,.88],
+      [24,72,1.8,.73], [26,69,1.8,.7], [28,65,7.5,.79]],
+      [[40,67,3.5,.62], [44,69,3.5,.68]]),
+    phrase([[0,65,3.8,.79], [4,67,3.8,.75], [8,70,7.5,.86], [16,74,3.8,.86],
+      [20,77,3.8,.9], [24,74,3.8,.76], [28,70,7.5,.81]],
+      [[40,72,3.5,.62], [44,74,3.5,.68]]),
+    phrase([[0,67,3.8,.79], [4,69,3.8,.74], [8,72,7.5,.85], [16,71,3.8,.77],
+      [20,69,3.8,.75], [24,67,1.8,.7], [26,64,1.8,.67], [28,67,7.5,.8]],
+      [[40,64,3.5,.61], [44,67,3.5,.68]])
   ];
   const hz = note => 440 * 2 ** ((note - 69) / 12);
   class WorkshopMusic {
@@ -54,6 +54,7 @@
       this.playing = false; this.volume = .35; this.effectsVolume = .65; this.step = 0;
       this.voices = new Set(); this.effectVoices = new Set(); this.generation = 0;
       this.scene = .25; this.chainUntil = 0; this.effectsEnabled = false;
+      this.pianoBuffers = new Map(); this.pianoLoad = null;
     }
     ensure() {
       if (this.master) return;
@@ -77,12 +78,47 @@
       this.keysBus.connect(this.keysLowCut); this.keysLowCut.connect(this.master);
       this.keysRoom = ctx.createConvolver(); this.keysRoom.normalize = false;
       this.keysRoom.buffer = this.keysRoomImpulse();
-      this.keysWet = ctx.createGain(); this.keysWet.gain.value = .1;
+      this.keysWet = ctx.createGain(); this.keysWet.gain.value = .04;
       this.keysLowCut.connect(this.keysRoom); this.keysRoom.connect(this.keysWet); this.keysWet.connect(this.master);
       this.guitarBuffers = new Map();
       this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = this.noiseBuffer.getChannelData(0); let seed = 719;
       for (let i = 0; i < data.length; i++) { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; data[i] = (seed >>> 0) / 2147483648 - 1; }
+    }
+    async preparePiano() {
+      this.ensure();
+      if (this.pianoBuffers.size === PIANO_SAMPLES.length) return true;
+      if (!PIANO_BASE || !root.fetch) return false;
+      if (this.pianoLoad) return this.pianoLoad;
+      this.pianoLoad = (async () => {
+        const controller = new AbortController(); let timer;
+        try {
+          const loading = Promise.all(PIANO_SAMPLES.map(async ([note, file]) => {
+            const response = await root.fetch(PIANO_BASE + file, { signal: controller.signal });
+            if (!response.ok) throw new Error('Piano sample unavailable');
+            const buffer = await this.context.decodeAudioData(await response.arrayBuffer());
+            let peak = 0, onset = buffer.length;
+            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+              const samples = buffer.getChannelData(channel);
+              for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+            }
+            if (peak < .001) throw new Error('Piano sample is silent');
+            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+              const samples = buffer.getChannelData(channel);
+              const first = samples.findIndex(sample => Math.abs(sample) > peak * .01);
+              if (first >= 0) onset = Math.min(onset, first);
+            }
+            return [note, { buffer, gain: .8 / peak, offset: Math.max(0, onset / buffer.sampleRate - .003) }];
+          }));
+          const timeout = new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(); reject(new Error('Piano loading timed out')); }, 5000); });
+          // Publish the bank atomically: late/partial downloads never change
+          // timbre mid-phrase. Failed loading uses the existing FM instrument.
+          const samples = await Promise.race([loading, timeout]);
+          this.pianoBuffers = new Map(samples); return true;
+        } catch (_) { controller.abort(); return false; }
+        finally { clearTimeout(timer); this.pianoLoad = null; }
+      })();
+      return this.pianoLoad;
     }
     keysRoomImpulse() {
       const ctx = this.context, rate = ctx.sampleRate;
@@ -109,17 +145,23 @@
       const attack = Math.min(options.attack || .003, length / 3);
       envelope.gain.setValueAtTime(.0001, time);
       envelope.gain.exponentialRampToValueAtTime(Math.max(.0002, strength), time + attack);
-      if (options.keys) {
+      if (options.sampledKeys) {
+        // The recording supplies the hammer and string decay. Only damp the
+        // sample at note-off, so held notes retain their natural resonance.
+        envelope.gain.setValueAtTime(strength, time + length);
+      } else if (options.keys) {
         // A struck tine settles into its body, then damps at note-off. Long
         // notes keep their body instead of becoming either a beep or a click.
         envelope.gain.exponentialRampToValueAtTime(strength * .8, time + Math.min(.16, length * .3));
         envelope.gain.exponentialRampToValueAtTime(strength * .67, time + length * .78);
       } else if (options.hold) envelope.gain.linearRampToValueAtTime(Math.max(.0002, strength * .85), time + Math.min(length * .7, options.hold));
-      envelope.gain.exponentialRampToValueAtTime(.0001, time + length);
+      const end = time + length + (options.sampledKeys ? .12 : 0);
+      envelope.gain.exponentialRampToValueAtTime(.0001, end);
       source.connect(filter); filter.connect(envelope); envelope.connect(options.keys ? this.keysBus : options.effect ? this.effectBus : this.master);
       set.add(source);
       source.onended = () => { source.disconnect(); filter.disconnect(); envelope.disconnect(); set.delete(source); };
-      source.start(time); source.stop(time + length + .025);
+      if (options.offset !== undefined) source.start(time, options.offset); else source.start(time);
+      source.stop(end + .025);
     }
     tone(note, time, length, strength, type = 'triangle', options = {}) {
       const source = this.context.createOscillator(); source.type = type;
@@ -177,6 +219,15 @@
       this.voice(carrier, time, length, .17 * velocity,
         { keys: true, attack: .004, cutoff: 2400 + velocity * 900 });
     }
+    sampledPiano(note, time, length, touch) {
+      const nearest = PIANO_SAMPLES.reduce((best, sample) => Math.abs(sample[0] - note) < Math.abs(best[0] - note) ? sample : best)[0];
+      const sample = this.pianoBuffers.get(nearest);
+      if (!sample) { this.electricPiano(note, time, length, touch); return; }
+      const source = this.context.createBufferSource(); source.buffer = sample.buffer;
+      source.playbackRate.setValueAtTime(2 ** ((note - nearest) / 12), time);
+      this.voice(source, time, length, .3 * touch * sample.gain,
+        { keys: true, sampledKeys: true, offset: sample.offset, attack: .002, cutoff: 3800 + touch * 1800 });
+    }
     melody(instrument, note, time, duration, touch) {
       const length = duration * STEP;
       if (instrument === 'guitar') {
@@ -184,7 +235,7 @@
         this.voice(source, time, length, .23 * touch,
           { attack: .004, hold: length * .65, cutoff: 3200 });
       } else {
-        this.electricPiano(note, time, length, touch);
+        this.sampledPiano(note, time, length, touch);
       }
     }
     renderStep(step, time, energy = this.scene) {
@@ -199,7 +250,7 @@
       // The last note approaches the next chord from a semitone below.
       const bassBeats = phraseBar < 2 ? [0, 6, 12] : [0, 4, 8, 12];
       const bassNotes = phraseBar < 2 ? [rootNote, rootNote + 7, rootNote + (phraseBar ? THIRDS[chordIndex] : 12)]
-        : phraseBar === 2 ? [rootNote, rootNote + THIRDS[chordIndex], rootNote + 7, rootNote + (chordIndex === 1 || chordIndex === 2 ? 11 : 10)]
+        : phraseBar === 2 ? [rootNote, rootNote + THIRDS[chordIndex], rootNote + 7, rootNote + (chordIndex === 0 || chordIndex === 2 ? 11 : 10)]
         : [rootNote + 12, rootNote + 7, rootNote + THIRDS[chordIndex], CHORDS[(chordIndex + 1) % 4][0] - 13];
       const bassIndex = bassBeats.indexOf(beat);
       if (bassIndex !== -1) this.tone(bassNotes[bassIndex], swungTime, STEP * (phraseBar < 2 ? 3.2 : 2.8),
@@ -234,10 +285,14 @@
       const generation = ++this.generation; this.playing = true;
       try {
         this.ensure(); await this.context.resume();
-        if (generation !== this.generation || !this.playing) return;
+        if (generation !== this.generation || !this.playing) return false;
+        await this.preparePiano();
+        if (generation !== this.generation || !this.playing) return false;
+        if (this.context.state !== 'running' || root.document?.hidden) return false;
         this.master.gain.setTargetAtTime(this.volume * .7, this.context.currentTime, .03);
         clearInterval(this.timer); this.next = this.context.currentTime + .04;
         this.schedule(); this.timer = setInterval(() => this.schedule(), 50);
+        return true;
       } catch (error) { if (generation === this.generation) this.stop(); throw error; }
     }
     setScene(stage = 1, boss = false, danger = false) { this.scene = Math.min(.8, .2 + stage * .025 + (boss ? .3 : 0) + (danger ? .12 : 0)); }
