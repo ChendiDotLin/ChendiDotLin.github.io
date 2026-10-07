@@ -20,7 +20,7 @@ function integrity(game) {
 assert.equal(Object.keys(RELICS).length, 16);
 // Lightning guarantee, level-two multi-target discharge, explicit held-target state, one firing per action.
 {
-  const g = fixture({ ukulele: 2 }, 3); g.spark = 2;
+  const g = fixture({ ukulele: 2 }, 3); g.spark = 3;
   const result = match(g, [0,1,2]);
   assert.equal(result.events.filter(e => e.kind === 'ukulele').length, 2); assert.equal(g.lightningReady, false); integrity(g);
   g.lightningReady = true; g.beginBurst();
@@ -61,7 +61,7 @@ assert.equal(Object.keys(RELICS).length, 16);
 // One critical starts Echo; extra recoveries feed Capacitor and Turbine, which bank lightning/energy.
 {
   const g = fixture({ prism: 3, echo: 3, capacitor: 3, turbine: 3, ukulele: 3, blackhole: 1 }, 11);
-  g.random = () => 0; g.spark = 0;
+  g.random = () => 0; g.spark = 3;
   const result = match(g, [0,1,2]);
   for (const kind of ['prism', 'echo', 'capacitor', 'turbine', 'ukulele']) assert.ok(result.events.some(e => e.kind === kind), kind);
   assert.ok(result.events.filter(e => e.kind === 'echo').length <= 3);

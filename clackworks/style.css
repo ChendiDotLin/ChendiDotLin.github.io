@@ -252,6 +252,10 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .fx-layer { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; contain: strict; }
 .fx-layer * { pointer-events: none !important; }
 .fx-surface { z-index: -1; }
+.fx-capacitor-beam { height: 4px; border-block: 1px solid #f3dfff; background: #b187f2; box-shadow: 0 0 9px #c398ff; transform-origin: left center; }
+.fx-fuse-pop { display: grid !important; place-items: center; width: 44px; height: 44px; border: 3px dashed #ffd089; border-radius: 50%; color: #ffe8bd; background: #72532b55; font: 700 19px system-ui; }
+.equipment-role { color: #bde5dc; font-size: 11px; font-style: normal; }
+.equipment-feedback { height: 40px; overflow: auto; margin: 7px 0 0; padding: 5px 8px; border-left: 2px solid #e6c78e; background: #e6c78e0b; color: #e7d2ad; font-size: 10px; line-height: 15px; }
 .fx-layer > i { position: absolute; display: block; pointer-events: none; }
 .fx-loot { display: grid !important; place-items: center; border: 1px solid var(--fx-color); border-radius: 7px; background: #f3e5c7; box-shadow: 0 0 18px #bdb2f15c; }
 .fx-loot img { width: 96%; height: 96%; object-fit: contain; }
@@ -599,6 +603,6 @@ dialog .empty-ranking { padding: 22px 0; text-align: center; font-size: 12px; }
 .proc-log { height: 90px; margin: 20px 4px 0; padding: 9px; overflow: auto; border: 1px solid #91c9cb32; border-radius: 6px; scrollbar-width: thin; overflow-anchor: none; }
 .proc-log-title { display: block; font-weight: 500; color: #c6d9df; }
 .status { height: 30px; overflow: auto; }
-@media (max-width: 360px) {
+@media (max-width: 480px) {
   .relic-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

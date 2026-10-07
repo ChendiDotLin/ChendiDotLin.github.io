@@ -253,13 +253,13 @@
     const rack = document.getElementById('rack').getBoundingClientRect();
     const pending = [];
     const step = events.length > 1 ? Math.min(180, 1600 / (events.length - 1)) : 0;
-    const heavy = events.filter(event => ['behemoth', 'gasoline', 'resin'].includes(event.kind));
+    const heavy = events.filter(event => ['behemoth', 'gasoline'].includes(event.kind));
     const accentEvery = Math.max(1, Math.ceil(heavy.length / 10));
     let impactIndex = 0;
     for (const [index, event] of events.entries()) {
       const delay = index * step;
       // Show the actual recovered cards, including radar and shield follow-ups.
-      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth', 'resin'].includes(event.kind)) {
+      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth'].includes(event.kind)) {
         event.ids.forEach((id, i) => { if (before.has(id)) pending.push(ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay + (['ukulele', 'capacitor'].includes(event.kind) ? 180 + i * 150 : event.kind === 'seeker' ? 450 + i * 100 : ['prism', 'echo', 'recycler'].includes(event.kind) ? 200 + i * 100 : 0))); });
       }
       if (event.kind === 'shield') {
@@ -279,20 +279,33 @@
         event.ids.forEach((id, i) => {
           if (!before.has(id)) return;
           const point = center(before.get(id).rect), dx = point.x - origin.x, dy = point.y - origin.y;
-          const arc = node('fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
+          const arc = node(event.kind === 'capacitor' ? 'fx-capacitor-beam' : 'fx-lightning', origin); arc.style.width = `${Math.hypot(dx, dy)}px`;
           const rotation = `rotate(${Math.atan2(dy, dx)}rad)`;
           pending.push(animate(arc, [{ transform: rotation + ' scaleX(0)', opacity: 0 }, { transform: rotation + ' scaleX(1)', opacity: .9, offset: .25 }, { transform: rotation, opacity: 0 }], { duration: 1000, delay: delay + i * 150, fill: 'backwards' }, true));
           const hit = node('fx-electric-hit', point, '#b4dfff');
           pending.push(animate(hit, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { opacity: 1, offset: .2 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: 0 }], { duration: 650, delay: delay + i * 150 + 160, fill: 'backwards' }, true));
           origin = point;
         });
-      } else if (['gasoline', 'behemoth', 'resin'].includes(event.kind)) {
+      } else if (event.kind === 'resin') {
+        // A marked charge pops only at its three targets; reserve the wide
+        // blast and board kick for the Boiler so the source is recognisable.
+        for (const id of event.ids) {
+          if (!before.has(id)) continue;
+          const ring = node('fx-fuse-pop', center(before.get(id).rect));
+          ring.textContent = '0';
+          pending.push(animate(ring, [
+            { transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 },
+            { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .2 },
+            { transform: 'translate(-50%,-50%) scale(1.7)', opacity: 0 }
+          ], { duration: 800, delay, fill: 'backwards' }, true));
+        }
+      } else if (['gasoline', 'behemoth'].includes(event.kind)) {
         const accented = impactIndex++ % accentEvery === 0;
         event.ids.forEach((id, i) => {
           const from = before.get(id); if (!from) return;
           const stagger = delay + i * 75;
-          pending.push(detonate(from, event.kind === 'resin' ? 'behemoth' : event.kind, stagger, index + i));
-          if (accented) pending.push(impact(center(from.rect), event.kind === 'resin' ? 'behemoth' : event.kind, stagger,
+          pending.push(detonate(from, event.kind, stagger, index + i));
+          if (accented) pending.push(impact(center(from.rect), event.kind, stagger,
             from.rect.width * (event.kind === 'behemoth' ? 2.2 : 1.15), events.length > 12 ? (i ? 0 : 5) : (i ? 3 : 9)));
         });
       } else if (['prism', 'seeker', 'echo', 'recycler'].includes(event.kind)) {

@@ -13,6 +13,9 @@ const assert = require('node:assert/strict');
   await page.locator('[data-reward=ukulele]').click();
   await page.locator('#lightning-status').waitFor(); assert.match(await page.locator('#lightning-status').textContent(),/0\/4/);
   await page.locator('#equipment-catalog').click(); assert.equal(await page.locator('[data-catalog]').count(),16);
+  for (const id of await page.evaluate(() => Object.keys(RainExpedition.RELICS))) {
+    assert.ok((await page.locator(`[data-catalog=${id}] small`).textContent()).includes(await page.evaluate(id => RainI18n.translate('zh', 'role_' + id), id)), id + ' shows its role');
+  }
   await page.waitForFunction(()=>[...document.querySelectorAll('.catalog-item img')].every(img=>img.complete&&img.naturalWidth>0));
   await page.screenshot({path:'/tmp/clackworks-arsenal-catalog.png',fullPage:true});
   await page.locator('[data-catalog=prism]').click(); assert.match(await page.locator('#modal-content').textContent(),/暴击|搭配建议/);
@@ -31,6 +34,8 @@ const assert = require('node:assert/strict');
   await page.waitForFunction(()=>document.querySelector('#board button:enabled'),null,{timeout:7000});
   assert.ok(await page.locator('#proc-log [data-proc=prism]').count());
   assert.ok(await page.locator('#proc-log [data-proc=echo]').count());
+  assert.match(await page.locator('#equipment-feedback').textContent(), /三消暴击.*跟随复写/);
+  assert.match(await page.locator('#proc-log [data-proc=echo]').textContent(), /三消暴击/);
   assert.ok(await page.locator('.fuse-count').count());
   const first=await page.evaluate(()=>RainSave.parse(localStorage.getItem(RainSave.KEY)));
   assert.ok(first);assert.ok(first.game.fuse);assert.ok(first.game.cleared>=9);

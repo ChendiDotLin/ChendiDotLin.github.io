@@ -120,7 +120,7 @@
     rollLightning() {
       if (!this.relics.ukulele || this.lightningReady) return;
       this.spark++;
-      if (this.random() < .2 + .05 * this.relics.ukulele + .05 * (this.relics.clover || 0) || this.spark >= (this.relics.ukulele >= 2 ? 3 : 4)) {
+      if (this.spark >= this.lightningLimit) {
         this.lightningReady = true; this.spark = 0;
       }
     }
@@ -132,6 +132,27 @@
         .sort((a, b) => Number(b.zone === 'rack') - Number(a.zone === 'rack'))).filter(group => group.length >= 3);
       groups.sort((a, b) => b.filter(t => t.zone === 'rack').length - a.filter(t => t.zone === 'rack').length);
       return groups[0]?.slice(0, 3).map(t => t.id) || null;
+    }
+    findProcTarget(kind, depth = 0, type = null) {
+      if (kind === 'seeker' || kind === 'blackhole') {
+        const tile = this.tiles.find(t => t.zone === 'board' &&
+          (kind === 'seeker' || this.blockers(t).length <= depth) &&
+          this.rack.filter(id => this.tiles[id].type === t.type).length === 2);
+        return tile ? [...this.rack.filter(id => this.tiles[id].type === tile.type), tile.id] : null;
+      }
+      if (kind === 'resin') return this.findFuseTarget();
+      if (!['ukulele', 'gasoline', 'behemoth'].includes(kind)) return this.findTriple(depth);
+      // Each offensive item has a recognisable target. Never break a triple's
+      // type balance or borrow tray tiles for a board-clearing effect.
+      const candidates = this.tiles.filter(t => t.zone === 'board' && (kind !== 'gasoline' || t.type === type));
+      const covers = new Map(candidates.map(t => [t.id, this.blockers(t).length]));
+      const eligible = candidates.filter(t => kind === 'gasoline' || covers.get(t.id) <= depth);
+      const groups = core.ITEMS.map((_, type) => eligible.filter(t => t.type === type)
+        .sort((a, b) => kind === 'behemoth' ? covers.get(b.id) - covers.get(a.id) : a.id - b.id)
+        .slice(0, 3)).filter(group => group.length === 3);
+      if (kind === 'behemoth') groups.sort((a, b) =>
+        b.reduce((sum, t) => sum + covers.get(t.id), 0) - a.reduce((sum, t) => sum + covers.get(t.id), 0));
+      return groups[0]?.map(t => t.id) || null;
     }
     clearTriple(ids) {
       if (ids.length !== 3 || new Set(ids).size !== 3 || new Set(ids.map(id => this.tiles[id].type)).size !== 1 ||
@@ -155,12 +176,12 @@
       this.lightningFired = false; this.echoFired = false; this.capacitorFired = false;
       this.burstLeft = this.relics.clover === 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
     }
-    get lightningLimit() { return this.relics.ukulele >= 2 ? 3 : 4; }
-    get lightningDepth() { return this.relics.ukulele === 3 ? 1 : 0; }
-    get lightningTarget() { return this.relics.ukulele && this.lightningReady ? this.findTriple(this.lightningDepth) : null; }
+    get lightningLimit() { return 4; }
+    get lightningDepth() { return 0; }
+    get lightningTarget() { return this.relics.ukulele && this.lightningReady ? this.findProcTarget('ukulele') : null; }
     releaseLightning(events) {
       if (!this.relics.ukulele || !this.lightningReady || this.lightningFired || !this.lightningTarget || this.burstLeft <= 0) return;
-      // Bank any charge supplied by a relay during this discharge for the next action.
+      // One discharge per action; levels increase its number of exposed triples.
       this.lightningReady = false; this.lightningFired = true; this.spark = 0;
       this.pulse(events, 'ukulele', this.relics.ukulele, this.lightningDepth);
     }
@@ -169,8 +190,7 @@
         if (this.fuse.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
         else if (--this.fuse.ticks <= 0) {
           const ids = this.fuse.ids; this.fuse = null;
-          this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'resin', ids }); this.onTriple(events, false, 'resin');
-          if (this.relics.resin === 3) this.comboQueue.push({ kind: 'resin', depth: 2 });
+          this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'resin', ids }); this.onTriple(events, false, 'resin', this.tiles[ids[0]].type, 50);
         }
       }
       if (this.relics.prism && this.random() < .1 + .1 * this.relics.prism + .05 * (this.relics.clover || 0))
@@ -184,7 +204,7 @@
             const target = this.tiles.find(tile => tile.zone === 'board' && this.rack.filter(id => this.tiles[id].type === tile.type).length === 2);
             if (!target) break;
             const ids = [...this.rack.filter(id => this.tiles[id].type === target.type), target.id];
-            this.clearTriple(ids); fired = true; this.burstLeft--; events.push({ kind: 'seeker', ids }); this.onTriple(events, false, 'seeker');
+            this.clearTriple(ids); fired = true; this.burstLeft--; events.push({ kind: 'seeker', ids }); this.onTriple(events, false, 'seeker', target.type, 50);
           }
           if (fired) this.seekerCharge = 0;
         }
@@ -214,16 +234,20 @@
       events.push({ kind: 'sealEnergy', amount: manual ? 2 : 1, ids: [] });
       if (this.bossEnergy >= 3) { this.bossEnergy -= 3; this.reclaim(events); }
     }
-    onTriple(events, manual = false, source = null) {
+    onTriple(events, manual = false, source = null, type = null, depth = 0) {
       this.chargeSeal(events, manual);
       if (!manual && source) {
         if (this.relics.turbine && ++this.turbineCharge >= 3) {
+          const activeBefore = this.charge * this.recharge + this.energy;
+          const grabBefore = this.featherCharge ? this.featherRecharge : this.featherEnergy;
           this.turbineCharge = 0; this.addEnergy(this.relics.turbine);
           if (this.relics.feather && !this.featherCharge) {
             this.featherEnergy += this.relics.turbine;
             if (this.featherEnergy >= this.featherRecharge) { this.featherEnergy = 0; this.featherCharge = 1; }
           }
-          events.push({ kind: 'turbine', ids: [], amount: this.relics.turbine });
+          const amount = this.charge * this.recharge + this.energy - activeBefore +
+            (this.featherCharge ? this.featherRecharge : this.featherEnergy) - grabBefore;
+          if (amount > 0) events.push({ kind: 'turbine', ids: [], amount });
         }
         if (this.relics.capacitor) {
           const limit = 5 - this.relics.capacitor;
@@ -231,24 +255,26 @@
           if (this.capacitorCharge >= limit && !this.capacitorFired) {
             this.capacitorCharge = 0; this.capacitorFired = true;
             this.comboQueue.push({ kind: 'capacitor', depth: 1 });
-            if (this.relics.ukulele) { this.lightningReady = true; this.spark = 0; }
           }
         }
         if (this.relics.echo && !this.echoFired && source !== 'echo' && source !== 'recycler') {
           this.echoFired = true;
-          for (let n = 0; n < this.relics.echo; n++) this.comboQueue.push({ kind: 'echo', depth: this.relics.echo });
+          for (let n = 0; n < this.relics.echo; n++) this.comboQueue.push({ kind: 'echo', targetKind: source, type, depth });
         }
       }
-      if (this.relics.behemoth && ++this.blastCharge >= 5 - this.relics.behemoth) {
-        this.blastCharge = 0;
-        this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
+      if (this.relics.behemoth) {
+        this.blastCharge = Math.min(5 - this.relics.behemoth, this.blastCharge + 1);
+        if (this.blastCharge >= 5 - this.relics.behemoth && this.findProcTarget('behemoth', this.relics.behemoth)) {
+          this.blastCharge = 0;
+          this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
+        }
       }
-      if (this.relics.gasoline && this.random() < .15 + .1 * this.relics.gasoline + .05 * (this.relics.clover || 0))
-        this.comboQueue.push({ kind: 'gasoline', depth: this.relics.gasoline === 3 ? 1 : 0 });
+      if (type !== null && this.relics.gasoline && this.random() < .15 + .1 * this.relics.gasoline + .05 * (this.relics.clover || 0))
+        this.comboQueue.push({ kind: 'gasoline', type, depth: 50 });
     }
     drainBurst(events) {
       while (this.comboQueue.length && this.burstLeft > 0) {
-        const proc = this.comboQueue.shift(); this.pulse(events, proc.kind, 1, proc.depth);
+        const proc = this.comboQueue.shift(); this.pulse(events, proc.kind, 1, proc.depth, proc);
         this.releaseLightning(events);
       }
       this.comboQueue = [];
@@ -259,18 +285,19 @@
         events.push({ kind: 'bossBreak', ids: [] });
       }
     }
-    pulse(events, kind, count, depth = 0) {
+    pulse(events, kind, count, depth = 0, target = {}) {
       if (!this.comboQueue) this.beginBurst();
       let recovered = 0;
       for (let i = 0; i < count && this.burstLeft > 0; i++) {
-        const ids = this.findTriple(depth); if (!ids) break;
-        this.clearTriple(ids); this.burstLeft--; events.push({ kind, ids }); recovered += 3; this.onTriple(events, false, kind);
+        const ids = this.findProcTarget(target.targetKind || kind, depth, target.type); if (!ids) break;
+        this.clearTriple(ids); this.burstLeft--; events.push({ kind, ids, ...(target.targetKind ? { source: target.targetKind } : {}) });
+        recovered += 3; this.onTriple(events, false, kind, this.tiles[ids[0]].type, depth);
         // Fractional Cell recovery cannot pay for the cast that created the chain.
         if (this.relics.cell) this.addEnergy(.25);
       }
       return recovered;
     }
-    resolveCombos(events, { type, jumping = false, scanned = false, skill = false, manual = false } = {}) {
+    resolveCombos(events, { type, jumping = false, scanned = false, manual = false } = {}) {
       if (!this.comboQueue) this.beginBurst();
       const before = this.cleared;
       let retarget = false;
@@ -279,12 +306,10 @@
         this.pulse(events, 'radar', jumping || this.relics.radar === 3 ? 2 : 1);
         if (this.relics.radar === 3) retarget = true;
         else { this.radarUntil = 0; this.radarMark = null; }
-        if (this.relics.ukulele) this.lightningReady = true;
       }
       if (jumping) {
         if (this.relics.feather === 3) this.addEnergy(2);
-        if (this.relics.ukulele) this.lightningReady = true;
-      } else if (skill) this.rollLightning();
+      }
       this.releaseLightning(events);
       this.drainBurst(events);
       if (this.relics.recycler && this.tiles.length - this.cleared <= 6 + 3 * this.relics.recycler) {
@@ -327,7 +352,7 @@
         this.check(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
       }
       if (result.matched) {
-        this.manualMatches++; this.stageMatches++; this.onTriple(events, true); this.addEnergy(1);
+        this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(1);
         if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
         }
@@ -358,17 +383,17 @@
         const tile = this.cubeTargets().find(t => t.id === id); if (!tile) return { ok: false };
         this.charge--; this.previous = null;
         const ids = [...this.rack.filter(n => this.tiles[n].type === tile.type), id];
-        this.clearTriple(ids); events.push({ kind: 'blackhole', ids }); this.onTriple(events, false, 'blackhole');
+        this.clearTriple(ids); events.push({ kind: 'blackhole', ids }); this.onTriple(events, false, 'blackhole', tile.type, this.relics.blackhole);
         if (this.relics.cell) this.addEnergy(.25);
         if (this.relics.blackhole === 3) {
           for (let i = 0; i < 2; i++) {
             const next = this.cubeTargets()[0]; if (!next) break;
             const more = [...this.rack.filter(n => this.tiles[n].type === next.type), next.id];
-            this.clearTriple(more); events.push({ kind: 'blackhole', ids: more }); this.onTriple(events, false, 'blackhole');
+            this.clearTriple(more); events.push({ kind: 'blackhole', ids: more }); this.onTriple(events, false, 'blackhole', next.type, this.relics.blackhole);
             if (this.relics.cell) this.addEnergy(.25);
           }
         }
-        this.resolveCombos(events, { skill: true });
+        this.resolveCombos(events);
       } else {
         this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1);
         this.markRadar(); events.push({ kind: 'radar', ids: [] });

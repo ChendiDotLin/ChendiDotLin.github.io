@@ -116,6 +116,14 @@
         this.noise(time, .075, .14 * strength, 2400, e);
       } else if (kind === 'gasoline') {
         this.noise(time, .26, .22 * strength, 1900, { ...e, q: .6 }); ping(48, .12, .12);
+      } else if (kind === 'fuse') {
+        this.noise(time, .055, .17 * strength, 2600, e); ping(67, .1, .13);
+      } else if (kind === 'press') {
+        this.noise(time, .09, .18 * strength, 850, e); ping(43, .15, .14); ping(55, .055, .08, .1);
+      } else if (kind === 'capacitor') {
+        this.tone(88, time, .16, .12 * strength, 'sine', { ...e, endNote: 57, cutoff: 4500 });
+      } else if (kind === 'echo') {
+        ping(79, .12, .12); ping(79, .16, .06, .15);
       } else if (kind === 'ukulele') {
         this.tone(notes[index % notes.length], time, .19, .13 * strength, 'triangle', { ...e, endNote: 86, cutoff: 3200 });
         this.noise(time, .06, .09 * strength, 3600, { ...e, q: 2 });
@@ -144,7 +152,7 @@
       const stride = Math.max(1, Math.ceil(audible.length / 10));
       audible.filter((_, i) => i % stride === 0).forEach((event, i) => {
         const delay = reducedMotion ? Math.min(i * .045, .3) : event.index * step + (event.kind === 'behemoth' ? .26 : event.kind === 'ukulele' ? .2 : .08);
-        this.sound(({ prism: 'match', seeker: 'blackhole', resin: 'behemoth', turbine: 'radar', capacitor: 'ukulele', echo: 'radar', recycler: 'behemoth' })[event.kind] || event.kind, delay, audible.length > 8 ? .65 : .85, i);
+        this.sound(({ prism: 'match', seeker: 'blackhole', resin: 'fuse', turbine: 'radar', recycler: 'press' })[event.kind] || event.kind, delay, audible.length > 8 ? .65 : .85, i);
       });
     }
     cancelEffects() {

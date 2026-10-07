@@ -492,12 +492,12 @@
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
-  function relicDescription(id, level = game.relics[id] || (RainExpedition.RELICS[id]?.kind === 'active' ? game.ownedRelics()[id] : 1) || 1) {
+  function relicDescription(id, level = game.relics[id] || (RainExpedition.RELICS[id]?.kind === 'active' ? game.ownedRelics()[id] : 1) || 1, details = true) {
     const values = { feather: { n: 9 - level, depth: level === 3 ? 2 : 1 }, shield: { n: 1 },
-      ukulele: { n: 20 + 5 * level + 5 * (game.relics.clover || 0), m: level >= 2 ? 3 : 4, groups: level }, cell: { n: 1 + level, m: 8 - level },
+      ukulele: { m: 4, groups: level }, cell: { n: 1 + level, m: 8 - level },
       blackhole: { n: level }, radar: { n: 3 + level }, gasoline: { n: 15 + 10 * level + 5 * (game.relics.clover || 0) }, behemoth: { n: 5 - level, depth: level }, clover: { n: 5 * level }, prism: { n: 10 + 10 * level + 5 * (game.relics.clover || 0), depth: level },
       seeker: { n: 5 - level, groups: level }, resin: { n: 4 - level }, turbine: { n: level }, capacitor: { n: 5 - level }, echo: { n: level, depth: level }, recycler: { n: 6 + 3 * level } };
-    return t('desc_' + id, values[id]) + (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '');
+    return t('desc_' + id, values[id]) + (details ? (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '') : '');
   }
   function relicIcon(id) {
     const relic = RainExpedition.RELICS[id];
@@ -510,11 +510,28 @@
     if (id === 'resin' && game.fuse) return t('expFuseMeter', { n: game.fuse.ticks });
     if (id === 'turbine') return t('expTurbineMeter', { n: game.turbineCharge });
     if (id === 'capacitor') return t('expCapacitorMeter', { n: game.capacitorCharge, max: 5 - game.relics.capacitor });
+    if (id === 'behemoth') return t('expBoilerMeter', { n: game.blastCharge, max: 5 - game.relics.behemoth });
     if (id === 'recycler') return t('expRecyclerMeter', { n: 6 + 3 * game.relics.recycler });
     return '';
   }
+  function relicBadge(id) {
+    const role = t('role_' + id), level = game.relics[id];
+    if (!level) return role;
+    const counters = {
+      ukulele: game.lightningReady ? t('expReady') : `${game.spark}/4`,
+      behemoth: `${game.blastCharge}/${5 - level}`,
+      seeker: `${game.seekerCharge}/${5 - level}`,
+      resin: game.fuse ? String(game.fuse.ticks) : '',
+      turbine: `${game.turbineCharge}/3`, capacitor: `${game.capacitorCharge}/${5 - level}`,
+      feather: game.featherCharge ? t('expReady') : `${game.featherEnergy}/${game.featherRecharge}`,
+      shield: t(game.shieldSpent ? 'used' : 'expReady')
+    };
+    return role + (counters[id] ? ' · ' + counters[id] : '');
+  }
   function renderProcLog() {
     const log = $('proc-log'); log.replaceChildren();
+    const feedback = $('equipment-feedback');
+    feedback.textContent = t('expFeedbackEmpty'); feedback.removeAttribute('title');
     log.hidden = !isExpedition();
     if (log.hidden) return;
     log.setAttribute('aria-label', t('expProcLog'));
@@ -523,16 +540,20 @@
     }
     const title = document.createElement('strong'); title.className = 'proc-log-title'; title.textContent = t('expProcLog') + ' · ' + t('expProcCount', { n: lastProc.total }); log.append(title);
     const totals = new Map();
-    for (const event of lastProc.events) if (RainExpedition.RELICS[event.kind] && (event.ids.length === 3 || event.kind === 'turbine')) {
-      const value = totals.get(event.kind) || 0; totals.set(event.kind, value + (event.kind === 'turbine' ? event.amount : event.ids.length));
+    for (const event of lastProc.events) if (RainExpedition.RELICS[event.kind]) {
+      const value = totals.get(event.kind) || 0; totals.set(event.kind, value + (event.kind === 'turbine' ? event.amount : event.ids.length === 3 ? 3 : 0));
     }
     for (const [id, n] of totals) {
       const chip = document.createElement('span'); chip.className = 'proc-entry'; chip.dataset.proc = id;
-      chip.textContent = t(id === 'turbine' ? 'expProcEnergy' : 'expProcRecovered', { item: t('relic_' + id), n }); log.append(chip);
+      const copied = id === 'echo' ? [...new Set(lastProc.events.filter(event => event.kind === id && event.source).map(event => t('role_' + event.source)))].join(' / ') : '';
+      const item = t('relic_' + id) + ' · ' + t('role_' + id) + (copied ? ` (${copied})` : '');
+      chip.textContent = n ? t(id === 'turbine' ? 'expProcEnergy' : 'expProcRecovered', { item, n }) : item; log.append(chip);
     }
+    feedback.textContent = [...totals].map(([id, n]) => t('role_' + id) + (n ? id === 'turbine' ? ` +${n}⚡` : ` +${n}` : '')).join(' → ') || t('expFeedbackEmpty');
+    feedback.title = [...totals].map(([id, n]) => t('relic_' + id) + ' · ' + t('role_' + id) + ` +${n}`).join(' → ');
   }
   function showCatalog() {
-    showDialog('catalog', `<h2 id="modal-title">${t('expCatalogTitle')}</h2><p>${t('expCatalogCopy')}</p><div class="equipment-catalog">${Object.keys(RainExpedition.RELICS).map(id => `<button class="catalog-item" data-catalog="${id}">${relicIcon(id)}<span>${t('relic_' + id)}<small>${t('expRarity_' + RainExpedition.RELICS[id].rarity)}</small></span></button>`).join('')}</div><button id="catalog-close" class="secondary-button">${t('expStay')}</button>`);
+    showDialog('catalog', `<h2 id="modal-title">${t('expCatalogTitle')}</h2><p>${t('expCatalogCopy')}</p><div class="equipment-catalog">${Object.keys(RainExpedition.RELICS).map(id => `<button class="catalog-item" data-catalog="${id}">${relicIcon(id)}<span>${t('relic_' + id)}<small>${t('role_' + id)} · ${t('expRarity_' + RainExpedition.RELICS[id].rarity)}</small></span></button>`).join('')}</div><button id="catalog-close" class="secondary-button">${t('expStay')}</button>`);
     $('catalog-close').addEventListener('click', closeDialog);
     $('modal-content').querySelectorAll('[data-catalog]').forEach(button => button.addEventListener('click', () => showRelic(button.dataset.catalog)));
   }
@@ -543,7 +564,7 @@
     selectedRelic = id;
     const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })} · ${t(game.relics[id] ? 'expPartialHint' : 'expSealedHint')}</p>` : '';
     const rarity = RainExpedition.RELICS[id].rarity;
-    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id)}</p><p class="relic-synergy"><b>${t('expSynergy')}</b><br>${t('synergy_' + id)}</p>${(game.relics[id] || 1) < 3 ? `<p class="relic-next"><b>${t('expNextLevel')}</b><br>${relicDescription(id, (game.relics[id] || 1) + 1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
+    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2><p class="equipment-role">${t('role_' + id)}</p>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id)}</p><p class="relic-synergy"><b>${t('expSynergy')}</b><br>${t('synergy_' + id)}</p>${(game.relics[id] || 1) < 3 ? `<p class="relic-next"><b>${t('expNextLevel')}</b><br>${relicDescription(id, (game.relics[id] || 1) + 1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
     $('relic-catalog').addEventListener('click', showCatalog);
     $('relic-close').addEventListener('click', closeDialog);
   }
@@ -574,7 +595,7 @@
       const sealed = Object.hasOwn(game.sealed, id), current = game.relics[id] || 0;
       button.classList.toggle('sealed', sealed && !current); button.classList.toggle('partial', sealed && !!current);
       const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level });
-      button.innerHTML = `${relicIcon(id)}<span class="relic-copy"><span class="relic-name">${t('relic_' + id)}</span><small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small><small class="relic-meter">${id === 'ukulele' && current ? t(game.lightningReady ? 'expLightningMiniReady' : 'expLightningMini', { n: game.spark, max: game.lightningLimit }) : relicMeter(id) || '&nbsp;'}</small></span>`;
+      button.innerHTML = `${relicIcon(id)}<span class="relic-copy"><span class="relic-name">${t('relic_' + id)}</span><small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small><small class="relic-meter">${relicBadge(id)}</small></span>`;
       button.title = t('expRarity_' + button.dataset.rarity) + ' · ' + label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
       button.title += relicMeter(id) ? ' · ' + relicMeter(id) : '';
       button.setAttribute('aria-label', t('relic_' + id) + ' · ' + button.title);
@@ -626,7 +647,7 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[id].rarity)} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)}</b><span>${relicDescription(id, level + 1)} <em class="reward-synergy">${t('synergy_' + id)}</em>${level === 2 && game.evolved && Object.values(game.relics).filter(level => level === 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
+    return `${relicIcon(id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[id].rarity)} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicDescription(id, level + 1, id === 'shield')}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level === 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
   }
   function showExpeditionReward() {
     if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
@@ -684,7 +705,7 @@
     else if (game.pendingReward) showExpeditionReward();
   }
   function finishExpeditionAction(before, events, recoveredCount) {
-    if (events.some(event => RainExpedition.RELICS[event.kind] && (event.ids.length === 3 || event.kind === 'turbine'))) {
+    if (events.some(event => RainExpedition.RELICS[event.kind])) {
       lastProc = { run: runId, stage: game.stage, events, total: recoveredCount }; renderProcLog();
     }
     if (!events.length) { expeditionOutcome(); return; }

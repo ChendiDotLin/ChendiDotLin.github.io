@@ -248,10 +248,10 @@ Open `/clackworks/?mode=expedition`. Classic difficulties keep their own rules.
   reset it. Each emergency power starts with one use; at most two extra refills
   are available across the entire run.
 - Welding Torch procs on each recovered triple, including automatic clears, with a
-  25/35/45% chance to recover another reachable triple. Evolution pierces one
-  blocker. Boiler accumulates all recovered triples and blasts another every
+  25/35/45% chance to burn another board triple of the same type through covers.
+  Boiler accumulates all recovered triples and blasts another every
   4/3/2 triples, through 1/2/3 blockers. Calibrator adds 5/10/15 percentage points to
-  Welding Torch and Arc Coil chances. Evolved Calibrator raises the automatic-clear budget
+  Welding Torch and Focus Prism chances. Evolved Calibrator raises the automatic-clear budget
   to 52 triples per action (otherwise `16 + 2 * equipped item types`).
 - Chains use a bounded queue and only clear real complete triples. Mature builds
   can nearly clear a board; accessible triples and chance still matter. Fractional
@@ -413,55 +413,59 @@ test real joins/leaves, browser deduplication, visibility, mode changes and
 offline recovery. Other browser tests block the Presence socket to avoid
 changing public counts. All leaderboard requests in these tests are mocked.
 
-## Arsenal expansion (16 equipment types)
+## Equipment identities (16 items)
 
-Apply `../scripts/clackworks-arsenal.sql` to the existing Supabase project before
-publishing this client. It only expands the v3 submission function's equipment
-allowlist; existing records, RLS, admin permissions and ranking rules remain.
-Fresh installs can use the updated Boss migration, which has the same allowlist.
-Version 3 checkpoints receive additive defaults for new counters and fuse data,
-including their Undo snapshot. Existing saved offers and gear IDs remain valid.
+Each item has a short role on its loadout chip, reward card and catalog entry.
+The fixed-height feedback strip above the board names the actual effects, with
+full contributions below the tools. Timed charges use local countdown pops;
+Capacitor uses a straight violet beam; only Boiler uses wide blasts and shakes.
+The animation layer remains inert and independent of the real board hit regions.
 
-New passives (all levels 1–3):
-
-| Item | Trigger / effect | Main combination |
+| Item | One main role | Trigger / targeting |
 | --- | --- | --- |
-| Focus Prism, common | Manual match: 20/30/40% critical; one extra triple through 1/2/3 covers. Calibrator adds chance. | Critical → Echo → Boiler |
-| Seeking Paper Rocket, uncommon | Every 4/3/2 manual matches, finish up to 1/2/3 tray pairs through any cover. Holds a ready shot without pairs. | Tray relief → Capacitor |
-| Clockwork Blast Can, common | Mark a buried triple; detonate after 3/2/1 more manual matches. Level 3 adds a second triple through two covers. | Delayed deep-layer opening → Echo |
-| Reflux Turbine, uncommon | Every three gear-cleared triples give 1/2/3 active energy and Grabber recharge progress. Offered only with an active or Grabber. | Lightning → energy → active cast |
-| Afterglow Capacitor, uncommon | Every 4/3/2 gear-cleared triples trigger one piercing triple and bank lightning. Once per action; progress can bank up to one full charge. | Lightning → relay → next lightning |
-| Echo Record, legendary | First gear recovery per action adds up to 1/2/3 triples through 1/2/3 covers. Does not repeat itself or Cleanup Press. | Extends every offensive build |
-| Cleanup Press, uncommon | After a manual match / Vacuum chain, sweep when ≤9/12/15 tiles remain. | Finish buried leftovers |
+| Telescopic Grabber | Reach below | Manually take one covered tile into the tray; recharge with manual triples. |
+| Safety Cushion | Save a life | Reject one overflow pickup per stage. |
+| Arc Coil | Clear exposed faces | Every four manual triples, clear 1/2/3 exposed board triples. No tray tiles or piercing; bank charge if no target. |
+| Power Flywheel | Store active uses | Raise active-item storage and reduce its energy cost. |
+| Welding Torch | Burn the same type | Each cleared triple can ignite another board triple of that exact type, ignoring covers (25/35/45% plus Calibrator). Fire can continue on the same type. |
+| Overload Boiler | Open covered layers | Every 4/3/2 recovered triples, blast a board triple through 1/2/3 covers, prioritizing covered targets. All recoveries count. Holds pressure without a valid target. |
+| Precision Calibrator | Improve chance | Add 5/10/15 percentage points to Prism and Torch chances; never changes fixed counters. |
+| Vortex Vacuum | Manually finish a pair | Select the missing third tile through covers. |
+| Sorting Scanner | Scout and mark | Preview supply piles and mark a type to match for a bounty. |
+| Focus Prism | Critical match | Manual triples have 20/30/40% critical chance (plus Calibrator) to clear one extra triple through 1/2/3 covers. |
+| Seeking Paper Rocket | Automatically finish pairs | Every 4/3/2 manual triples, finish up to 1/2/3 tray pairs through any cover. Hold the shot without a pair. |
+| Clockwork Blast Can | Timed target | Mark three matching tiles; after 3/2/1 further manual triples, detonate only those three through any cover. |
+| Reflux Turbine | Recharge | Every three gear-cleared triples grant 1/2/3 energy to active gear and uncharged Grabber progress. Feedback reports actual restored energy. |
+| Afterglow Capacitor | Chain-powered piercing | Every 4/3/2 gear-cleared triples, clear one extra triple through one cover, at most once per action. It no longer charges Coil. |
+| Echo Record | Follow the source | Follow the first successful clearing item for up to 1/2/3 triples using its targeting rule: Coil stays on exposed faces, Torch stays on the same type, Rocket needs another tray pair. No fallback to arbitrary triples. |
+| Cleanup Press | Finish the board | After a manual match or Vacuum chain, sweep the remaining tiles at ≤9/12/15 tiles. |
 
-Arc Coil keeps its chance plus guaranteed-charge rule. Level 2 now recovers up to
-two groups (levels 1/3 recover one/three). The UI shows progress, held-charge reason,
-reachable targets and per-equipment recovery totals. Discharges originate at the
-Coil chip. Relic details and reward cards show concrete combinations; the bilingual
-catalog lists all sixteen items. Each new effect has its own visual cue.
+Hidden Coil charging from Grabber/Scanner/Vacuum is removed. Its charge counter is
+deterministic at every level; upgrading increases discharge size. Blast Can no
+longer adds an unmarked second explosion at level 3. Synergies remain: Boiler
+opens layers for Coil, recoveries feed Turbine/Capacitor, and Echo inherits source
+targeting. Per-action guards and burst limits remain; mature builds can still
+clear a whole page when targets and triggers line up.
 
-All proc recoveries feed existing Boiler/Torch and new relay/recharge rules.
-Echo, Capacitor and lightning each have a per-action guard, alongside the existing
-burst budget (Cleanup Press reserves at most five final triples). Six passive slots, one active slot, growth gates, and red-slot odds
-(18% before stage 11, 25% thereafter) remain. More red item types share that slot;
-adding items does not increase the chance of a red offer. Boss sealing resets new
-counters and fuses; restoring a level enables only that level's effect. Shuffle
-retargets the fuse to matching tiles without resetting its countdown.
+Equipment IDs, v3 save shape, six passive slots, one active slot, Boss rules and
+leaderboard RPCs remain compatible. Existing saved runs use the current rules
+while retaining their inventory, board, counters and Undo. No new SQL is needed
+for this balance update. New installations still require the arsenal allowlist
+migration (`../scripts/clackworks-arsenal.sql`) or the current Boss migration.
+Red-slot odds remain 18% before stage 11 and 25% thereafter.
 
-Mechanic references, consulted 2026-10-06: RoR2 community documentation on
-[proc coefficients](https://riskofrain2.wiki.gg/wiki/Proc_Coefficient),
-[chain lightning](https://riskofrain2.wiki.gg/wiki/Ukulele), and
-[homing missiles](https://riskofrain2.wiki.gg/wiki/AtG_Missile_Mk._1).
-This adapts trigger-chain ideas to matching triples, with original item identities,
-illustrations and rule implementation; it does not copy those games' assets.
+Design references: the distinct targeting roles of RoR2's
+[Ukulele](https://riskofrain2.wiki.gg/wiki/Ukulele),
+[AtG Missile](https://riskofrain2.wiki.gg/wiki/AtG_Missile_Mk._1), and
+[Sticky Bomb](https://riskofrain2.wiki.gg/wiki/Sticky_Bomb).
+Names, illustrations and matching rules are original adaptations.
 
-Regression checks: `test-clackworks-arsenal.cjs` covers all seven effects, bounded
-synergies, deterministic saves/Undo, fuse Shuffle behavior, Boss transitions and
-random-board play. `test-clackworks-arsenal-browser.cjs` checks the bilingual
-catalog, actual proc feedback, icon loads, animation cleanup, mobile layout and
-resume. Score RPCs and Presence are mocked in browser tests. The PostgreSQL test
-`test-rain-boss-sql.cjs` reruns the standalone migration and checks new submissions,
-duplicate/passive-slot rejection, prior scores, privileges and admin tombstones.
+`test-clackworks-item-identities.cjs` checks concrete targets and trigger counts,
+source-specific echoes and removal of hidden cross-triggers.
+`test-clackworks-arsenal.cjs` covers conservation, bounded synergies, saves, Undo,
+Shuffle and random boards. Browser checks cover bilingual roles, live contribution
+feedback, fixed layout, animation cleanup and input recovery. Scores and Presence
+are mocked during browser tests.
 
 ### Stable in-run layout
 

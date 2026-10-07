@@ -76,6 +76,7 @@ function fixture(game, types, rack = []) {
 // A proc may clear one exposed triple only; Undo restores score, charge and random cursor.
 {
   const game = fresh(); fixture(game, [0,0,0,1,1,1,2,2,2], [0,1]); game.relics.ukulele = 1; game.rngState = 1;
+  game.spark = 3;
   const before = game.snapshot(), result = game.pick(2);
   assert.equal(result.events.filter(e => e.kind === 'ukulele').length, 1);
   assert.equal(game.cleared, 6); assert.equal(game.manualMatches, 1); counts(game);
@@ -132,7 +133,7 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   }
   assert.equal(rewards, 1); assert.ok(game.midRewardTaken);
 }
-// Banked lightning waits for a complete triple; it can clear rack/reserve cards too.
+// Banked lightning waits for a complete exposed board triple.
 {
   const game = fresh(); game.relics.ukulele = 1; game.lightningReady = true;
   fixture(game, [0,0,0,1,1,1]);
@@ -141,16 +142,16 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.tiles.forEach((t, i) => { t.x = i * 90; t.z = 0; });
   game.resolveCombos(events); assert.equal(game.cleared, 3); assert.equal(game.lightningReady, false); counts(game);
 }
-// A marked leap triggers radar follow-ups and lightning; one manual match, finite chain.
+// A marked leap triggers radar follow-ups; it no longer secretly fills lightning.
 {
   const game = fresh(); game.relics = { feather: 1, ukulele: 3, radar: 2, cell: 2 }; game.equipment = 'radar';
   fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6], [0,1]);
   game.tiles[2].x = game.tiles[3].x; game.tiles[3].z = 1;
   game.radarUntil = 10; game.radarMark = 0; game.charge = 0;
   const before = game.snapshot(), result = game.pick(2, true);
-  assert.equal(result.recovered, 18); assert.equal(game.bestChain, 18); assert.equal(game.manualMatches, 1);
+  assert.equal(result.recovered, 9); assert.equal(game.bestChain, 9); assert.equal(game.manualMatches, 1);
   assert.equal(result.events.filter(e => e.kind === 'radar').length, 2);
-  assert.equal(result.events.filter(e => e.kind === 'ukulele').length, 3); assert.equal(game.charge, 0); counts(game);
+  assert.equal(result.events.filter(e => e.kind === 'ukulele').length, 0); assert.equal(game.spark, 1); assert.equal(game.charge, 0); counts(game);
   // Undo must restore the entire chain, including scan and leap state.
   assert.ok(game.use('undo')); assert.equal(game.cleared, before.cleared);
   assert.equal(game.radarMark, before.radarMark); assert.equal(game.featherCharge, before.featherCharge);
@@ -167,6 +168,6 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   const game = fresh(); game.relics = { radar: 3, ukulele: 2 }; game.equipment = 'radar';
   fixture(game, [0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5], [0,1]);
   game.radarUntil = 6; game.radarMark = 0;
-  assert.equal(game.pick(2).recovered, 15); assert.equal(game.radarMark, 5); counts(game);
+  assert.equal(game.pick(2).recovered, 9); assert.equal(game.radarMark, 3); counts(game);
 }
 console.log('PASS: growth gates, stage-based evolution slots, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');

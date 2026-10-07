@@ -50,7 +50,7 @@ for (let n = 1; n <= 60; n++) {
   const gear = { feather: 3, cell: 2, ukulele: 3, gasoline: 2, behemoth: 2, clover: 2, blackhole: 2 };
   const g = boss(gear); g.relics = { ...gear }; g.relics.feather = 1; g.relics.cell = 1;
   g.sealed = { feather: 3, cell: 2 }; g.equipment = 'blackhole'; g.charge = 1; g.featherCharge = 1;
-  g.bossStarted = true; g.rngState = new Expedition(seed(1)).rngState;
+  g.bossStarted = true; g.spark = 3; g.rngState = new Expedition(seed(1)).rngState;
   g.pick(0); g.pick(1); const result = g.pick(2);
   assert.ok(result.recovered >= 30, `burst ${result.recovered}`);
   assert.equal(result.events.filter(e => e.kind === 'sealEnergy').reduce((n,e) => n + e.amount,0), 3);
