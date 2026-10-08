@@ -7,7 +7,7 @@
   const relicIds = new Set(['feather', 'shield', 'ukulele', 'cell', 'blackhole', 'radar', 'gasoline', 'behemoth', 'clover', 'prism', 'seeker', 'resin', 'turbine', 'capacitor', 'echo', 'recycler']);
   function validLoadout(loadout) {
     return Array.isArray(loadout) && loadout.length >= 1 && loadout.length <= 7 &&
-      loadout.every(item => item && relicIds.has(item.id) && Number.isInteger(item.level) && item.level >= 1 && item.level <= 3) &&
+      loadout.every(item => item && relicIds.has(item.id) && Number.isInteger(item.level) && item.level >= 1 && item.level <= 5) &&
       new Set(loadout.map(item => item.id)).size === loadout.length &&
       loadout.filter(item => ['blackhole', 'radar'].includes(item.id)).length <= 1 &&
       loadout.filter(item => !['blackhole', 'radar'].includes(item.id)).length <= 6;

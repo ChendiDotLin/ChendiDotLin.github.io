@@ -22,6 +22,16 @@
     echo: { kind: 'passive', icon: 'module-echo', symbol: '◉', rarity: 'legendary', weight: 45 },
     recycler: { kind: 'passive', icon: 'module-recycler', symbol: '⤓', rarity: 'uncommon', weight: 60 }
   };
+  const FAMILIES = {
+    cats: ['prism', 'behemoth', 'clover', 'blackhole'],
+    dragons: ['ukulele', 'gasoline', 'capacitor', 'resin'],
+    birds: ['feather', 'seeker', 'radar', 'echo'],
+    shells: ['shield', 'cell', 'turbine', 'recycler']
+  };
+  for (const [family, ids] of Object.entries(FAMILIES)) ids.forEach((id, row) => Object.assign(RELICS[id], { family, row }));
+  const rarityAt = level => ['common', 'uncommon', 'rare', 'void', 'legendary'][Math.max(0, Math.min(4, level - 1))];
+  const levelCapAt = stage => stage < 3 ? 1 : stage < 6 ? 2 : stage < 11 ? 3 : stage < 21 ? 4 : 5;
+  const chargeLimit = level => Math.max(2, 5 - level);
   function weightedChoice(pool, random) {
     const weight = id => RELICS[id]?.weight ?? 50;
     let roll = random() * pool.reduce((total, id) => total + weight(id), 0);
@@ -35,7 +45,7 @@
     const layers = Array(Math.min(18, 2 * stage + 2)).fill(6);
     const pileSize = fog ? 18 : stage < 3 ? 6 : stage < 5 ? 9 : 12;
     return { mode: 'rain', layers, pileSize, kinds: Math.min(12, 4 + 2 * stage),
-      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: stage === 10 ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
+      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: [10, 20, 30].includes(stage) ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
   }
   function bankedBefore(stage) {
     let sum = 0;
@@ -48,14 +58,14 @@
       game.rngState = n >>> 0; return game.rngState / 4294967296; };
   }
   const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
-    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge'];
+    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial'];
   const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
-      this.bossEnergy = 0; this.bossStarted = false;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null;
       this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
       this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
       this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
@@ -64,21 +74,25 @@
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
-    get bossActive() { return this.stage === 10 && this.cleared < this.tiles.length; }
+    get bossActive() { return (this.stage === 10 || !!this.trial) && this.cleared < this.tiles.length; }
+    get bossKind() { return this.trial?.kind || 'seal'; }
+    familyCount(family) { return FAMILIES[family].filter(id => this.relics[id]).length; }
+    get armorPhase() { return Math.min(2, Math.floor(this.stageMatches / 3)); }
+    procAllowed(tile) { return !this.trial || this.trial.kind !== 'ward' || !this.trial.types.includes(tile.type) || this.trial.broken.includes(tile.type); }
     get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (RELICS[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
     get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
     get evolutionSlots() { return this.stage < 6 ? 0 : this.stage < 10 ? 2 : 6; }
     ownedRelics() { return { ...this.relics, ...this.sealed }; }
     get recovered() { return this.banked + this.cleared; }
     get totalMoves() { return this.bankedMoves + this.moves; }
-    get capacity() { return 1 + (this.relics.cell || 0); }
+    get capacity() { return 1 + (this.relics.cell || 0) + Number(this.familyCount('shells') >= 2); }
     get recharge() { return 8 - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0); }
-    get featherRecharge() { return 9 - (this.relics.feather || 1); }
+    get featherRecharge() { return 9 - (this.relics.feather || 1) - Number(this.familyCount('birds') >= 4); }
     get radarActive() { return this.radarUntil > this.moves; }
     get rewardTarget() { return this.stage === 1 ? 3 : Math.min(12, 4 + this.stage); }
-    get legendaryChance() { return this.stage >= 11 ? .25 : .18; }
-    get levelCap() { return this.stage < 3 ? 1 : this.stage < 6 ? 2 : 3; }
-    get evolved() { return Object.keys(this.relics).find(id => this.relics[id] === 3) || null; }
+    get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
+    get levelCap() { return levelCapAt(this.stage); }
+    get evolved() { return Object.keys(this.relics).filter(id => this.relics[id] >= 3).sort((a, b) => this.relics[a] - this.relics[b])[0] || null; }
     snapshot() {
       return { ...super.snapshot(), ...JSON.parse(JSON.stringify(Object.fromEntries(PICK_FIELDS.map(key => [key, this[key]])))) };
     }
@@ -86,12 +100,12 @@
       return this.tiles.filter(other => other.zone === 'board' && other.z > tile.z && core.overlap(tile, other));
     }
     featherTargets() {
-      const depth = this.relics.feather === 3 ? 2 : 1;
+      const depth = Math.max(1, (this.relics.feather || 1) - 1);
       return this.relics.feather && this.featherCharge ? this.tiles.filter(t => t.zone === 'board' && this.blockers(t).length >= 1 && this.blockers(t).length <= depth) : [];
     }
     cubeTargets() {
       const pairs = this.rack.map(id => this.tiles[id].type).filter((type, _, all) => all.filter(n => n === type).length === 2);
-      return this.tiles.filter(t => t.zone === 'board' && pairs.includes(t.type) && this.blockers(t).length <= (this.relics.blackhole || 1));
+      return this.tiles.filter(t => this.procAllowed(t) && t.zone === 'board' && pairs.includes(t.type) && this.blockers(t).length <= (this.relics.blackhole || 1));
     }
     previewIds() {
       if (!this.radarActive) return [];
@@ -103,19 +117,19 @@
       const ticks = this.fuse?.ticks, ok = super.use(tool);
       // Shuffle changes types, so retarget the fuse while preserving its countdown.
       if (ok && tool === 'shuffle' && ticks) {
-        const ids = this.findFuseTarget(); this.fuse = ids ? { ids, ticks } : null;
+        const ids = this.findFuseTarget(Math.max(1, this.relics.resin - 2)); this.fuse = ids ? { ids, ticks } : null;
       }
       return ok;
     }
     addEnergy(amount) {
       if (!this.equipment) return;
       if (this.charge === this.capacity) {
-        if (this.relics.cell === 3) this.energy = Math.min(2, this.energy + amount);
+        if (this.relics.cell >= 3) this.energy = Math.min(2, this.energy + amount);
         return;
       }
       this.energy += amount;
       while (this.energy >= this.recharge && this.charge < this.capacity) { this.charge++; this.energy -= this.recharge; }
-      if (this.charge === this.capacity) this.energy = this.relics.cell === 3 ? Math.min(2, this.energy) : 0;
+      if (this.charge === this.capacity) this.energy = this.relics.cell >= 3 ? Math.min(2, this.energy) : 0;
     }
     rollLightning() {
       if (!this.relics.ukulele || this.lightningReady) return;
@@ -126,8 +140,8 @@
     }
     findTriple(depth = 0) {
       // Prefer freeing the tray; a proc no longer silently requires three board-only tiles.
-      const accessible = this.tiles.filter(t => t.zone === 'rack' || t.zone === 'reserve' ||
-        (t.zone === 'board' && this.blockers(t).length <= depth));
+      const accessible = this.tiles.filter(t => this.procAllowed(t) && (t.zone === 'rack' || t.zone === 'reserve' ||
+        (t.zone === 'board' && this.blockers(t).length <= depth)));
       const groups = core.ITEMS.map((_, type) => accessible.filter(t => t.type === type)
         .sort((a, b) => Number(b.zone === 'rack') - Number(a.zone === 'rack'))).filter(group => group.length >= 3);
       groups.sort((a, b) => b.filter(t => t.zone === 'rack').length - a.filter(t => t.zone === 'rack').length);
@@ -135,7 +149,7 @@
     }
     findProcTarget(kind, depth = 0, type = null) {
       if (kind === 'seeker' || kind === 'blackhole') {
-        const tile = this.tiles.find(t => t.zone === 'board' &&
+        const tile = this.tiles.find(t => this.procAllowed(t) && t.zone === 'board' &&
           (kind === 'seeker' || this.blockers(t).length <= depth) &&
           this.rack.filter(id => this.tiles[id].type === t.type).length === 2);
         return tile ? [...this.rack.filter(id => this.tiles[id].type === tile.type), tile.id] : null;
@@ -144,7 +158,7 @@
       if (!['ukulele', 'gasoline', 'behemoth'].includes(kind)) return this.findTriple(depth);
       // Each offensive item has a recognisable target. Never break a triple's
       // type balance or borrow tray tiles for a board-clearing effect.
-      const candidates = this.tiles.filter(t => t.zone === 'board' && (kind !== 'gasoline' || t.type === type));
+      const candidates = this.tiles.filter(t => this.procAllowed(t) && t.zone === 'board' && (kind !== 'gasoline' || t.type === type));
       const covers = new Map(candidates.map(t => [t.id, this.blockers(t).length]));
       const eligible = candidates.filter(t => kind === 'gasoline' || covers.get(t.id) <= depth);
       const groups = core.ITEMS.map((_, type) => eligible.filter(t => t.type === type)
@@ -162,10 +176,10 @@
       this.cleared += 3;
       if (this.fuse?.ids.some(id => ids.includes(id))) this.fuse = null;
     }
-    findFuseTarget() {
+    findFuseTarget(groupsWanted = 1) {
       const covered = new Map(this.tiles.filter(tile => tile.zone !== 'matched').map(tile => [tile.id, tile.zone === 'board' ? this.blockers(tile).length : 0]));
-      const groups = core.ITEMS.map((_, type) => this.tiles.filter(tile => tile.type === type && tile.zone !== 'matched')
-        .sort((a, b) => covered.get(b.id) - covered.get(a.id)).slice(0, 3)).filter(group => group.length === 3);
+      const groups = core.ITEMS.map((_, type) => this.tiles.filter(tile => this.procAllowed(tile) && tile.type === type && tile.zone !== 'matched')
+        .sort((a, b) => covered.get(b.id) - covered.get(a.id))).map(group => group.slice(0, Math.min(groupsWanted, Math.floor(group.length / 3)) * 3)).filter(group => group.length >= 3);
       const depth = group => group.reduce((sum, tile) => sum + covered.get(tile.id), 0);
       groups.sort((a, b) => depth(b) - depth(a));
       return groups[0]?.map(tile => tile.id) || null;
@@ -174,9 +188,10 @@
       this.comboQueue = [];
       this.bossChainAwarded = false;
       this.lightningFired = false; this.echoFired = false; this.capacitorFired = false;
-      this.burstLeft = this.relics.clover === 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
+      this.burstLeft = this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
+      if (this.trial?.kind === 'armor' && this.armorPhase < 2) this.burstLeft = [3, 6][this.armorPhase];
     }
-    get lightningLimit() { return 4; }
+    get lightningLimit() { return this.familyCount('dragons') >= 2 ? 3 : 4; }
     get lightningDepth() { return 0; }
     get lightningTarget() { return this.relics.ukulele && this.lightningReady ? this.findProcTarget('ukulele') : null; }
     releaseLightning(events) {
@@ -189,19 +204,23 @@
       if (this.fuse && this.relics.resin) {
         if (this.fuse.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
         else if (--this.fuse.ticks <= 0) {
-          const ids = this.fuse.ids; this.fuse = null;
-          this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'resin', ids }); this.onTriple(events, false, 'resin', this.tiles[ids[0]].type, 50);
+          const targets = this.fuse.ids; this.fuse = null;
+          for (let i = 0; i < targets.length && this.burstLeft > 0; i += 3) {
+            const ids = targets.slice(i, i + 3);
+            if (ids.some(id => !this.procAllowed(this.tiles[id]))) continue;
+            this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'resin', ids }); this.onTriple(events, false, 'resin', this.tiles[ids[0]].type, 50);
+          }
         }
       }
-      if (this.relics.prism && this.random() < .1 + .1 * this.relics.prism + .05 * (this.relics.clover || 0))
-        this.comboQueue.push({ kind: 'prism', depth: this.relics.prism });
+      if (this.relics.prism && this.random() < .1 + .1 * this.relics.prism + .05 * (this.relics.clover || 0) + (this.familyCount('cats') >= 2 ? .05 : 0))
+        for (let n = 0; n < (this.familyCount('cats') >= 4 ? 2 : 1); n++) this.comboQueue.push({ kind: 'prism', depth: this.relics.prism });
       if (this.relics.seeker) {
-        const limit = 5 - this.relics.seeker;
+        const limit = chargeLimit(this.relics.seeker);
         this.seekerCharge = Math.min(limit, this.seekerCharge + 1);
         if (this.seekerCharge >= limit) {
           let fired = false;
-          for (let n = 0; n < this.relics.seeker; n++) {
-            const target = this.tiles.find(tile => tile.zone === 'board' && this.rack.filter(id => this.tiles[id].type === tile.type).length === 2);
+          for (let n = 0; n < this.relics.seeker && this.burstLeft > 0; n++) {
+            const target = this.tiles.find(tile => this.procAllowed(tile) && tile.zone === 'board' && this.rack.filter(id => this.tiles[id].type === tile.type).length === 2);
             if (!target) break;
             const ids = [...this.rack.filter(id => this.tiles[id].type === target.type), target.id];
             this.clearTriple(ids); fired = true; this.burstLeft--; events.push({ kind: 'seeker', ids }); this.onTriple(events, false, 'seeker', target.type, 50);
@@ -236,8 +255,15 @@
     }
     onTriple(events, manual = false, source = null, type = null, depth = 0) {
       this.chargeSeal(events, manual);
+      if (manual && this.trial?.kind === 'ward' && this.trial.types.includes(type) && !this.trial.broken.includes(type)) {
+        this.trial.broken.push(type); events.push({ kind: 'wardBreak', type, ids: [] });
+      }
+      if (manual && this.trial?.kind === 'armor' && [3, 6].includes(this.stageMatches)) {
+        this.burstLeft = this.armorPhase === 1 ? 6 : this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
+        events.push({ kind: 'armorBreak', phase: this.armorPhase, ids: [] });
+      }
       if (!manual && source) {
-        if (this.relics.turbine && ++this.turbineCharge >= 3) {
+        if (this.relics.turbine && ++this.turbineCharge >= (this.familyCount('shells') >= 4 ? 2 : 3)) {
           const activeBefore = this.charge * this.recharge + this.energy;
           const grabBefore = this.featherCharge ? this.featherRecharge : this.featherEnergy;
           this.turbineCharge = 0; this.addEnergy(this.relics.turbine);
@@ -250,11 +276,11 @@
           if (amount > 0) events.push({ kind: 'turbine', ids: [], amount });
         }
         if (this.relics.capacitor) {
-          const limit = 5 - this.relics.capacitor;
+          const limit = chargeLimit(this.relics.capacitor);
           this.capacitorCharge = Math.min(limit, this.capacitorCharge + 1);
           if (this.capacitorCharge >= limit && !this.capacitorFired) {
             this.capacitorCharge = 0; this.capacitorFired = true;
-            this.comboQueue.push({ kind: 'capacitor', depth: 1 });
+            this.comboQueue.push({ kind: 'capacitor', depth: Math.max(1, this.relics.capacitor - 2) + Number(this.familyCount('dragons') >= 4) });
           }
         }
         if (this.relics.echo && !this.echoFired && source !== 'echo' && source !== 'recycler') {
@@ -263,8 +289,8 @@
         }
       }
       if (this.relics.behemoth) {
-        this.blastCharge = Math.min(5 - this.relics.behemoth, this.blastCharge + 1);
-        if (this.blastCharge >= 5 - this.relics.behemoth && this.findProcTarget('behemoth', this.relics.behemoth)) {
+        this.blastCharge = Math.min(chargeLimit(this.relics.behemoth), this.blastCharge + 1);
+        if (this.blastCharge >= chargeLimit(this.relics.behemoth) && this.findProcTarget('behemoth', this.relics.behemoth)) {
           this.blastCharge = 0;
           this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
         }
@@ -303,25 +329,25 @@
       let retarget = false;
       if (scanned && type === this.radarMark) {
         this.addEnergy(2);
-        this.pulse(events, 'radar', jumping || this.relics.radar === 3 ? 2 : 1);
-        if (this.relics.radar === 3) retarget = true;
+        this.pulse(events, 'radar', jumping || this.relics.radar >= 3 ? 2 : 1);
+        if (this.relics.radar >= 3) retarget = true;
         else { this.radarUntil = 0; this.radarMark = null; }
       }
       if (jumping) {
-        if (this.relics.feather === 3) this.addEnergy(2);
+        if (this.relics.feather >= 3) this.addEnergy(2);
       }
       this.releaseLightning(events);
       this.drainBurst(events);
       if (this.relics.recycler && this.tiles.length - this.cleared <= 6 + 3 * this.relics.recycler) {
         // The finisher promises to sweep the remainder, even after a capped chain.
         // Its separate allowance is bounded by five triples and cannot loop.
-        this.burstLeft = Math.max(this.burstLeft, (this.tiles.length - this.cleared) / 3);
-        this.pulse(events, 'recycler', 5, 50); this.drainBurst(events);
+        if (this.trial?.kind !== 'armor' || this.armorPhase === 2) this.burstLeft = Math.max(this.burstLeft, (this.tiles.length - this.cleared) / 3);
+        this.pulse(events, 'recycler', Math.ceil((6 + 3 * this.relics.recycler) / 3), 50); this.drainBurst(events);
       }
       if (this.fuse?.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
       if (manual && this.relics.resin && !this.fuse) {
-        const ids = this.findFuseTarget();
-        if (ids) this.fuse = { ids, ticks: 4 - this.relics.resin };
+        const ids = this.findFuseTarget(Math.max(1, this.relics.resin - 2));
+        if (ids) this.fuse = { ids, ticks: Math.max(1, 4 - this.relics.resin) };
       }
       // Choose the next bounty after lightning, so it cannot mark a vanished type.
       if (retarget) this.markRadar();
@@ -346,13 +372,13 @@
         Object.assign(this, before); this.shieldSpent = true; this.previous = null;
         events.length = 0; events.push({ kind: 'shield', ids: [id] });
         if (this.relics.shield >= 2) this.addEnergy(2);
-        if (this.relics.shield === 3) this.pulse(events, 'shield', 2);
+        if (this.relics.shield >= 3) this.pulse(events, 'shield', this.relics.shield - 1);
         this.drainBurst(events);
         this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
         this.check(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
       }
       if (result.matched) {
-        this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(1);
+        this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(this.familyCount('birds') >= 2 ? 1.25 : 1);
         if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
         }
@@ -383,19 +409,19 @@
         const tile = this.cubeTargets().find(t => t.id === id); if (!tile) return { ok: false };
         this.charge--; this.previous = null;
         const ids = [...this.rack.filter(n => this.tiles[n].type === tile.type), id];
-        this.clearTriple(ids); events.push({ kind: 'blackhole', ids }); this.onTriple(events, false, 'blackhole', tile.type, this.relics.blackhole);
+        this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'blackhole', ids }); this.onTriple(events, false, 'blackhole', tile.type, this.relics.blackhole);
         if (this.relics.cell) this.addEnergy(.25);
-        if (this.relics.blackhole === 3) {
-          for (let i = 0; i < 2; i++) {
+        if (this.relics.blackhole >= 3) {
+          for (let i = 0; i < 2 && this.burstLeft > 0; i++) {
             const next = this.cubeTargets()[0]; if (!next) break;
             const more = [...this.rack.filter(n => this.tiles[n].type === next.type), next.id];
-            this.clearTriple(more); events.push({ kind: 'blackhole', ids: more }); this.onTriple(events, false, 'blackhole', next.type, this.relics.blackhole);
+            this.clearTriple(more); this.burstLeft--; events.push({ kind: 'blackhole', ids: more }); this.onTriple(events, false, 'blackhole', next.type, this.relics.blackhole);
             if (this.relics.cell) this.addEnergy(.25);
           }
         }
         this.resolveCombos(events);
       } else {
-        this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1);
+        this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1) + (this.familyCount('birds') >= 4 ? 2 : 0);
         this.markRadar(); events.push({ kind: 'radar', ids: [] });
       }
       this.check(); this.bestChain = Math.max(this.bestChain, this.cleared - before);
@@ -407,11 +433,11 @@
       if (this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
       const choices = [];
       // Roll the red slot separately so capped common gear cannot force red drops.
-      // The same rarity roll applies to obtaining and upgrading legendary items.
-      const legendary = pool.filter(id => RELICS[id]?.rarity === 'legendary');
+      // Newly obtained companions are white; only level-four upgrades enter the red slot.
+      const legendary = pool.filter(id => RELICS[id] && (this.relics[id] || 0) === 4);
       if (legendary.length && this.random() < this.legendaryChance) choices.push(weightedChoice(legendary, this.random));
       if (!this.equipment) choices.push('blackhole', 'radar');
-      const ordinary = pool.filter(id => RELICS[id]?.rarity !== 'legendary');
+      const ordinary = pool.filter(id => !RELICS[id] || (this.relics[id] || 0) < 4);
       while (choices.length < 3 && ordinary.some(id => !choices.includes(id))) {
         const available = ordinary.filter(id => !choices.includes(id));
         choices.push(weightedChoice(available, this.random));
@@ -446,7 +472,7 @@
           if (replace === 'ukulele') { this.spark = 0; this.lightningReady = false; }
         }
         const oldLevel = this.relics[id] || 0;
-        if (oldLevel === 2 && Object.values(this.relics).filter(level => level === 3).length >= this.evolutionSlots)
+        if (oldLevel === 2 && Object.values(this.relics).filter(level => level >= 3).length >= this.evolutionSlots)
           this.relics[this.evolved] = 2;
         if (RELICS[id].kind === 'active') {
           const first = !this.equipment;
@@ -456,11 +482,11 @@
           this.radarUntil = 0; this.radarMark = null;
         }
         this.relics[id] = oldLevel + 1;
-        if (id === 'seeker' || id === 'capacitor') this[id + 'Charge'] = Math.min(this[id + 'Charge'], 5 - this.relics[id]);
+        if (id === 'seeker' || id === 'capacitor') this[id + 'Charge'] = Math.min(this[id + 'Charge'], chargeLimit(this.relics[id]));
         if (id === 'feather' && !oldLevel) this.featherCharge = 1;
         // Neither upgrades nor swapping the shield restore its once-per-stage block.
         this.charge = Math.min(this.capacity, this.charge);
-        if (this.charge === this.capacity) this.energy = this.relics.cell === 3 ? Math.min(2, this.energy) : 0;
+        if (this.charge === this.capacity) this.energy = this.relics.cell >= 3 ? Math.min(2, this.energy) : 0;
       }
       this.pendingReward = null; this.previous = null; return true;
     }
@@ -470,7 +496,14 @@
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
-      this.bossEnergy = 0; this.bossStarted = false; this.fuse = null;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.fuse = null;
+      if (this.stage === 20) {
+        const types = [...new Set(this.tiles.map(tile => tile.type))];
+        this.trial = { kind: 'ward', types: types.slice(0, 3), broken: [] };
+        this.midRewardTaken = true;
+      } else if (this.stage === 30) {
+        this.trial = { kind: 'armor', types: [], broken: [] }; this.midRewardTaken = true;
+      }
       if (this.stage === 10) {
         this.sealed = { ...this.relics }; this.relics = {}; this.equipment = null;
         this.charge = 0; this.energy = 0; this.featherCharge = 0; this.featherEnergy = 0;
@@ -505,6 +538,7 @@
     for (const state of [copy, copy.previous].filter(Boolean)) {
       for (const key of ['seekerCharge', 'turbineCharge', 'capacitorCharge']) if (state[key] === undefined) state[key] = 0;
       if (state.fuse === undefined) state.fuse = null;
+      if (state.trial === undefined) state.trial = null;
       if (state.bossEnergy === undefined) state.bossEnergy = 0;
       if (state.bossStarted === undefined) state.bossStarted = copy.stage === 10 && state.stageMatches > 0;
     }
@@ -513,7 +547,7 @@
   function validSeals(data, stage, count) {
     if (!data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics) ||
       !data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed)) return false;
-    if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 3))) return false;
+    if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 5))) return false;
     return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, 3) &&
       stage === 10 && data.cleared < count && (data.relics[id] || 0) < target &&
       !(RELICS[id].kind === 'active' && data.relics[id])) &&
@@ -522,7 +556,7 @@
   function validSnapshot(data, count) {
     if (!data || !Array.isArray(data.tiles) || data.tiles.length !== count || !Array.isArray(data.rack) || !Array.isArray(data.reserve) ||
       data.rack.length > 7 || data.reserve.length > 3 || !integer(data.cleared, 0, count) || !integer(data.moves) ||
-      !integer(data.charge, 0, 4) || !Number.isFinite(data.energy) || data.energy < 0 || data.energy > 12 ||
+      !integer(data.charge, 0, 7) || !Number.isFinite(data.energy) || data.energy < 0 || data.energy > 12 ||
       !integer(data.featherCharge, 0, 1) || !integer(data.featherEnergy, 0, 8) || typeof data.shieldSpent !== 'boolean' ||
       !integer(data.manualMatches) || !integer(data.stageMatches, 0, count / 3) || !integer(data.radarUntil) ||
       !(data.radarMark === null || integer(data.radarMark, 0, core.ITEMS.length - 1)) || !integer(data.spark, 0, 4) ||
@@ -530,7 +564,7 @@
       !integer(data.bossEnergy, 0, 2) || typeof data.bossStarted !== 'boolean' ||
       !integer(data.seekerCharge, 0, 4) || !integer(data.turbineCharge, 0, 2) || !integer(data.capacitorCharge, 0, 4)) return false;
     if (data.fuse !== null && (!data.fuse || !data.relics.resin || !integer(data.fuse.ticks, 1, 3) ||
-      !Array.isArray(data.fuse.ids) || data.fuse.ids.length !== 3 || new Set(data.fuse.ids).size !== 3 ||
+      !Array.isArray(data.fuse.ids) || ![3, 6, 9].includes(data.fuse.ids.length) || new Set(data.fuse.ids).size !== data.fuse.ids.length ||
       data.fuse.ids.some(id => !integer(id, 0, count - 1) || data.tiles[id]?.zone === 'matched') ||
       new Set(data.fuse.ids.map(id => data.tiles[id]?.type)).size !== 1)) return false;
     const ids = [...data.rack, ...data.reserve], counts = Array(core.ITEMS.length).fill(0);
@@ -548,17 +582,27 @@
   function validSave(data) {
     if (!data || data.version !== VERSION || !integer(data.stage, 1, 1000000)) return false;
     const count = stageSpec(data.stage).count;
+    for (const state of [data, data.previous].filter(Boolean)) {
+      if (state.trial !== null && state.trial !== undefined) {
+        const trial = state.trial;
+        if (!trial || !['ward', 'armor'].includes(trial.kind) || data.stage !== (trial.kind === 'ward' ? 20 : 30) ||
+          !Array.isArray(trial.types) || !Array.isArray(trial.broken) ||
+          trial.types.length !== (trial.kind === 'ward' ? 3 : 0) || new Set(trial.types).size !== trial.types.length ||
+          trial.types.some(type => !integer(type, 0, core.ITEMS.length - 1)) ||
+          new Set(trial.broken).size !== trial.broken.length || trial.broken.some(type => !trial.types.includes(type))) return false;
+      }
+    }
     if (!validSnapshot(data, count) || data.banked !== bankedBefore(data.stage) || !integer(data.bankedMoves) ||
       typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
       !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
       !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
     if (!validSeals(data, data.stage, count) || (data.stage !== 10 && (data.bossEnergy || data.bossStarted))) return false;
     const relics = Object.entries({ ...data.relics, ...data.sealed });
-    if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, data.stage < 3 ? 1 : data.stage < 6 ? 2 : 3)) ||
-      relics.filter(([, level]) => level === 3).length > (data.stage < 6 ? 0 : data.stage < 10 ? 2 : 6) || relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
+    if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, levelCapAt(data.stage))) ||
+      relics.filter(([, level]) => level >= 3).length > (data.stage < 6 ? 0 : data.stage < 10 ? 2 : 6) || relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
     const actives = Object.entries(data.relics).filter(([id]) => RELICS[id].kind === 'active');
     if (relics.filter(([id]) => RELICS[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
-    if (data.charge > 1 + (data.relics.cell || 0) || (!data.equipment && (data.charge || data.energy)) ||
+    if (data.charge > 1 + (data.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.relics[id]).length >= 2) || (!data.equipment && (data.charge || data.energy)) ||
       (!data.relics.feather && (data.featherCharge || data.featherEnergy)) || data.manualMatches > (data.banked + data.cleared) / 3 ||
       data.stageMatches > data.cleared / 3 || data.stageMatches > data.manualMatches) return false;
     const status = data.finished ? 'lost' : data.cleared === count ? 'won' : data.rack.length >= 7 ? 'lost' : 'playing';
@@ -570,12 +614,12 @@
       JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
       (data.stage !== 10 && (data.previous.bossEnergy || data.previous.bossStarted)) ||
       (Object.keys(data.previous.relics).find(id => RELICS[id].kind === 'active') || null) !== data.previous.equipment)) return false;
-    if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) ||
+    if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.previous.relics[id]).length >= 2) ||
       (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
       (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave };
+  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

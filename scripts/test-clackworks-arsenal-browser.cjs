@@ -16,12 +16,12 @@ const assert = require('node:assert/strict');
   for (const id of await page.evaluate(() => Object.keys(RainExpedition.RELICS))) {
     assert.ok((await page.locator(`[data-catalog=${id}] small`).textContent()).includes(await page.evaluate(id => RainI18n.translate('zh', 'role_' + id), id)), id + ' shows its role');
   }
-  await page.waitForFunction(()=>[...document.querySelectorAll('.catalog-item img')].every(img=>img.complete&&img.naturalWidth>0));
+  await page.evaluate(()=>Promise.all([...new Set([...document.querySelectorAll('.catalog-item image')].map(img=>img.getAttribute('href')))].map(src=>new Promise((resolve,reject)=>{const img=new Image();img.onload=resolve;img.onerror=reject;img.src=src;}))));
   await page.screenshot({path:'/tmp/clackworks-arsenal-catalog.png',fullPage:true});
   await page.locator('[data-catalog=prism]').click(); assert.match(await page.locator('#modal-content').textContent(),/暴击|搭配建议/);
-  await page.locator('#modal-language').click(); assert.match(await page.locator('#modal-content').textContent(),/Focus Prism/);
-  await page.locator('#relic-catalog').click(); assert.match(await page.locator('#modal-title').textContent(),/Workshop equipment/);
-  await page.locator('#modal-language').click(); assert.match(await page.locator('#modal-title').textContent(),/工坊装备图鉴/);
+  await page.locator('#modal-language').click(); assert.match(await page.locator('#modal-content').textContent(),/Kitten/);
+  await page.locator('#relic-catalog').click(); assert.match(await page.locator('#modal-title').textContent(),/companion families/);
+  await page.locator('#modal-language').click(); assert.match(await page.locator('#modal-title').textContent(),/四族伙伴图鉴/);
   await page.locator('#catalog-close').click();
   await page.evaluate(()=>{
     const g=testGame;g.pendingReward=null;g.midRewardTaken=true;

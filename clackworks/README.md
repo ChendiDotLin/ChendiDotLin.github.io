@@ -22,7 +22,69 @@ The optional shared leaderboard requires the public Supabase configuration below
 - A new round or difficulty change resets all powers. Win totals are stored
   locally when browser storage is available. Sound is optional and off by default.
 
-## Workshop presentation
+## Animal companions and late-game guardians (current)
+
+Equipment now uses four original animal families, sixteen companions and five
+individually drawn forms per companion (80 forms total). Saved item IDs are
+unchanged. `companions.js` owns bilingual names and current descriptions;
+`expedition.js` owns targeting, levels, family bonuses and Boss rules.
+The ordinary match tiles remain workshop parts; the title and URL stay Clackworks.
+
+| Family | Existing IDs | Roles | Family bonuses (distinct equipped species) |
+| --- | --- | --- | --- |
+| Felines | prism, behemoth, clover, blackhole | Critical / covered smash / luck / active pair pull | 2: +5 pp critical chance; 4: critical clears two groups |
+| Dragons | ukulele, gasoline, capacitor, resin | Exposed chain / same-type burn / piercing / marked countdown | 2: lightning charges in 3 matches; 4: capacitor reaches one cover deeper |
+| Birds | feather, seeker, radar, echo | Reach / auto pair / active scout / repeat targets | 2: +0.25 active energy per manual match; 4: Reach recharges one match sooner and Scout lasts two more picks |
+| Shells | shield, cell, turbine, recycler | Overflow guard / energy storage / recharge / finishing sweep | 2: one more active storage slot; 4: Turbine triggers every 2 gear groups |
+
+All family bonuses depend on currently active species, not sealed ownership.
+Each family can actually reach four members within the six-passive/one-active
+limit. Mixing families preserves the original targeting interactions.
+
+White / green / blue / purple / red correspond to levels 1 / 2 / 3 / 4 / 5.
+The caps unlock at stages 1 / 3 / 6 / 11 / 21. The existing two level-3+ slots
+before stage 10 and six afterwards remain; upgrading a seventh companion past
+level 2 warns before downgrading the lowest evolved companion. Level-five
+upgrades use a separate legendary offer roll (25% from stage 21); newly
+obtained species always start at level 1. Unwanted offers can be skipped.
+Level 4/5 cooldown floors prevent zero/negative intervals. Level 4/5 fuse marks
+six/nine tiles of one type; only those marks detonate. Marks remain triple-balanced.
+
+- **Stage 10 — Seal Guardian:** existing gradual equipment-return rules retained.
+- **Stage 20 — Three Wards:** three marked tile types resist all automatic clears.
+  A manual triple of a marked type permanently unlocks that type for the team.
+  Other types remain available to all gear. Clear the whole board to win.
+- **Stage 30 — Armored Dragon:** keep the full build. Bonus clears per action are
+  capped at 3 groups, then 6 after 3 manual triples. At 6 manual triples, armor
+  breaks and the normal chain allowance returns. Clear the whole board to win.
+- All three Boss stages have no mid-stage supply. Stage-clear supply and endless
+  continuation remain available; there is no forced ending at stage 30.
+- New Boss effects use the inert overlay and guarded cleanup lifecycle; the live
+  board is never transformed. Wards/armor have distinct entrance and break effects.
+
+Old v3 checkpoints receive `trial: null` in live and Undo snapshots. A run already
+inside old stage 20/30 is not given new restrictions retroactively. New guardians
+activate when entering their stages. Board counts and score banking are unchanged.
+Stage-10 speed records, failed submission payloads and old leaderboard rows retain
+original IDs/levels. This is an additive rules update on the existing casual board;
+historical results are not directly comparable across balance versions.
+
+**Before publishing**, run `scripts/clackworks-companions.sql` in Supabase SQL
+Editor. It extends the existing submission whitelist to levels 4/5 and preserves
+rows, admins, permissions, deletion tombstones and idempotent retries.
+No reset or secret key is needed.
+
+Artwork: `assets/companions/{cats,dragons,birds,shells}.webp`, original PNGs,
+`prompts.json`, and alpha-derived `atlas.js` view windows. Built-in image_gen made
+the art; WebP encoding preserves composition and transparency. The browser clips
+sprite windows without altering the source pixels. `scripts/build-companion-atlas.cjs`
+rebuilds those windows using Sharp (optional `RAIN_SHARP` module path).
+
+Checks: `test-clackworks-companions.cjs`, `test-clackworks-companions-browser.cjs`,
+`test-rain-boss-sql.cjs` (PGlite), existing save/Boss/arsenal tests, stable layout
+and raw mouse hit testing. Browser networking is mocked to avoid real score writes.
+
+## Workshop presentation (earlier machine edition)
 
 The workshop edition replaces the former third-party item pictures and soundtrack
 with 12 original part icons, sixteen original machine icons and a
@@ -265,7 +327,7 @@ Open `/clackworks/?mode=expedition`. Classic difficulties keep their own rules.
 
 ### Stage-ten Boss: Emergency Lockdown
 
-Only stage 10 is a Boss stage. Entering it seals **all passives and the active
+Stage 10 is the sealing Boss. Entering it seals **all passives and the active
 item**, preserving their original levels. The first manual triple immediately
 returns one passive level (or the whole active item). Later manual triples earn
 2 seal energy; all proc triples in a single action together earn at most 1 extra.
@@ -418,7 +480,7 @@ test real joins/leaves, browser deduplication, visibility, mode changes and
 offline recovery. Other browser tests block the Presence socket to avoid
 changing public counts. All leaderboard requests in these tests are mocked.
 
-## Equipment identities (16 items)
+## Historical machine identities (16 items)
 
 Each item has a short role on its loadout chip, reward card and catalog entry.
 The fixed-height feedback strip above the board names the actual effects, with

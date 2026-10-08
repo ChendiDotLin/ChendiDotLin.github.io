@@ -1,3 +1,27 @@
+# Current companion artwork
+
+Equipment uses the original animal atlases in `companions/`: four families,
+sixteen partners, five forms each. The ordinary match tiles, emergency tools,
+favicon and existing homepage illustration retain the flat workshop objects.
+
+- `cats.webp`: critical tiger, smashing lion, lucky lynx, pair-pulling snow leopard.
+- `dragons.webp`: lightning serpent, fire salamander, piercing viper, timed gecko.
+- `birds.webp`: reaching sparrow, pair-finding swallow, scouting owl, repeating phoenix.
+- `shells.webp`: guarding turtle, storage snail, charging crab, finishing pangolin.
+
+Rows follow those lists; columns are levels 1–5. Original transparent PNGs are
+preserved. `atlas.js` indexes tight alpha bounds; the browser renders each sprite
+through its SVG view window. Production WebP keeps the same pixels/dimensions and
+alpha with compressed color encoding. `prompts.json` records all four built-in
+image_gen prompts and source filenames. The generated cat atlas was the style
+reference for the other three families. No third-party characters were referenced.
+
+Each saved equipment ID keeps its function across the rename. `companions.js`
+provides per-level Chinese/English names; `expedition.js` provides family/row maps.
+Old machine art below remains as design history and for prior screenshots.
+
+---
+
 # Clackworks workshop artwork
 
 The game uses the original faceless flat workshop set: 12 part icons and sixteen

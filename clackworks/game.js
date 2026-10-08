@@ -105,6 +105,7 @@
   function decorateTarget(el, tile) {
     const lightning = lightningMarks.has(tile.id);
     const fused = isExpedition() && game.fuse?.ids.includes(tile.id);
+    el.classList.toggle('ward-mark', isExpedition() && !!game.trial && !game.procAllowed(tile));
     el.classList.toggle('lightning-mark', !!lightning); el.classList.toggle('fuse-mark', !!fused);
     el.querySelector('.fuse-count')?.remove();
     if (fused) { const badge = document.createElement('span'); badge.className = 'fuse-count'; badge.textContent = game.fuse.ticks; badge.title = t('expFuseTile', { n: game.fuse.ticks }); el.append(badge); }
@@ -454,7 +455,7 @@
       if (rankingMode.startsWith('expedition') && entry.stage) {
         const detail = document.createElement('details'); detail.className = 'ranking-build';
         const summary = document.createElement('summary'); summary.textContent = t('expStage', { n: entry.stage });
-        const build = document.createElement('span'); build.textContent = (entry.loadout || []).map(relic => t('relic_' + relic.id) + ' ' + relic.level).join(' · ');
+        const build = document.createElement('span'); build.textContent = (entry.loadout || []).map(relic => relicName(relic.id, relic.level) + ' ' + relic.level).join(' · ');
         detail.append(summary, build);
         row.children[1].append(detail);
       }
@@ -492,25 +493,23 @@
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
-  function relicDescription(id, level = game.relics[id] || (RainExpedition.RELICS[id]?.kind === 'active' ? game.ownedRelics()[id] : 1) || 1, details = true) {
-    const values = { feather: { n: 9 - level, depth: level === 3 ? 2 : 1 }, shield: { n: 1 },
-      ukulele: { m: 4, groups: level }, cell: { n: 1 + level, m: 8 - level },
-      blackhole: { n: level }, radar: { n: 3 + level }, gasoline: { n: 15 + 10 * level + 5 * (game.relics.clover || 0) }, behemoth: { n: 5 - level, depth: level }, clover: { n: 5 * level }, prism: { n: 10 + 10 * level + 5 * (game.relics.clover || 0), depth: level },
-      seeker: { n: 5 - level, groups: level }, resin: { n: 4 - level }, turbine: { n: level }, capacitor: { n: 5 - level }, echo: { n: level, depth: level }, recycler: { n: 6 + 3 * level } };
-    return t('desc_' + id, values[id]) + (details ? (level === 3 ? ' ' + t('evolve_' + id) : id === 'shield' && level === 2 ? ' ' + t('shieldEnergy') : '') : '');
+  function relicName(id, level = game.relics[id] || game.ownedRelics?.()[id] || 1) { return ClackCompanions.name(id, level, language); }
+  function relicDescription(id, level = game.relics[id] || game.ownedRelics()[id] || 1) {
+    return ClackCompanions.description(id, level, game, language);
   }
-  function relicIcon(id) {
-    const relic = RainExpedition.RELICS[id];
-    return `<span class="relic-portrait" data-rarity="${relic.rarity}" aria-hidden="true"><img src="assets/flat/${relic.icon}.webp" alt=""></span>`;
+  function relicIcon(id, level = game.relics[id] || game.ownedRelics?.()[id] || 1) {
+    const relic = RainExpedition.RELICS[id], visibleLevel = Math.max(1, Math.min(5, level));
+    const box = ClackAtlas[relic.family][relic.row][visibleLevel-1];
+    return `<span class="relic-portrait" data-rarity="${RainExpedition.rarityAt(visibleLevel)}" aria-hidden="true"><span class="animal-sprite" data-family="${relic.family}" data-level="${visibleLevel}"><svg viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet"><image href="assets/companions/${relic.family}.webp" width="1402" height="1122"/></svg></span></span>`;
   }
   function relicMeter(id) {
     if (!game.relics[id]) return '';
     if (id === 'ukulele') return t(game.lightningReady ? game.lightningTarget ? 'expLightningTarget' : 'expLightningWait' : 'expLightningCharge', { n: game.spark, max: game.lightningLimit });
-    if (id === 'seeker') return t(game.seekerCharge >= 5 - game.relics.seeker ? 'expSeekerWait' : 'expSeekerMeter', { n: game.seekerCharge, max: 5 - game.relics.seeker });
+    if (id === 'seeker') return t(game.seekerCharge >= RainExpedition.chargeLimit(game.relics.seeker) ? 'expSeekerWait' : 'expSeekerMeter', { n: game.seekerCharge, max: RainExpedition.chargeLimit(game.relics.seeker) });
     if (id === 'resin' && game.fuse) return t('expFuseMeter', { n: game.fuse.ticks });
-    if (id === 'turbine') return t('expTurbineMeter', { n: game.turbineCharge });
-    if (id === 'capacitor') return t('expCapacitorMeter', { n: game.capacitorCharge, max: 5 - game.relics.capacitor });
-    if (id === 'behemoth') return t('expBoilerMeter', { n: game.blastCharge, max: 5 - game.relics.behemoth });
+    if (id === 'turbine') return t('expTurbineMeter', { n: game.turbineCharge, max: game.familyCount('shells') >= 4 ? 2 : 3 });
+    if (id === 'capacitor') return t('expCapacitorMeter', { n: game.capacitorCharge, max: RainExpedition.chargeLimit(game.relics.capacitor) });
+    if (id === 'behemoth') return t('expBoilerMeter', { n: game.blastCharge, max: RainExpedition.chargeLimit(game.relics.behemoth) });
     if (id === 'recycler') return t('expRecyclerMeter', { n: 6 + 3 * game.relics.recycler });
     return '';
   }
@@ -518,11 +517,11 @@
     const role = t('role_' + id), level = game.relics[id];
     if (!level) return role;
     const counters = {
-      ukulele: game.lightningReady ? t('expReady') : `${game.spark}/4`,
-      behemoth: `${game.blastCharge}/${5 - level}`,
-      seeker: `${game.seekerCharge}/${5 - level}`,
+      ukulele: game.lightningReady ? t('expReady') : `${game.spark}/${game.lightningLimit}`,
+      behemoth: `${game.blastCharge}/${RainExpedition.chargeLimit(level)}`,
+      seeker: `${game.seekerCharge}/${RainExpedition.chargeLimit(level)}`,
       resin: game.fuse ? String(game.fuse.ticks) : '',
-      turbine: `${game.turbineCharge}/3`, capacitor: `${game.capacitorCharge}/${5 - level}`,
+      turbine: `${game.turbineCharge}/${game.familyCount('shells') >= 4 ? 2 : 3}`, capacitor: `${game.capacitorCharge}/${RainExpedition.chargeLimit(level)}`,
       feather: game.featherCharge ? t('expReady') : `${game.featherEnergy}/${game.featherRecharge}`,
       shield: t(game.shieldSpent ? 'used' : 'expReady')
     };
@@ -546,25 +545,26 @@
     for (const [id, n] of totals) {
       const chip = document.createElement('span'); chip.className = 'proc-entry'; chip.dataset.proc = id;
       const copied = id === 'echo' ? [...new Set(lastProc.events.filter(event => event.kind === id && event.source).map(event => t('role_' + event.source)))].join(' / ') : '';
-      const item = t('relic_' + id) + ' · ' + t('role_' + id) + (copied ? ` (${copied})` : '');
+      const item = relicName(id) + ' · ' + t('role_' + id) + (copied ? ` (${copied})` : '');
       chip.textContent = n ? t(id === 'turbine' ? 'expProcEnergy' : 'expProcRecovered', { item, n }) : item; log.append(chip);
     }
     feedback.textContent = [...totals].map(([id, n]) => t('role_' + id) + (n ? id === 'turbine' ? ` +${n}⚡` : ` +${n}` : '')).join(' → ') || t('expFeedbackEmpty');
-    feedback.title = [...totals].map(([id, n]) => t('relic_' + id) + ' · ' + t('role_' + id) + ` +${n}`).join(' → ');
+    feedback.title = [...totals].map(([id, n]) => relicName(id) + ' · ' + t('role_' + id) + ` +${n}`).join(' → ');
   }
   function showCatalog() {
-    showDialog('catalog', `<h2 id="modal-title">${t('expCatalogTitle')}</h2><p>${t('expCatalogCopy')}</p><div class="equipment-catalog">${Object.keys(RainExpedition.RELICS).map(id => `<button class="catalog-item" data-catalog="${id}">${relicIcon(id)}<span>${t('relic_' + id)}<small>${t('role_' + id)} · ${t('expRarity_' + RainExpedition.RELICS[id].rarity)}</small></span></button>`).join('')}</div><button id="catalog-close" class="secondary-button">${t('expStay')}</button>`);
+    showDialog('catalog', `<h2 id="modal-title">${t('expCatalogTitle')}</h2><p>${t('expCatalogCopy')}</p>${Object.entries(RainExpedition.FAMILIES).map(([family, ids]) => `<section class="family-catalog"><h3>${ClackCompanions.families[language][family]}</h3><p>${ClackCompanions.bonuses[language][family]}</p><div class="equipment-catalog">${ids.map(id => `<button class="catalog-item" data-catalog="${id}">${relicIcon(id)}<span>${relicName(id)}<small>${t('role_' + id)}</small></span></button>`).join('')}</div></section>`).join('')}<button id="catalog-close" class="secondary-button">${t('expStay')}</button>`);
     $('catalog-close').addEventListener('click', closeDialog);
     $('modal-content').querySelectorAll('[data-catalog]').forEach(button => button.addEventListener('click', () => showRelic(button.dataset.catalog)));
   }
   function loadoutMarkup() {
-    return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${t('relic_' + id)} ${level}`).join(' / ')}</p>`;
+    return `<p class="build-summary">${t('expLoadout')} · ${game.loadout().map(({ id, level }) => `${relicName(id,level)} ${level}`).join(' / ')}</p>`;
   }
   function showRelic(id = selectedRelic) {
     selectedRelic = id;
-    const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })} · ${t(game.relics[id] ? 'expPartialHint' : 'expSealedHint')}</p>` : '';
-    const rarity = RainExpedition.RELICS[id].rarity;
-    showDialog('relic', `<div class="relic-large">${relicIcon(id)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t(RainExpedition.RELICS[id].kind === 'active' ? 'expActive' : 'expPassive')}</p><h2 id="modal-title">${t('relic_' + id)}</h2><p class="equipment-role">${t('role_' + id)}</p>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id)}</p><p class="relic-synergy"><b>${t('expSynergy')}</b><br>${t('synergy_' + id)}</p>${(game.relics[id] || 1) < 3 ? `<p class="relic-next"><b>${t('expNextLevel')}</b><br>${relicDescription(id, (game.relics[id] || 1) + 1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
+    const level = game.relics[id] || game.ownedRelics()[id] || 1, relic = RainExpedition.RELICS[id];
+    const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })}</p>` : '';
+    const rarity = RainExpedition.rarityAt(level);
+    showDialog('relic', `<div class="relic-large">${relicIcon(id, level)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t('expLevel', {n:level})} · ${ClackCompanions.families[language][relic.family]}</p><h2 id="modal-title">${relicName(id, level)}</h2><p class="equipment-role">${t('role_' + id)}</p>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id, level)}</p><p class="relic-synergy">${ClackCompanions.bonuses[language][relic.family]}</p><div class="evolution-strip">${[1,2,3,4,5].map(n => `<div data-rarity="${RainExpedition.rarityAt(n)}">${relicIcon(id,n)}<small>Lv.${n}</small><b>${relicName(id,n)}</b></div>`).join('')}</div>${level < 5 ? `<p class="relic-next"><b>${t('expNextLevel')} · ${relicName(id,level+1)}</b><br>${relicDescription(id,level+1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
     $('relic-catalog').addEventListener('click', showCatalog);
     $('relic-close').addEventListener('click', closeDialog);
   }
@@ -573,7 +573,7 @@
     $('expedition-panel').hidden = !isExpedition();
     if (!isExpedition()) { document.body.classList.remove('boss-run'); $('proc-log').hidden = true; return; }
     const spec = RainExpedition.stageSpec(game.stage);
-    $('expedition-stage').textContent = t('exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
+    $('expedition-stage').textContent = t(game.trial ? game.bossKind === 'ward' ? 'bossWardTitle' : 'bossArmorTitle' : spec.theme === 'boss' && game.stage !== 10 ? 'expStorm' : 'exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
     captureTen();
     $('boss-status').hidden = !game.bossActive;
     const sealedCount = Object.keys(game.sealed).length;
@@ -585,30 +585,41 @@
     [...$('boss-meter').children].forEach((pip, index) => pip.classList.toggle('charged', index < game.bossEnergy));
     $('boss-status').classList.toggle('restored', !sealedCount);
     document.body.classList.toggle('boss-run', game.bossActive);
+    document.body.dataset.boss = game.bossActive ? game.bossKind : '';
+    if (game.trial) {
+      $('boss-status').classList.toggle('restored', game.bossKind === 'ward' ? game.trial.broken.length === 3 : game.armorPhase === 2);
+      $('boss-meter').hidden = true;
+      $('boss-seals').textContent = t(game.bossKind === 'ward' ? 'bossWardStatus' : 'bossArmorStatus', { n: game.bossKind === 'ward' ? game.trial.broken.length : game.armorPhase + 1 });
+      $('boss-energy-label').textContent = game.bossKind === 'ward' ? game.trial.types.map(type => (game.trial.broken.includes(type) ? '✓ ' : '◇ ') + itemName(type)).join(' · ') : t('bossArmorProgress', {n: game.stageMatches, max: 6});
+    }
     $('relic-slots').textContent = t('expSlots', { n: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'passive').length, max: RainExpedition.PASSIVE_SLOTS, evolutions: game.evolutionSlots });
     $('expedition-ten').hidden = !tenRecord; $('expedition-ten').disabled = animating || savePaused;
     $('expedition-ten').textContent = t('expTenButton', { time: formatTime(tenTime || 0, true) });
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
     for (const { id, level } of game.loadout()) {
       const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
-      button.dataset.rarity = RainExpedition.RELICS[id].rarity;
+      button.dataset.rarity = RainExpedition.rarityAt(game.relics[id] || level);
       const sealed = Object.hasOwn(game.sealed, id), current = game.relics[id] || 0;
       button.classList.toggle('sealed', sealed && !current); button.classList.toggle('partial', sealed && !!current);
-      const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : level === 3 ? t('expEvolved') : t('expLevel', { n: level });
-      button.innerHTML = `${relicIcon(id)}<span class="relic-copy"><span class="relic-name">${t('relic_' + id)}</span><small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small><small class="relic-meter">${relicBadge(id)}</small></span>`;
+      const label = sealed ? current ? t('expPartial', { n: current, max: level }) : t('expSealed') : t('expLevel', { n: level });
+      button.innerHTML = `${relicIcon(id)}<span class="relic-copy"><span class="relic-name">${relicName(id)}</span><small>${t('expRarity_' + button.dataset.rarity)} · ${label}</small><small class="relic-meter">${relicBadge(id)}</small></span>`;
       button.title = t('expRarity_' + button.dataset.rarity) + ' · ' + label + ' · ' + (sealed && !current ? t('expSealedHint') : relicDescription(id));
       button.title += relicMeter(id) ? ' · ' + relicMeter(id) : '';
-      button.setAttribute('aria-label', t('relic_' + id) + ' · ' + button.title);
+      button.setAttribute('aria-label', relicName(id) + ' · ' + button.title);
       button.addEventListener('click', () => showRelic(id));
       relicBar.append(button);
     }
     if (!game.loadout().length) relicBar.textContent = t('expNoRelics');
+    $('family-bonuses').innerHTML = Object.entries(RainExpedition.FAMILIES).map(([family]) => {
+      const count = game.familyCount(family);
+      return `<span data-family="${family}" class="family-bonus ${count >= 2 ? 'active' : ''}" title="${ClackCompanions.bonuses[language][family]}">${ClackCompanions.families[language][family].split(' · ')[0]} ${count}/4${count >= 2 ? ' ◆' : ''}${count >= 4 ? ' ◆' : ''}</span>`;
+    }).join('');
     const owned = game.ownedRelics(), ownedActive = Object.keys(owned).find(id => RainExpedition.RELICS[id].kind === 'active');
     $('expedition-feather').hidden = !owned.feather;
     $('expedition-feather').textContent = targeting === 'feather' ? t('expCancel') : `${t('expFeather')} · ${!game.relics.feather ? t('expSealed') : game.featherCharge ? t('expReady') : t('expCharging', { n: game.featherRecharge - game.featherEnergy })}`;
     $('expedition-feather').disabled = animating || finalized || savePaused || !!game.pendingReward || game.status !== 'playing' || !game.featherTargets().length;
     $('expedition-active').hidden = !ownedActive;
-    $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${t('relic_' + ownedActive)} · ${!game.equipment ? t('expSealed') : t('expCharge', { n: game.charge, max: game.capacity })}`;
+    $('expedition-active').textContent = targeting === 'blackhole' ? t('expCancel') : `${relicName(ownedActive)} · ${!game.equipment ? t('expSealed') : t('expCharge', { n: game.charge, max: game.capacity })}`;
     $('expedition-active').disabled = animating || finalized || savePaused || !game.canActivate();
     $('expedition-active').title = game.equipment ? relicDescription(game.equipment) : '';
     const pending = !!game.pendingReward || game.status === 'won';
@@ -626,7 +637,7 @@
 
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
-    if (game.bossActive && !targeting) hint = t(sealedCount ? 'expBossHint' : 'expBossFinish');
+    if (game.bossActive && !targeting) hint = t(game.trial ? game.bossKind === 'ward' ? 'bossWardRule' : 'bossArmorRule' : sealedCount ? 'expBossHint' : 'expBossFinish');
     if (!game.competitive) hint += ' · ' + t('expLegacyRun');
     $('expedition-hint').textContent = hint;
     $('lightning-status').hidden = !owned.ukulele;
@@ -647,7 +658,7 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[id].rarity)} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${t('relic_' + id)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicDescription(id, level + 1, id === 'shield')}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level === 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: t('relic_' + game.evolved) }) : ''}</span></div>`;
+    return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicDescription(id, level + 1, id === 'shield')}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level >= 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: relicName(game.evolved) }) : ''}</span></div>`;
   }
   function rewardSkipMarkup() {
     return game.canSkipReward ? `<button class="secondary-button" id="reward-skip">${t('expSkipReward')}</button><p class="input-hint">${t('expSkipRewardCopy')}</p>` : '';
@@ -662,7 +673,7 @@
     if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
     targeting = null;
     const first = !game.loadout().length;
-    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed, evolutions: game.evolutionSlots })}<br>${t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id]?.rarity || 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed, evolutions: game.evolutionSlots })}<br>${game.levelCap < 5 ? t('expMythicGate') : t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id] ? RainExpedition.rarityAt((game.relics[id] || 0) + 1) : 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
@@ -674,7 +685,7 @@
   function showReplacement(id) {
     replacementItem = id;
     const passives = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === 'passive');
-    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.RELICS[relic.id].rarity}">${relicIcon(relic.id)}<div><small>${t('expRarity_' + RainExpedition.RELICS[relic.id].rarity)}</small><b>${t('relic_' + relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${t('relic_' + id)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.rarityAt(relic.level)}">${relicIcon(relic.id)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(relic.level))}</small><b>${relicName(relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${relicName(id, 1)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
     $('reward-back').addEventListener('click', showExpeditionReward);
@@ -690,7 +701,7 @@
     if (animate === true) music.sound('win');
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
-    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.stage === 10 ? `<p class="boss-victory">${t('expBossClear')}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${[10,20,30].includes(game.stage) ? `<p class="boss-victory">${t(game.stage === 10 ? 'expBossClear' : game.stage === 20 ? 'bossWardClear' : 'bossArmorClear')}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
     $('stage-ten')?.addEventListener('click', showTenRecord);
     $('stage-extract').addEventListener('click', showExtract);
     $('stage-next').addEventListener('click', () => {
@@ -723,11 +734,11 @@
     }
     if (!events.length) { expeditionOutcome(); return; }
     const chain = recoveredCount ?? events.reduce((sum, event) => sum + (event.ids.length === 3 ? 3 : 0), 0);
-    clearTimeout(comboTimeout); $('combo').textContent = chain >= 6 ? t('expChain', { n: chain }) : t('expFx_' + events[events.length - 1].kind);
+    clearTimeout(comboTimeout); $('combo').textContent = chain >= 6 ? t('expChain', { n: chain }) : (RainExpedition.RELICS[events[events.length - 1].kind] ? relicName(events[events.length - 1].kind) + ' · ' + t('role_' + events[events.length - 1].kind) : t('expFx_' + events[events.length - 1].kind));
     const returned = events.filter(event => event.kind === 'reclaim');
     if (returned.length && chain < 6) {
       const last = returned[returned.length - 1];
-      $('combo').textContent = t('expReclaimed', { item: t('relic_' + last.relic), n: last.level });
+      $('combo').textContent = t('expReclaimed', { item: relicName(last.relic), n: last.level });
     }
     $('combo').classList.add('show'); comboTimeout = setTimeout(() => $('combo').classList.remove('show'), 2700);
     playEffect(() => {
@@ -743,11 +754,14 @@
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
   function showBossIntro() {
-    showDialog('boss', `<div class="boss-emblem" aria-hidden="true"><i></i><i></i><span>◇</span></div><span class="modal-eyebrow">STAGE 10 / EQUIPMENT LOCKDOWN</span><h2 id="modal-title">${t('expBoss')}</h2><p>${t('expBossIntro')}</p><p class="boss-intro-rule">${t('expBossHint')}</p><button class="primary-button" id="boss-start">${t('expBossStart')}</button>`);
+    const kind = game.bossKind, title = kind === 'ward' ? 'bossWardTitle' : kind === 'armor' ? 'bossArmorTitle' : 'expBoss';
+    const rule = kind === 'ward' ? 'bossWardRule' : kind === 'armor' ? 'bossArmorRule' : 'expBossIntro';
+    showDialog('boss', `<div class="boss-emblem" data-boss="${kind}" aria-hidden="true"><i></i><i></i><span>${kind === 'ward' ? '❖' : kind === 'armor' ? '◈' : '◇'}</span></div><span class="modal-eyebrow">STAGE ${game.stage} / GUARDIAN</span><h2 id="modal-title">${t(title)}</h2><p>${t(rule)}</p><button class="primary-button" id="boss-start">${t('bossEnter')}</button>`);
     $('boss-start').addEventListener('click', () => {
-      closeDialog(); playEffect(() => { music.sound('boss'); return fx.bossEntrance(); });
+      closeDialog(); playEffect(() => { music.sound('boss'); return fx.bossEntrance(kind); });
     });
   }
+
   function showTenRecord() {
     if (!tenRecord || savePaused) return;
     showDialog('ten', `<span class="modal-eyebrow">TEN STAGES / RECORD</span><h2 id="modal-title">${t('expTenTitle')}</h2><p class="ten-time">${formatTime(tenTime, true)}</p><p>${t('expTenCopy')}</p>${tenRecord.receipt ? `<p class="save-feedback">${t('expTenSaved', { n: tenRecord.receipt.speedRank || '—' })}</p>` : `<form id="ten-form" novalidate><label for="ten-player">${t('player')}</label><div class="score-input-row"><input id="ten-player" maxlength="20" autocomplete="off" autocapitalize="off"><button class="primary-button" ${tenSubmitting ? 'disabled' : ''}>${t(tenSubmitting ? 'sending' : 'submit')}</button></div><p id="ten-error" class="form-error" role="alert"></p></form>`}<button class="secondary-button" id="ten-continue">${t('expTenContinue')}</button>`);

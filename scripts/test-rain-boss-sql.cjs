@@ -6,7 +6,8 @@ await db.query('insert into auth.users values ($1)',[admin]);await db.exec(readF
 await db.query("select public.rain_submit_expedition($1,'legacy',36,1000,1,'[{\"id\":\"feather\",\"level\":1}]')",[randomUUID()]);
 const migration=readFileSync(join(__dirname,'rain-expedition-boss.sql'),'utf8');await db.exec(migration);await db.exec(migration);
 const arsenal=readFileSync(join(__dirname,'clackworks-arsenal.sql'),'utf8');await db.exec(arsenal);await db.exec(arsenal);
-for(const stage of [1,2,5,9,10,11,12,13,40,1000000])assert.equal(Number((await db.query('select rain_private.expedition_banked($1) n',[stage])).rows[0].n),bankedBefore(stage));
+const companions=readFileSync(join(__dirname,'clackworks-companions.sql'),'utf8');await db.exec(companions);await db.exec(companions);
+for(const stage of [1,2,5,9,10,11,12,13,20,30,40,1000000])assert.equal(Number((await db.query('select rain_private.expedition_banked($1) n',[stage])).rows[0].n),bankedBefore(stage));
 await db.exec('set role anon');const list=async board=>(await db.query('select public.rain_expedition_v3_leaderboard($1) r',[board])).rows[0].r;
 const gear=[{id:'feather',level:3},{id:'shield',level:2},{id:'ukulele',level:3},{id:'gasoline',level:3},{id:'behemoth',level:3},{id:'clover',level:3},{id:'radar',level:3}];
 const submit=async(id,stage,completed,time,ten,run=randomUUID(),loadout=gear,cleared=bankedBefore(stage)+Number(stage===completed)*(bankedBefore(stage+1)-bankedBefore(stage)))=>(await db.query('select public.rain_submit_expedition_v3($1,$2,$3,$4,$5,$6,$7,$8) r',[run,id,cleared,time,stage,completed,ten,JSON.stringify(loadout)])).rows[0].r;
@@ -28,4 +29,6 @@ for(const id of ['prism','seeker','resin','turbine','capacitor','echo','recycler
 }
 await assert.rejects(()=>submit('bad',1,0,100,null,randomUUID(),[{id:'prism',level:1},{id:'prism',level:2}],0),/Invalid/);
 await assert.rejects(()=>submit('bad',1,0,100,null,randomUUID(),['prism','seeker','resin','turbine','capacitor','echo','recycler'].map(id=>({id,level:1})),0),/Invalid/);
-console.log('PASS: repeat migration preserves legacy; exact stage bounds; distinct distance/speed bests; ten-stage gating; immutable retries; seven-item loadouts; RLS and scoped admin tombstones.');await db.close();})().catch(e=>{console.error(e);process.exit(1)});
+for(const level of [4,5]) assert.ok((await submit('animal_'+level,31,30,10000,5000,randomUUID(),[{id:'ukulele',level}])).ok);
+await assert.rejects(()=>submit('bad',31,30,10000,5000,randomUUID(),[{id:'ukulele',level:6}]),/Invalid/);
+console.log('PASS: five-level migration; repeat migration preserves legacy; exact stage bounds; distinct distance/speed bests; ten-stage gating; immutable retries; seven-item loadouts; RLS and scoped admin tombstones.');await db.close();})().catch(e=>{console.error(e);process.exit(1)});

@@ -227,9 +227,24 @@
     ], { duration: victory ? 1700 : 1250, delay, fill: 'backwards' }, true));
     return Promise.all(pending);
   }
-  function bossEntrance() {
+  function bossEntrance(kind = 'seal') {
     if (motion.matches) return Promise.resolve();
     const board = document.getElementById('board'), rect = board.getBoundingClientRect(), pending = [];
+    if (kind !== 'seal') {
+      const count = kind === 'ward' ? 3 : 6;
+      for (let i = 0; i < count; i++) {
+        const angle = i / count * Math.PI * 2, radius = rect.width * .32;
+        const point = {x: rect.left + rect.width / 2 + Math.cos(angle) * radius, y: rect.top + rect.height / 2 + Math.sin(angle) * radius};
+        const shard = node(kind === 'ward' ? 'fx-ward-shard' : 'fx-armor-shard', point);
+        pending.push(animate(shard, [
+          {transform: 'translate(-50%,-50%) scale(.2) rotate(-45deg)', opacity: 0},
+          {transform: 'translate(-50%,-50%) scale(1) rotate(0)', opacity: .9, offset: .35},
+          {transform: 'translate(-50%,-50%) scale(1) rotate(0)', opacity: .9, offset: .7},
+          {transform: 'translate(-50%,-50%) scale(1.3) rotate(20deg)', opacity: 0}
+        ], {duration: 1800, delay: i * 70, fill: 'backwards'}, true));
+      }
+      return Promise.all(pending);
+    }
     const seal = node('fx-seal-ring fx-seal-lock', center(rect), '#ddb296');
     seal.style.width = `${rect.width * .7}px`; seal.style.height = `${rect.width * .7}px`;
     pending.push(animate(seal, [
@@ -359,6 +374,17 @@
             { opacity: 1, offset: .15 },
             { transform: `translate(${target.x - origin.x}px,${target.y - origin.y}px) scale(.3)`, opacity: 0 }
           ], { duration: 950, delay: delay + i * 90, fill: 'backwards' }, true));
+        }
+      } else if (event.kind === 'wardBreak' || event.kind === 'armorBreak') {
+        const point = center(board), ward = event.kind === 'wardBreak';
+        for (let i = 0; i < (ward ? 3 : 6); i++) {
+          const shard = node(ward ? 'fx-ward-shard' : 'fx-armor-shard', point);
+          const angle = i / (ward ? 3 : 6) * Math.PI * 2;
+          pending.push(animate(shard, [
+            {transform: 'translate(-50%,-50%) scale(.5)', opacity: 0},
+            {opacity: 1, offset: .2},
+            {transform: `translate(${Math.cos(angle)*160}px,${Math.sin(angle)*160}px) rotate(${i*60}deg) scale(.15)`, opacity: 0}
+          ], {duration: 1250, delay, fill: 'backwards'}, true));
         }
       } else if (event.kind === 'bossBreak') {
         pending.push(sealShatter(center(board), board.width * .7, delay, true));

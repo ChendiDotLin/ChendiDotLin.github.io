@@ -33,17 +33,22 @@ const assert = require('node:assert/strict');
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator('[data-mode=expedition]').click();
     await page.locator('[data-reward=blackhole]').click();
-    await page.evaluate(() => { testGame.rngState = 1; testGame.offerReward(); });
+    await page.evaluate(() => {
+      const g=testGame, b=new RainMatch.Game('rain',Math.random,RainExpedition.stageSpec(21));
+      for(const key of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[key]=b[key];
+      g.stage=21;g.banked=RainExpedition.bankedBefore(21);g.competitive=false;
+      g.relics={behemoth:4,clover:4,echo:4,blackhole:1};g.equipment='blackhole';g.rngState=1;g.offerReward();document.getElementById('board').replaceChildren();
+    });
     await page.locator('#language').click();
     await page.locator('#expedition-continue').click();
     const choice = page.locator('[data-reward][data-rarity=legendary]');
     assert.equal(await choice.count(), 1);
-    assert.match(await choice.locator('small').textContent(), /Legendary/);
-    assert.match(await page.locator('#modal-content').textContent(), /18%/);
+    assert.match(await choice.locator('small').textContent(), /Mythic/);
+    assert.match(await page.locator('#modal-content').textContent(), /25%/);
     const offered = await page.locator('[data-reward]').evaluateAll(buttons => buttons.map(button => button.dataset.reward));
     const red = await choice.getAttribute('data-reward');
     await page.locator('#modal-language').click();
-    assert.match(await choice.locator('small').textContent(), /红装/);
+    assert.match(await choice.locator('small').textContent(), /红色/);
     await page.screenshot({ path: '/tmp/rain-rarity-phone.png', fullPage: true });
     for (const width of [320, 390, 1366]) {
       await page.setViewportSize({ width, height: 900 });
@@ -54,11 +59,11 @@ const assert = require('node:assert/strict');
     await page.locator(`[data-reward="${red}"]`).waitFor();
     assert.deepEqual(await page.locator('[data-reward]').evaluateAll(buttons => buttons.map(button => button.dataset.reward)), offered);
     await page.locator(`[data-reward="${red}"]`).click();
-    assert.equal(await page.evaluate(id => testGame.relics[id], red), 1);
+    assert.equal(await page.evaluate(id => testGame.relics[id], red), 5);
     assert.ok(await page.locator('#board button:enabled').count());
-    // One loadout displays all five rarity frames; levels remain independent.
+    // One loadout displays all five level-dependent rarity frames.
     await page.evaluate(() => {
-      testGame.relics = { gasoline: 1, feather: 1, shield: 1, behemoth: 1, blackhole: 1 };
+      testGame.relics = { gasoline: 1, feather: 2, shield: 3, behemoth: 5, blackhole: 4 };
       testGame.equipment = 'blackhole'; testGame.charge = 1;
     });
     await page.locator('#language').click();
@@ -77,7 +82,7 @@ const assert = require('node:assert/strict');
     await page.locator('[data-relic=behemoth]').click();
     assert.equal(await page.locator('.rarity-badge[data-rarity=legendary]').count(), 1);
     await page.locator('#modal-language').click();
-    assert.match(await page.locator('.rarity-badge').innerText(), /红装|Legendary/);
+    assert.match(await page.locator('.rarity-badge').innerText(), /红色|Mythic/);
     await page.locator('#relic-close').click();
     assert.deepEqual(errors, []);
     console.log('PASS: covered-vs-playable contrast, hidden stacks, bilingual rarity and odds, real legendary selection, stable saved offers, and mobile/desktop layouts.');

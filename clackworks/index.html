@@ -8,18 +8,20 @@
   <title>咔嗒工坊 · Clackworks</title>
   <link rel="canonical" href="https://chendilin.com/clackworks/">
   <link rel="icon" href="assets/flat/favicon-battery.png">
-  <link rel="stylesheet" href="style.css?v=clackworks-item-roles-v1">
+  <link rel="stylesheet" href="style.css?v=animal-companions-v1">
   <script defer src="core.js?v=clackworks-jazz-v1"></script>
-  <script defer src="expedition.js?v=clackworks-skip-supply-v1"></script>
+  <script defer src="expedition.js?v=animal-companions-v1"></script>
   <script defer src="expedition-save.js?v=sealer-levels-v1"></script>
-  <script defer src="i18n.js?v=clackworks-skip-supply-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=animal-companions-v1"></script>
+  <script defer src="companions.js?v=animal-companions-v1"></script>
+  <script defer src="i18n.js?v=animal-companions-v1"></script>
   <script defer src="config.js?v=expedition-v3-boss"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
   <script defer src="presence.js?v=presence-v1"></script>
-  <script defer src="leaderboard.js?v=clackworks-arsenal-v1"></script>
-  <script defer src="effects.js?v=clackworks-item-roles-v1"></script>
+  <script defer src="leaderboard.js?v=animal-companions-v1"></script>
+  <script defer src="effects.js?v=animal-companions-v1"></script>
   <script defer src="music.js?v=clackworks-item-roles-v1"></script>
-  <script defer src="game.js?v=clackworks-skip-supply-v1"></script>
+  <script defer src="game.js?v=animal-companions-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -61,6 +63,7 @@
             </div>
           </div><p id="relic-slots" class="expedition-hint"></p>
           <button id="equipment-catalog" class="text-button equipment-library" data-i18n="expCatalog">装备图鉴 · 16</button>
+          <div id="family-bonuses" class="family-bonuses" aria-label="Companion families"></div>
           <div id="relic-bar" class="relic-bar"></div>
           <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>
           <p id="lightning-status" class="lightning-status" role="status" hidden></p>
