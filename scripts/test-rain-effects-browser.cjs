@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/rest/v1/rpc/*', route => route.fulfill({ json: { entries: [], total: 0 } }));
-    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/');
+    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
     url.searchParams.set('mode', 'rain');
     await page.goto(url.href);
     await page.locator('#board button:enabled').first().waitFor();

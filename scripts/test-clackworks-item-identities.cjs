@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition } = require('../clackworks/expedition.js');
+const { Expedition } = require('../critter-cascade/expedition.js');
 function board(types, relics = {}) {
  const g = new Expedition(() => .8); g.pendingReward = null; g.midRewardTaken = true;
  g.relics = relics; g.tiles = types.map((type, id) => ({ id, type, x: id % 6 * 85, y: Math.floor(id / 6) * 85, z: 0, pile: 'main', zone: 'board' }));

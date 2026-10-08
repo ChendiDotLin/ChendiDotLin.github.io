@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172a32">
+  <meta name="description" content="收集四族动物伙伴，从小动物进化为神兽。层叠三消、伙伴联动、无尽远征与共享排行榜。">
+  <title>Critter Cascade</title>
+  <link rel="canonical" href="https://chendilin.com/critter-cascade/">
+  <link rel="icon" href="assets/tiles/acorn.webp">
+  <link rel="stylesheet" href="style.css?v=critter-cascade-v1">
+  <script defer src="core.js?v=critter-cascade-v1"></script>
+  <script defer src="expedition.js?v=critter-cascade-v1"></script>
+  <script defer src="expedition-save.js?v=critter-cascade-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-cascade-v1"></script>
+  <script defer src="companions.js?v=critter-cascade-v1"></script>
+  <script defer src="i18n.js?v=critter-cascade-v1"></script>
+  <script defer src="config.js?v=critter-cascade-v1"></script>
+  <script defer src="vendor/supabase-2.117.2.js"></script>
+  <script defer src="presence.js?v=critter-cascade-v1"></script>
+  <script defer src="leaderboard.js?v=critter-cascade-v1"></script>
+  <script defer src="effects.js?v=critter-cascade-v1"></script>
+  <script defer src="music.js?v=critter-cascade-v1"></script>
+  <script defer src="game.js?v=critter-cascade-v1"></script>
+</head>
+<body>
+  <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
+  <div class="landscape" aria-hidden="true"><div class="forest-canopy"></div><div class="forest-floor"></div></div>
+  <div class="play-space">
+  <div class="game-shell">
+    <header class="site-header">
+      <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>
+      <a class="brand" href="./" aria-label="Critter Cascade 首页"><span id="brand-name">Critter Cascade</span><small data-i18n="brandSubtitle">层叠三消 · 萌兽连锁</small></a>
+      <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button><button class="icon-button" id="restart" aria-label="重新开局" title="重新开局">↻</button></div>
+    </header>
+    <div class="presence-status" id="presence-status" data-state="connecting" role="status" aria-live="polite"><span class="presence-dot" aria-hidden="true"></span><span id="presence-text">正在连接在线人数…</span></div>
+    <section id="music-panel" class="music-panel" hidden aria-labelledby="music-title">
+      <div class="music-heading"><span id="music-title" data-i18n="musicTitle">George Street Shuffle</span><button id="music-close" class="text-button" data-i18n="musicClose">关闭并停止</button></div>
+      <div id="music-player"><button id="music-toggle" class="text-button" aria-pressed="false" data-i18n="musicPlay">▶ 播放音乐</button><label class="music-volume"><span data-i18n="musicVolume">音乐音量</span><input id="music-volume" type="range" min="0" max="100" value="35"></label></div>
+      <div class="music-actions"><button id="effects" class="text-button" aria-pressed="false">开启音效</button><label class="music-volume"><span data-i18n="effectsVolume">音效音量</span><input id="effects-volume" type="range" min="0" max="100" value="65"></label></div>
+      <p id="music-error" role="status" hidden data-i18n="musicUnavailable"></p>
+    </section>
+    <main class="app-layout">
+      <div class="play-menu">
+      <div class="difficulty-options" role="group" aria-label="游戏难度">
+        <button data-mode="drizzle" aria-pressed="false" title="细雨热身 · 36 张">细雨</button>
+        <button data-mode="rain" aria-pressed="false" title="暴雨挑战 · 108 张">暴雨</button>
+        <button data-mode="monsoon" aria-pressed="false" title="季风试炼 · 144 张">季风</button>
+        <button data-mode="expedition" class="selected" aria-pressed="true">远征</button>
+      </div>
+      <div class="menu-actions"><button id="rankings" class="text-button" data-i18n="rankings">排行榜</button><button id="language" class="language-button" aria-label="Switch to English">EN</button></div>
+      </div>
+      <section id="resume-banner" class="resume-banner" hidden><span id="resume-summary"></span><button id="resume-expedition" class="text-button" data-i18n="saveContinue">继续远征</button></section>
+      <section class="game-panel" aria-label="三消游戏">
+        <div class="game-topbar"><h1 id="mode-title">第 1 关 · 无限远征</h1><div class="run-stats"><span><span id="cleared">0</span><span id="total"> / 36</span></span><span id="timer" aria-label="探索时间">00:00</span></div></div>
+        <div class="progress-track" role="progressbar" aria-label="消除进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress"></div></div>
+        <section id="expedition-panel" class="expedition-panel" hidden aria-label="Expedition">
+          <div class="expedition-heading"><span id="expedition-stage"></span><button id="expedition-extract" class="text-button" data-i18n="expExtract">撤离结算</button></div>
+          <div id="boss-status" class="boss-status" hidden>
+            <span class="boss-sigil" aria-hidden="true">◇</span>
+            <div class="boss-readout"><strong id="boss-seals"></strong><span id="boss-energy-label"></span>
+              <div id="boss-meter" class="boss-meter" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><i></i><i></i><i></i></div>
+            </div>
+          </div><p id="relic-slots" class="expedition-hint"></p>
+          <button id="equipment-catalog" class="text-button equipment-library" data-i18n="expCatalog">装备图鉴 · 16</button>
+          <div id="family-bonuses" class="family-bonuses" aria-label="Companion families"></div>
+          <div id="relic-bar" class="relic-bar"></div>
+          <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>
+          <p id="lightning-status" class="lightning-status" role="status" hidden></p>
+          <div id="radar-preview" class="radar-preview" hidden></div>
+          <p id="expedition-save-status" class="save-status" role="status"></p>
+          <p id="expedition-hint" class="expedition-hint" role="status"></p>
+          <p id="equipment-feedback" class="equipment-feedback" role="status"></p>
+        </section>
+        <div class="board-area">
+          <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
+          <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>
+        </div>
+        <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
+        <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
+        <div class="inventory-area">
+          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><strong id="capacity">0 <span>/ 7</span></strong></div>
+          <div class="rack" id="rack" aria-label="七格背包"></div>
+          <p id="status" class="status" role="status">先找第三张，再捡第一张。</p>
+        </div>
+        <div class="tools">
+          <button class="tool" id="remove" title="将背包前面最多三张移入临时补给区"><span class="tool-icon">⇥</span><b data-i18n="remove">移出三张</b><span class="charge">免费 ×1</span></button>
+          <button class="tool" id="undo" title="撤销上一次拾取及该次产生的消除"><span class="tool-icon">↶</span><b data-i18n="undo">撤回一步</b><span class="charge">免费 ×1</span></button>
+          <button class="tool" id="shuffle" title="打乱主牌区及两侧补给堆的剩余图案"><span class="tool-icon">⤨</span><b data-i18n="shuffle">重新洗牌</b><span class="charge">免费 ×1</span></button>
+        </div>
+        <button id="result-button" class="text-button result-button" data-i18n="result" hidden>本局成绩</button>
+        <div id="proc-log" class="proc-log" hidden tabindex="0"></div>
+        <p class="free-note" data-i18n="freeNote">每局各免费一次 · 重新开局全部恢复</p>
+      </section>
+    </main>
+    <footer><span><a href="/" data-i18n="siteHome">← 主页</a> · <span data-i18n="wins">累计通关</span> <strong id="wins">00</strong></span><span><span data-i18n="fan">小动物，大连锁</span> <button id="credits" data-i18n="credits">素材致谢</button> <a href="admin/" data-i18n="admin">管理</a></span></footer>
+  </div>
+  <aside id="leaderboard-panel" class="leaderboard-panel" aria-labelledby="leaderboard-title" tabindex="-1">
+    <div class="leaderboard-heading"><h2 id="leaderboard-title" data-i18n="rankingTitle">远征排行榜</h2><button id="refresh-rankings" class="text-button"><span aria-hidden="true">↻</span> <span data-i18n="refreshRankings">刷新</span></button></div>
+    <p class="scope-note" data-i18n="rankingScope">全站榜 · 成绩跨设备共享</p>
+    <div id="inline-ranking-tabs" class="ranking-tabs" role="group" aria-label="排行榜模式">
+      <button data-leaderboard-mode="drizzle" data-i18n="drizzle" aria-pressed="false">细雨</button>
+      <button data-leaderboard-mode="rain" data-i18n="rain" aria-pressed="false">暴雨</button>
+      <button data-leaderboard-mode="monsoon" data-i18n="monsoon" aria-pressed="false">季风</button>
+      <button data-leaderboard-mode="expedition" data-i18n="expedition" class="selected" aria-pressed="true">远征</button>
+    </div>
+    <div id="expedition-ranking-tabs" class="ranking-tabs"><button data-exp-board="expedition_distance" data-i18n="expDistance" class="selected" aria-pressed="true">最远关数</button><button data-exp-board="expedition_speed" data-i18n="expSpeed" aria-pressed="false">最快 10 关</button><button data-exp-board="expedition_legacy" data-i18n="expLegacy" aria-pressed="false">旧榜</button></div>
+    <p class="ranking-rules" data-i18n="expDistanceRules">先比已通关数，再比累计回收数，最后比用时。每个 ID 保留最佳纪录，显示前 10 名。</p>
+    <div id="inline-ranking-content" aria-busy="true"><p class="empty-ranking" role="status" data-i18n="loading">正在加载排行榜…</p></div>
+    <p class="ranking-browse-note" data-i18n="rankingBrowseHint">切换榜单不影响当前牌局</p>
+  </aside>
+  </div>
+  <dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-button" id="close-modal" aria-label="关闭弹窗">×</button><button id="modal-language" class="language-button" aria-label="Switch to English">EN</button><div id="modal-content"></div></dialog>
+</body>
+</html>

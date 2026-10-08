@@ -21,7 +21,7 @@
   const t = (key, values = {}) => (words[lang][key] || key).replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
   function inform(key, values) { notice = { key, values }; $('notice').textContent = t(key, values); }
   function localize() {
-    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'; document.title = t('title') + ' · Clackworks';
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'; document.title = t('title') + ' · Critter Cascade';
     document.querySelectorAll('[data-text]').forEach(el => { el.textContent = t(el.dataset.text); });
     $('language').textContent = lang === 'zh' ? 'EN' : '中文';
     if (notice) $('notice').textContent = t(notice.key, notice.values);

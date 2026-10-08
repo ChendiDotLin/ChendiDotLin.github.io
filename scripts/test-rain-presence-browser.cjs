@@ -17,7 +17,7 @@ const assert = require('node:assert/strict');
       if (blockSDK) await ctx.route('**/vendor/supabase-*.js', route => route.abort());
       return ctx;
     }
-    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/'); url.searchParams.delete('mode');
+    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/'); url.searchParams.delete('mode');
     const classic = new URL(url); classic.searchParams.set('mode', 'rain');
     const counts = async (page, total, expedition, timeout = 20000) => {
       try { await page.waitForFunction(([n, e]) => document.querySelector('#presence-status').dataset.state === 'ready' && JSON.stringify(document.querySelector('#presence-text').textContent.match(/\d+/g)?.map(Number)) === JSON.stringify([n, e]), [total, expedition], { timeout }); }

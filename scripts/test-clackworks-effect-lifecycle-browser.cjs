@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
       const response = await route.fetch();
       await route.fulfill({ response, body: await response.text() + '\nconst Base = RainExpedition.Expedition; RainExpedition.Expedition = class extends Base { constructor() { super(); window.testGame = this; } };' });
     });
-    const url = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/';
+    const url = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/';
     const fresh = async () => {
       await page.goto(url);
       if (await page.locator('#resume-new').count()) await page.locator('#resume-new').click();

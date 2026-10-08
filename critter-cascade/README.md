@@ -1,8 +1,8 @@
-# Clackworks
+# Critter Cascade
 
-Standalone, mobile-friendly layered match-three roguelite with an original invention-workshop theme.
+Standalone, mobile-friendly layered match-three roguelite with an original woodland-and-creature theme.
 Open `index.html` directly, or serve this directory from any static web host.
-In this GitHub Pages repository the game lives at `/clackworks/`.
+In this GitHub Pages repository the game lives at `/critter-cascade/`.
 No build step, external JavaScript, ads, or paid actions are required to play.
 The optional shared leaderboard requires the public Supabase configuration below.
 
@@ -28,7 +28,21 @@ Equipment now uses four original animal families, sixteen companions and five
 individually drawn forms per companion (80 forms total). Saved item IDs are
 unchanged. `companions.js` owns bilingual names and current descriptions;
 `expedition.js` owns targeting, levels, family bonuses and Boss rules.
-The ordinary match tiles remain workshop parts; the title and URL stay Clackworks.
+The twelve ordinary match tiles are woodland treasures (food, fruit and natural objects).
+They are deliberately separate from the animal portraits used for companion skills.
+The name is Critter Cascade in both languages; the canonical route is `/critter-cascade/`.
+The `/clackworks/`, `/rain_match/` and `/yang/` routes (including admin) redirect
+directly, preserving query strings and fragments. Local storage keys, tile type order,
+item IDs, RPC names and Presence channel remain unchanged, so old saves and boards
+continue working on the same origin. No new SQL is required for this rename.
+
+`companions.js` exposes `profile()` with a short core effect and explicit rules.
+Reward cards and detail views separate these two fields; tooltips combine them.
+All 16 companions / 5 levels / both languages use the same calculation source.
+Avoid imaginary resource names such as “stored electricity”: the UI explains the
+actual match counter, eligible targets and what happens when none exist.
+Active recharge progress is defined as normally +1 per manual triple.
+See `DESIGN.md` for the RoR2-inspired design roles and deliberate adaptations.
 
 | Family | Existing IDs | Roles | Family bonuses (distinct equipped species) |
 | --- | --- | --- | --- |
@@ -69,8 +83,8 @@ Stage-10 speed records, failed submission payloads and old leaderboard rows reta
 original IDs/levels. This is an additive rules update on the existing casual board;
 historical results are not directly comparable across balance versions.
 
-**Before publishing**, run `scripts/clackworks-companions.sql` in Supabase SQL
-Editor. It extends the existing submission whitelist to levels 4/5 and preserves
+**For a new database installation**, run `scripts/clackworks-companions.sql` in Supabase SQL
+Editor. The live project has already applied it. It extends the existing submission whitelist to levels 4/5 and preserves
 rows, admins, permissions, deletion tombstones and idempotent retries.
 No reset or secret key is needed.
 
@@ -126,7 +140,7 @@ counter, and an Expedition checkpoint with one previous valid backup. Scores are
 4. Fill `supabaseUrl` and `supabasePublishableKey` in `config.js`.
    Use a key beginning with `sb_publishable_`. Never use a Secret key,
    `service_role` key, database password, or connection string in browser code.
-5. Reload `/clackworks/`, finish a round, and submit a test ID. Open the leaderboard
+5. Reload `/critter-cascade/`, finish a round, and submit a test ID. Open the leaderboard
    in another browser to verify that the score is shared.
 
 Without configuration, the game and language switching work normally. The
@@ -214,7 +228,7 @@ host is contacted during gameplay.
 
 ## Developer administration
 
-Open `/clackworks/admin/` (also linked from the game footer). Sign in with your Supabase
+Open `/critter-cascade/admin/` (also linked from the game footer). Sign in with your Supabase
 Auth email and password. The static page uses only the project's publishable key;
 all management RPCs verify `auth.uid()` against a private administrator whitelist.
 Creating another Auth account does not grant management access.
@@ -225,7 +239,7 @@ Creating another Auth account does not grant management access.
    base migration and the supplied developer UUID
    `cf51ed16-ab31-41a7-8134-154688dfca14`. For a different installation, replace
    that UUID with the intended administrator's Auth user ID before running.
-3. Sign in at `/clackworks/admin/`. Inspect mode counts and scores; remove one ID from a
+3. Sign in at `/critter-cascade/admin/`. Inspect mode counts and scores; remove one ID from a
    selected mode, reset one mode, or reset all boards. Each deletion requires typing
    the displayed confirmation. Running the setup script does not delete scores.
 
@@ -282,8 +296,8 @@ an approximately 1.6 s transition: the old board contracts into a portal and the
 new tiles descend into place. Input and the play clock resume after landing;
 repeated restarts cancel the earlier transition. Reduced-motion mode skips it.
 
-The former `/rain_match/`, `/yang/` and their `/admin/` URLs redirect to `/clackworks/` and
-`/clackworks/admin/`, preserving query parameters and fragments when JavaScript
+The former `/rain_match/`, `/yang/` and their `/admin/` URLs redirect to `/critter-cascade/` and
+`/critter-cascade/admin/`, preserving query parameters and fragments when JavaScript
 is enabled. Origin-based preferences and the Supabase leaderboard stay intact.
 
 The leaderboard is displayed directly on the game page: left of the centered
@@ -298,7 +312,7 @@ inside the panel; empty/error states and the panel controls support both languag
 
 ## Expedition (endless roguelike mode, Boss update)
 
-Open `/clackworks/?mode=expedition`. Classic difficulties keep their own rules.
+Open `/critter-cascade/?mode=expedition`. Classic difficulties keep their own rules.
 
 - Carry **six passive types plus one active equipment**. The pool now includes
   Welding Torch, Overload Boiler and Precision Calibrator. A seventh passive requires a

@@ -13,15 +13,15 @@ const assert = require('node:assert/strict');
    const response = await route.fetch();
    await route.fulfill({ response, body: await response.text() + '\nconst BaseMusic = RainMusic; window.RainMusic = class extends BaseMusic { constructor(...args) { super(...args); if (!window.testMix) window.testMix = this; } };' });
   });
-  const origin = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/').origin;
-  await page.goto(origin + '/clackworks/'); await page.locator('[data-reward=feather]').click();
+  const origin = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/').origin;
+  await page.goto(origin + '/critter-cascade/'); await page.locator('[data-reward=feather]').click();
   assert.equal(await page.evaluate(() => testMix.context), null);
   assert.equal(audioRequests.length, 0, 'no recording or retired piano bank loads before Play');
   assert.equal(await page.locator('[data-i18n="musicHint"]').count(), 0);
   await page.locator('#board button:enabled').first().click();
   const saved = await page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY)));
   await page.goto(origin + '/rain_match/?mode=expedition#resume');
-  await page.waitForURL('**/clackworks/?mode=expedition#resume');
+  await page.waitForURL('**/critter-cascade/?mode=expedition#resume');
   await page.locator('#resume-confirm').click();
   assert.deepEqual(await page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY)).game), saved.game);
   await page.locator('#sound').click();
@@ -29,7 +29,7 @@ const assert = require('node:assert/strict');
   assert.equal(audioRequests.length, 0, 'opening the panel is silent and does not fetch music');
   await page.locator('#music-toggle').click();
   await page.waitForFunction(() => testMix.track?.currentTime > .15 && document.getElementById('effects').getAttribute('aria-pressed') === 'true');
-  assert.ok(audioRequests.every(url => url === origin + '/clackworks/assets/audio/george-street-shuffle.mp3'), 'only the selected local recording loads');
+  assert.ok(audioRequests.every(url => url === origin + '/critter-cascade/assets/audio/george-street-shuffle.mp3'), 'only the selected local recording loads');
   const playback = await page.evaluate(async () => {
    const analyser = testMix.context.createAnalyser(); analyser.fftSize = 2048; testMix.master.connect(analyser);
    await new Promise(resolve => setTimeout(resolve, 160));
@@ -122,11 +122,11 @@ const assert = require('node:assert/strict');
    assert.equal(await credits.locator('a[href$="george-street-shuffle-NOTICE.txt"]').count(), 1);
    await page.locator('#close-modal').click();
   }
-  await page.goto(origin + '/yang/?mode=rain#legacy'); await page.waitForURL('**/clackworks/?mode=rain#legacy');
+  await page.goto(origin + '/yang/?mode=rain#legacy'); await page.waitForURL('**/critter-cascade/?mode=rain#legacy');
   await page.locator('#board button:enabled').first().waitFor();
   await page.locator('#sound').click();
   for (const width of [320,390,1366]) { await page.setViewportSize({ width, height: 950 }); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); }
-  for (const old of ['rain_match','yang']) { await page.goto(origin + '/' + old + '/admin/?view=all#login'); await page.waitForURL('**/clackworks/admin/?view=all#login'); assert.match(await page.title(), /Clackworks/); }
+  for (const old of ['rain_match','yang']) { await page.goto(origin + '/' + old + '/admin/?view=all#login'); await page.waitForURL('**/critter-cascade/admin/?view=all#login'); assert.match(await page.title(), /Clackworks/); }
   assert.deepEqual(errors, []);
   console.log('PASS: opt-in local recording, audible playback, real loop, pause/resume, background handling, failed-load retry, cancellation, independent volumes, unchanged effects, bilingual attribution, saves and layouts.', { peak: mix.peak, rms: mix.rms });
  } finally { await browser.close(); }

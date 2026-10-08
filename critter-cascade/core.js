@@ -3,18 +3,18 @@
   'use strict';
   // IDs/order stay stable for existing saves; only presentation metadata changes.
   const ITEMS = [
-    { id: 'bear', icon: 'part-measure', name: '口袋卷尺', en: 'Pocket Tape Measure', color: '#d5deec' },
-    { id: 'glasses', icon: 'part-battery', name: '迷你电池', en: 'Mini Battery', color: '#d5deec' },
-    { id: 'syringe', icon: 'part-plug-side', name: '电源插头', en: 'Power Plug', color: '#d5deec' },
-    { id: 'crowbar', icon: 'part-key', name: '柜门钥匙', en: 'Cabinet Key', color: '#d5deec' },
-    { id: 'backupMag', icon: 'part-spring', name: '压缩弹簧', en: 'Compression Spring', color: '#d5deec' },
-    { id: 'feather', icon: 'part-magnet', name: '马蹄磁铁', en: 'Horseshoe Magnet', color: '#9be2a4' },
-    { id: 'bandolier', icon: 'part-spool', name: '绕线轴', en: 'Thread Spool', color: '#9be2a4' },
-    { id: 'cell', icon: 'part-fan', name: '散热风扇', en: 'Cooling Fan', color: '#9be2a4' },
-    { id: 'buckler', icon: 'part-tape', name: '胶带卷', en: 'Tape Roll', color: '#9be2a4' },
-    { id: 'clover', icon: 'part-bell', name: '柜台铃', en: 'Counter Bell', color: '#f298a4' },
-    { id: 'behemoth', icon: 'part-bolt', name: '六角螺栓', en: 'Hex Bolt', color: '#f298a4' },
-    { id: 'blackhole', icon: 'part-tin', name: '颜料罐', en: 'Paint Tin', color: '#efc077' }
+    { id: 'bear', icon: 'carrot', name: '胡萝卜', en: 'Carrot', color: '#ee9137' },
+    { id: 'glasses', icon: 'fish', name: '小鱼', en: 'Fish', color: '#69c6e9' },
+    { id: 'syringe', icon: 'acorn', name: '橡果', en: 'Acorn', color: '#cb924c' },
+    { id: 'crowbar', icon: 'berry', name: '浆果', en: 'Berries', color: '#b885ef' },
+    { id: 'backupMag', icon: 'mushroom', name: '蘑菇', en: 'Mushroom', color: '#f27463' },
+    { id: 'feather', icon: 'leaf', name: '枫叶', en: 'Maple Leaf', color: '#65c18c' },
+    { id: 'bandolier', icon: 'honeycomb', name: '蜂蜜块', en: 'Honeycomb', color: '#efbe4d' },
+    { id: 'cell', icon: 'shell', name: '贝壳', en: 'Seashell', color: '#ee9aad' },
+    { id: 'buckler', icon: 'feather', name: '羽毛', en: 'Feather', color: '#60c9c9' },
+    { id: 'clover', icon: 'egg', name: '斑点蛋', en: 'Speckled Egg', color: '#d8dcc9' },
+    { id: 'behemoth', icon: 'pinecone', name: '松果', en: 'Pinecone', color: '#b4794a' },
+    { id: 'blackhole', icon: 'flower', name: '雏菊', en: 'Daisy', color: '#eedc88' }
   ];
   const MODES = {
     drizzle: { name: '细雨热身', count: 36, kinds: 6 },

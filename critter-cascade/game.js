@@ -52,7 +52,7 @@
   function resetEffects() {
     // Cleanup is optional presentation work too: neither renderer may keep input locked.
     for (const reset of [() => fx.reset(), () => music.cancelEffects()]) {
-      try { reset(); } catch (error) { console.warn('Clackworks effect cleanup skipped:', error); }
+      try { reset(); } catch (error) { console.warn('Critter Cascade effect cleanup skipped:', error); }
     }
   }
   function playEffect(play, after = () => {}) {
@@ -67,10 +67,10 @@
       for (const complete of [() => render(), after]) {
         try { complete(); }
         catch (error) {
-          console.warn('Clackworks effect completion retry:', error);
+          console.warn('Critter Cascade effect completion retry:', error);
           queueMicrotask(() => {
             if (effect.run !== runId || activeEffect) return;
-            try { complete(); } catch (retryError) { console.warn('Clackworks effect completion skipped:', retryError); }
+            try { complete(); } catch (retryError) { console.warn('Critter Cascade effect completion skipped:', retryError); }
             syncClock();
           });
         }
@@ -82,9 +82,9 @@
     // errors need the same protection as a rejected native animation promise.
     effect.timer = setTimeout(effect.skip, 4500);
     try { render(); syncClock(); }
-    catch (error) { console.warn('Clackworks effect startup skipped:', error); effect.skip(); return; }
+    catch (error) { console.warn('Critter Cascade effect startup skipped:', error); effect.skip(); return; }
     Promise.resolve().then(() => activeEffect === effect ? play() : undefined)
-      .catch(error => { console.warn('Clackworks effect skipped:', error); if (activeEffect === effect) resetEffects(); })
+      .catch(error => { console.warn('Critter Cascade effect skipped:', error); if (activeEffect === effect) resetEffects(); })
       .then(finish);
     if (document.hidden) effect.skip();
   }
@@ -96,7 +96,7 @@
     el.style.setProperty('--rarity', item.color); el.title = itemName(tile.type);
     el.setAttribute('aria-label', itemName(tile.type));
     const img = document.createElement('img');
-    img.src = `assets/flat/${item.icon}.webp`; img.alt = ''; img.draggable = false;
+    img.src = `assets/tiles/${item.icon}.webp`; img.alt = ''; img.draggable = false;
     img.addEventListener('error', () => { el.textContent = itemName(tile.type); el.style.fontSize = '9px'; });
     el.append(img);
     decorateTarget(el, tile);
@@ -345,7 +345,7 @@
     lastStatus = null; beep(result.matched); render();
     if (!result.events?.some(event => event.kind === 'shield')) {
       try { fx.pick(before, id, result.type, result.matched, (result.events || []).filter(event => event.ids.length === 3).flatMap(event => event.ids)); }
-      catch (error) { console.warn('Clackworks pick effect skipped:', error); fx.reset(); }
+      catch (error) { console.warn('Critter Cascade pick effect skipped:', error); fx.reset(); }
     }
     if (result.matched) {
       $('combo').textContent = t('match', { item: itemName(result.type) });
@@ -497,6 +497,8 @@
   function relicDescription(id, level = game.relics[id] || game.ownedRelics()[id] || 1) {
     return ClackCompanions.description(id, level, game, language);
   }
+  function relicEffect(id, level) { return ClackCompanions.profile(id, level, game, language).effect; }
+  function relicRules(id, level) { return ClackCompanions.profile(id, level, game, language).rules; }
   function relicIcon(id, level = game.relics[id] || game.ownedRelics?.()[id] || 1) {
     const relic = RainExpedition.RELICS[id], visibleLevel = Math.max(1, Math.min(5, level));
     const box = ClackAtlas[relic.family][relic.row][visibleLevel-1];
@@ -564,7 +566,7 @@
     const level = game.relics[id] || game.ownedRelics()[id] || 1, relic = RainExpedition.RELICS[id];
     const seal = game.sealed[id] ? `<p class="boss-victory">${t('expPartial', { n: game.relics[id] || 0, max: game.sealed[id] })}</p>` : '';
     const rarity = RainExpedition.rarityAt(level);
-    showDialog('relic', `<div class="relic-large">${relicIcon(id, level)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t('expLevel', {n:level})} · ${ClackCompanions.families[language][relic.family]}</p><h2 id="modal-title">${relicName(id, level)}</h2><p class="equipment-role">${t('role_' + id)}</p>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p>${relicDescription(id, level)}</p><p class="relic-synergy">${ClackCompanions.bonuses[language][relic.family]}</p><div class="evolution-strip">${[1,2,3,4,5].map(n => `<div data-rarity="${RainExpedition.rarityAt(n)}">${relicIcon(id,n)}<small>Lv.${n}</small><b>${relicName(id,n)}</b></div>`).join('')}</div>${level < 5 ? `<p class="relic-next"><b>${t('expNextLevel')} · ${relicName(id,level+1)}</b><br>${relicDescription(id,level+1)}</p>` : ''}<button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
+    showDialog('relic', `<div class="relic-large">${relicIcon(id, level)}</div><p class="rarity-badge" data-rarity="${rarity}">${t('expRarity_' + rarity)} · ${t('expLevel', {n:level})} · ${ClackCompanions.families[language][relic.family]}</p><h2 id="modal-title">${relicName(id, level)}</h2><p class="equipment-role">${t('role_' + id)}</p>${seal}${relicMeter(id) ? `<p class="relic-state">${relicMeter(id)}</p>` : ''}<p class="companion-effect">${relicEffect(id, level)}</p><div class="companion-rules"><b>${t('companionRules')}</b><p>${relicRules(id, level)}</p></div><p class="relic-synergy">${ClackCompanions.bonuses[language][relic.family]}</p><div class="evolution-strip">${[1,2,3,4,5].map(n => `<div data-rarity="${RainExpedition.rarityAt(n)}">${relicIcon(id,n)}<small>Lv.${n}</small><b>${relicName(id,n)}</b></div>`).join('')}</div>${level < 5 ? `<p class="relic-next"><b>${t('expNextLevel')} · ${relicName(id,level+1)}</b><br>${relicEffect(id,level+1)}<br><small>${relicRules(id,level+1)}</small></p>` : ''}<details class="companion-basics"><summary>${t('help')}</summary><p>${t('companionBasics')}</p></details><button class="primary-button" id="relic-close">${t('expStay')}</button><button class="text-button" id="relic-catalog">${t('expCatalog')}</button>`);
     $('relic-catalog').addEventListener('click', showCatalog);
     $('relic-close').addEventListener('click', closeDialog);
   }
@@ -632,7 +634,7 @@
     if (!targeting && !game.pendingReward) {
       if (game.radarActive) hint += ' · ' + t('expRadarOn', { n: game.radarUntil - game.moves });
       else if (game.equipment === 'blackhole' && game.charge && !game.cubeTargets().length) hint += ' · ' + t('expNeedPair');
-      else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: Math.ceil(game.recharge - game.energy) });
+      else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: Math.ceil((game.recharge - game.energy) / (game.familyCount('birds') >= 2 ? 1.25 : 1)) });
       if (game.relics.shield) hint += ' · ' + t(game.shieldSpent ? 'expShieldSpent' : 'expShieldReady');
 
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
@@ -650,7 +652,7 @@
     $('radar-preview').replaceChildren(...game.previewIds().map(id => {
       const tile = game.tiles[id], label = document.createElement('span');
       label.className = 'radar-preview-tile'; label.title = t(tile.pile) + ' · ' + itemName(tile.type);
-      const img = document.createElement('img'); img.src = `assets/flat/${ITEMS[tile.type].icon}.webp`; img.alt = label.title;
+      const img = document.createElement('img'); img.src = `assets/tiles/${ITEMS[tile.type].icon}.webp`; img.alt = label.title;
       label.append(img); return label;
     }));
   }
@@ -658,7 +660,7 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicDescription(id, level + 1, id === 'shield')}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level >= 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: relicName(game.evolved) }) : ''}</span></div>`;
+    return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicEffect(id, level + 1)}</span><span class="reward-rule">${relicRules(id, level + 1)}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level >= 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: relicName(game.evolved) }) : ''}</span></div>`;
   }
   function rewardSkipMarkup() {
     return game.canSkipReward ? `<button class="secondary-button" id="reward-skip">${t('expSkipReward')}</button><p class="input-hint">${t('expSkipRewardCopy')}</p>` : '';

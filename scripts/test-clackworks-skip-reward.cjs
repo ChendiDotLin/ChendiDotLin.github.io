@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition } = require('../clackworks/expedition.js');
+const { Expedition } = require('../critter-cascade/expedition.js');
 const game = new Expedition(() => .37);
 assert.equal(game.skipReward(), false, 'starter must still be chosen');
 game.choose('feather');

@@ -18,18 +18,18 @@ use-site-title: true
   </aside>
 </section>
 
-<section class="home-game" aria-labelledby="clackworks-heading">
+<section class="home-game" aria-labelledby="critter-cascade-heading">
   <div class="home-game-art" aria-hidden="true">
     <span class="home-game-orbit"></span>
-    <span class="home-game-tile"><img src="{{ '/clackworks/assets/flat/module-coil.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/clackworks/assets/flat/module-boiler.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
-    <span class="home-game-tile"><img src="{{ '/clackworks/assets/flat/module-vacuum.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/critter-cascade/assets/tiles/berry.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/critter-cascade/assets/tiles/acorn.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
+    <span class="home-game-tile"><img src="{{ '/critter-cascade/assets/tiles/mushroom.webp' | relative_url }}" alt="" width="90" height="90" loading="lazy"></span>
   </div>
   <div class="home-game-copy">
     <span class="section-eyebrow">Made for fun · Browser game</span>
-    <h2 id="clackworks-heading">Clackworks <span lang="zh-CN">咔嗒工坊</span></h2>
-    <p>A workshop roguelite built on layered tile matching. Assemble inventive machines, spark chain reactions, and take your evolving build on an endless expedition. Shared leaderboards included. Play in English or 中文.</p>
-    <a class="home-game-play" href="{{ '/clackworks/' | relative_url }}">Play a round <span lang="zh-CN">开始游戏</span> <span aria-hidden="true">↗</span></a>
+    <h2 id="critter-cascade-heading">Critter Cascade</h2>
+    <p>Tiny critters. Big cascades. Match woodland treasures, grow animal companions into mythical beasts, and combine their powers on an endless roguelite expedition. Shared leaderboards included. Play in English or 中文.</p>
+    <a class="home-game-play" href="{{ '/critter-cascade/' | relative_url }}">Play a round <span lang="zh-CN">开始游戏</span> <span aria-hidden="true">↗</span></a>
   </div>
 </section>
 

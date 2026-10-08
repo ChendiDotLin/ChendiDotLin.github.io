@@ -1,7 +1,7 @@
 // Read alpha bounds only; original image pixels are never changed.
 // Rebuild atlas view windows after replacing generated art. RAIN_SHARP may locate sharp.
 const sharp=require(process.env.RAIN_SHARP||'sharp'),fs=require('node:fs'),path=require('node:path');
-const base=path.join(__dirname,'../clackworks/assets/companions');
+const base=path.join(__dirname,'../critter-cascade/assets/companions');
 const grids={cats:[[0,247,511,778,1062,1402],[0,284,574,865,1122]],dragons:[[0,244,506,779,1057,1402],[0,299,566,837,1122]],birds:[[0,249,511,782,1060,1402],[0,346,625,884,1122]],shells:[[0,254,515,799,1070,1402],[0,305,571,841,1122]]};
 (async()=>{const atlas={};for(const [family,[xs,ys]] of Object.entries(grids)){
  const {data,info}=await sharp(path.join(base,family+'.png')).ensureAlpha().raw().toBuffer({resolveWithObject:true});

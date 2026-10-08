@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {Expedition,RELICS}=require('../clackworks/expedition.js');
+const {Expedition,RELICS}=require('../critter-cascade/expedition.js');
 const seed=n=>()=>{n=Math.imul(n,1664525)+1013904223|0;return(n>>>0)/4294967296;};
 const fresh=()=>{const g=new Expedition(seed(319));g.choose('feather');return g;};
 function sample(stage,saturated=false,noEquipment=false){

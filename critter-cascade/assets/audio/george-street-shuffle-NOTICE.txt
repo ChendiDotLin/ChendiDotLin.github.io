@@ -14,7 +14,7 @@ Downloaded and license verified October 6, 2026.
 
 The MP3 recording is bundled unchanged: no editing or re-encoding.
 The game repeats it and adjusts playback volume. Separate game sound effects
-are synthesized by Clackworks; they are not part of the original composition.
+are synthesized by Critter Cascade; they are not part of the original composition.
 No artist endorsement is implied. The file is hosted locally for playback.
 
 SHA-256:

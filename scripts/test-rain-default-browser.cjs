@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
     });
     await context.routeWebSocket(/\/realtime\/v1\//, socket => socket.close());
     const page = await context.newPage();
-    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/');
+    const url = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
     url.searchParams.delete('mode');
     const saved = () => page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY)));
     const defaults = async target => {

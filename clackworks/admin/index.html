@@ -1,56 +1,8 @@
 <!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="referrer" content="same-origin">
-  <title>排行榜管理 · Clackworks</title>
-  <link rel="icon" href="../assets/flat/favicon-battery.png">
-  <link rel="stylesheet" href="../style.css?v=clackworks-audio-v1">
-  <link rel="stylesheet" href="admin.css?v=expedition-v3-boss">
-  <script defer src="../config.js"></script>
-  <script defer src="admin.js?v=expedition-v3-boss"></script>
-</head>
-<body>
-  <main class="admin-shell">
-    <header class="admin-header"><a href="../" data-text="back">← 返回游戏</a><button id="language" class="language-button">EN</button></header>
-    <p class="admin-eyebrow">RAIN MATCH / ADMIN</p><h1 data-text="title">排行榜管理</h1>
-    <p class="admin-intro" data-text="intro">仅开发者账号可管理。所有删除操作都会留档。</p>
-    <p id="notice" role="status" aria-live="polite"></p>
-    <section id="login-panel" class="admin-card">
-      <h2 data-text="loginTitle">开发者登录</h2>
-      <form id="login-form">
-        <label for="email" data-text="email">邮箱</label><input id="email" type="email" autocomplete="username" required>
-        <label for="password" data-text="password">密码</label><input id="password" type="password" autocomplete="current-password" required>
-        <button id="login" class="primary-button" type="submit" data-text="login">登录</button>
-      </form>
-      <p class="input-hint" data-text="sessionNote">关闭或刷新本页后需要重新登录。</p>
-    </section>
-    <section id="dashboard" hidden>
-      <div class="admin-toolbar"><span id="identity"></span><button id="logout" class="text-button" data-text="logout">退出登录</button></div>
-      <div id="counts" class="admin-counts"></div>
-      <section class="admin-card">
-        <div class="admin-toolbar"><h2 data-text="scores">查看成绩</h2><button id="refresh" class="text-button" data-text="refresh">刷新</button></div>
-        <label for="mode" data-text="mode">模式</label><select id="mode"><option value="drizzle" data-text="drizzle">细雨</option><option value="rain" data-text="rain">暴雨</option><option value="monsoon" data-text="monsoon">季风</option><option value="expedition" data-text="expedition">远征旧榜</option><option value="expedition_distance" data-text="expedition_distance">远征最远</option><option value="expedition_speed" data-text="expedition_speed">最快 10 关</option></select>
-        <div class="ranking-scroll"><table class="ranking-table"><thead><tr><th data-text="player">用户 ID</th><th data-text="tiles">回收</th><th data-text="time">用时</th><th data-text="action">操作</th></tr></thead><tbody id="rows"></tbody></table></div>
-        <p class="input-hint" data-text="topNote">显示前 100 名。也可在下方输入任意 ID 删除。</p>
-      </section>
-      <section class="admin-card danger-card">
-        <h2 data-text="manage">管理操作</h2>
-        <p class="input-hint" data-text="manageNote">单个 ID 和单模式操作使用上方选中的模式。删除后，该玩家仍可提交新一局成绩。</p>
-        <label for="player" data-text="player">用户 ID</label><input id="player" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button id="delete-player" class="secondary-button" data-text="deletePlayer">删除此 ID 在当前模式的成绩</button>
-        <div class="admin-buttons"><button id="clear-mode" class="danger-button" data-text="clearMode">清空当前模式</button><button id="clear-all" class="danger-button" data-text="clearAll">清空全部排行榜</button></div>
-      </section>
-      <section class="admin-card"><h2 data-text="audit">最近操作</h2><ul id="audit"></ul></section>
-    </section>
-  </main>
-  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
-    <h2 id="confirm-title" data-text="confirmTitle">确认删除范围</h2><p id="scope"></p>
-    <form id="confirm-form"><label for="confirmation" id="confirmation-label"></label><input id="confirmation" autocomplete="off" spellcheck="false" required><p id="confirm-error" role="alert"></p>
-      <div class="admin-buttons"><button type="button" id="cancel" class="secondary-button" data-text="cancel">取消</button><button type="submit" id="confirm-delete" class="danger-button" data-text="confirmDelete">确认删除</button></div>
-    </form>
-  </dialog>
-</body>
-</html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Critter Cascade</title>
+<link rel="canonical" href="https://chendilin.com/critter-cascade/admin/">
+<script>location.replace('/critter-cascade/admin/' + location.search + location.hash);</script>
+<noscript><meta http-equiv="refresh" content="0; url=/critter-cascade/admin/"></noscript>
+</head><body><p>已迁至新地址。<a href="/critter-cascade/admin/">前往 Critter Cascade</a></p></body></html>

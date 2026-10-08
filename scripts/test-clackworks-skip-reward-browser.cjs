@@ -1,7 +1,7 @@
 // Uses mocked rankings/Presence; never writes player scores.
 const { chromium } = require(process.env.RAIN_PLAYWRIGHT || 'playwright');
 const assert = require('node:assert/strict');
-const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/';
+const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/';
 (async () => {
   const browser = await chromium.launch({ executablePath: process.env.RAIN_BROWSER_PATH, headless: true });
   try {

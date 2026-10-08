@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
-const R = require('../clackworks/expedition.js'), C = require('../clackworks/companions.js');
-const {Game}=require('../clackworks/core.js');
+const R = require('../critter-cascade/expedition.js'), C = require('../critter-cascade/companions.js');
+const {Game}=require('../critter-cascade/core.js');
 const seed = n => () => { n=Math.imul(n,1664525)+1013904223|0; return (n>>>0)/4294967296; };
 function at(stage,gear={feather:1}) {
  const g=new R.Expedition(seed(stage));g.choose('feather');const b=new Game('rain',seed(stage),R.stageSpec(stage));

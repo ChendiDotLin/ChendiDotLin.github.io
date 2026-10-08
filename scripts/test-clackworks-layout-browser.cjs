@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
   await page.route('**/expedition.js*',async route=>{const response=await route.fetch();await route.fulfill({response,body:await response.text()+`\nconst Original=RainExpedition.Expedition;RainExpedition.Expedition=class extends Original {constructor(){super();window.testGame=this;}};`});});
   await page.route('**/game.js*',async route=>{const response=await route.fetch();let body=await response.text();body=body.replace('  function render(enter = false) {',`  window.layoutProbe = { render: () => render(), log: events => { lastProc = events ? { run: runId, stage: game.stage, total: events.length * 3, events } : null; renderProcLog(); } };
   function render(enter = false) {`);await route.fulfill({response,body});});
-  await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/');await page.locator('[data-reward=ukulele]').click();
+  await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();
   await page.evaluate(()=>{
    const g=testGame;g.relics={ukulele:1,seeker:1,resin:1,shield:1,feather:1,capacitor:1,radar:1};g.equipment='radar';g.charge=0;g.energy=0;g.pendingReward=null;
    layoutProbe.render();

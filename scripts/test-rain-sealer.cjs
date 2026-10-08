@@ -1,8 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition, stageSpec, bankedBefore, validSave } = require('../clackworks/expedition.js');
-const { Game } = require('../clackworks/core.js');
-const Save = require('../clackworks/expedition-save.js');
+const { Expedition, stageSpec, bankedBefore, validSave } = require('../critter-cascade/expedition.js');
+const { Game } = require('../critter-cascade/core.js');
+const Save = require('../critter-cascade/expedition-save.js');
 const seed = n => () => { n = Math.imul(n, 1664525) + 1013904223 | 0; return (n >>> 0) / 4294967296; };
 function boss(gear, n = 7) {
   const g = new Expedition(seed(n)); g.choose('feather');

@@ -15,7 +15,7 @@ const assert = require('node:assert/strict');
       const Base = window.AudioContext;
       window.AudioContext = class extends Base { constructor(...args) { super(...args); window.testAudio = this; } };
     });
-    const url = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/';
+    const url = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/';
     await page.goto(url);
     await page.locator('[data-reward=feather]').click();
     assert.equal(await page.evaluate(() => !!window.testAudio), false, 'music never autoplays');

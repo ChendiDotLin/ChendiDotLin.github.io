@@ -1,5 +1,5 @@
 'use strict';
-const assert=require('node:assert/strict');const {Expedition,stageSpec,bankedBefore,validSave}=require('../clackworks/expedition.js');const {Game}=require('../clackworks/core.js');const Save=require('../clackworks/expedition-save.js');
+const assert=require('node:assert/strict');const {Expedition,stageSpec,bankedBefore,validSave}=require('../critter-cascade/expedition.js');const {Game}=require('../critter-cascade/core.js');const Save=require('../critter-cascade/expedition-save.js');
 const seed=n=>()=>{n=Math.imul(n,1664525)+1013904223|0;return(n>>>0)/4294967296};
 function stage(n,gear) {const g=new Expedition(seed(9)),b=new Game('rain',seed(19),stageSpec(n));g.choose('feather');for(const k of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[k]=b[k];g.stage=n;g.banked=bankedBefore(n);g.relics={...gear};g.equipment=Object.keys(gear).find(id=>['radar','blackhole'].includes(id))||null;g.featherCharge=gear.feather?1:0;g.charge=g.equipment?1:0;return g;}
 const gear={feather:2,shield:2,cell:2,clover:2,gasoline:2,behemoth:2,radar:2};

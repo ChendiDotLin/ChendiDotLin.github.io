@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
    const response = await route.fetch();
    await route.fulfill({ response, body: await response.text() + '\nconst Base = RainExpedition.Expedition; RainExpedition.Expedition = class extends Base { constructor() { super(); window.testGame = this; } };' });
   });
-  await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/clackworks/');
+  await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
   await page.locator('[data-reward=ukulele]').click();
   const clickTile = async id => {
    const tile = page.locator(`#board [data-id="${id}"]`);

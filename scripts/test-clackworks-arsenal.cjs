@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
-const { Expedition, RELICS, validSave, normalizeSave, stageSpec, bankedBefore } = require('../clackworks/expedition.js');
-const { Game } = require('../clackworks/core.js');
+const { Expedition, RELICS, validSave, normalizeSave, stageSpec, bankedBefore } = require('../critter-cascade/expedition.js');
+const { Game } = require('../critter-cascade/core.js');
 function fixture(relics = {}, stage = 1) {
   const game = new Expedition(() => .8), spec = stageSpec(stage);
   game.stage = stage; game.banked = bankedBefore(stage); game.relics = { ...relics };

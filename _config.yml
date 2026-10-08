@@ -30,7 +30,7 @@ navbar-links:
     - Playwriting: "playwriting"
     - Doodles: "doodles"
     - 60 Days of Pixel Art: "pixel"
-    - Clackworks: "clackworks/"
+    - Critter Cascade: "critter-cascade/"
 
 ################
 # --- Logo --- #
@@ -300,7 +300,8 @@ exclude:
   - screenshot.png
   - docs/
   - scripts/
-  - clackworks/README.md
+  - critter-cascade/README.md
+  - critter-cascade/DESIGN.md
 
 plugins:
   - jekyll-paginate

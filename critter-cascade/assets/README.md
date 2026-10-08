@@ -1,3 +1,15 @@
+# Current Critter Cascade art
+
+- `tiles/`: twelve transparent woodland matching sprites, exported as 192px WebP.
+- `tiles/prompts.json`: exact built-in image generator prompts and source paths.
+- `companions/`: four family atlases containing the 80 animal evolution forms.
+- `audio/`: George Street Shuffle and its attribution/permission record.
+
+Legacy workshop artwork below is retained as source history. It is not used for
+current tiles, companion portraits, homepage art or the favicon.
+
+---
+
 # Current companion artwork
 
 Equipment uses the original animal atlases in `companions/`: four families,
@@ -22,7 +34,7 @@ Old machine art below remains as design history and for prior screenshots.
 
 ---
 
-# Clackworks workshop artwork
+# Critter Cascade workshop artwork
 
 The game uses the original faceless flat workshop set: 12 part icons and sixteen
 machine icons. Rounded silhouettes, dark-teal outlines and warm color blocks

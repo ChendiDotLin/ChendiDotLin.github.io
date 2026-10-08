@@ -1,0 +1,80 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "transparent_background": true,
+  "style_reference": "../companions/cats.png",
+  "export": "192x192 WebP, unchanged composition and alpha",
+  "assets": [
+    {
+      "id": "carrot",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single plump orange carrot with three short emerald leaves, tilted diagonally. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-6891dc0e-cdaa-4696-a05b-453911024ccf.png",
+      "file": "carrot.webp"
+    },
+    {
+      "id": "fish",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single sky-blue fish seen in side profile, broad oval body and dark blue triangular tail. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-2c712f61-3e0f-4b0b-9f23-5203ea5e7f8d.png",
+      "file": "fish.webp"
+    },
+    {
+      "id": "acorn",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single warm chestnut-brown acorn with oversized textured golden cap. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-5d75c4e2-c45f-4381-bace-0bbb2e0b9300.png",
+      "file": "acorn.webp"
+    },
+    {
+      "id": "berry",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: one compact bunch of three vivid purple berries with a small teal leaf. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-5f4a3116-5219-441f-a660-fab46fb53ed8.png",
+      "file": "berry.webp"
+    },
+    {
+      "id": "mushroom",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: one scarlet red mushroom with three big ivory dots and a short cream stem. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-97172ef8-d403-4f41-86cb-152fa3f7abe9.png",
+      "file": "mushroom.webp"
+    },
+    {
+      "id": "leaf",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single emerald maple leaf with a golden stem, clear five-point silhouette. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-99ed88f6-5cd4-4273-b058-2cf41f2ceef3.png",
+      "file": "leaf.webp"
+    },
+    {
+      "id": "honeycomb",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a golden yellow hexagonal honeycomb chunk with three large hexagonal holes and a tiny honey drip. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-2adb82ee-5eaf-4f9b-b257-c8ab35d5c2c6.png",
+      "file": "honeycomb.webp"
+    },
+    {
+      "id": "shell",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single coral-pink scallop seashell, broad fan silhouette, five simple ribs. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-db80101e-435b-4c7c-9237-60a16661c564.png",
+      "file": "shell.webp"
+    },
+    {
+      "id": "feather",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single turquoise feather with deep blue tip and cream quill, gently curved upright. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-842fde35-b2b2-45ae-a7df-d40357ec60d8.png",
+      "file": "feather.webp"
+    },
+    {
+      "id": "egg",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single cream egg with three large turquoise spots, slightly tilted. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-c968011d-5bfe-4baa-be30-a608ae04ac8f.png",
+      "file": "egg.webp"
+    },
+    {
+      "id": "pinecone",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single compact russet pinecone, layered chunky scales and small stem. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-cb0060ba-f68e-4667-8dc0-f9f1ce905431.png",
+      "file": "pinecone.webp"
+    },
+    {
+      "id": "flower",
+      "prompt": "Use case: stylized-concept. Asset type: one matching-tile game sprite for Critter Cascade, a cute woodland animal roguelite. Subject: a single bright white five-petal daisy with large golden orange center and tiny green leaf. Only ONE centered isolated item. Style: polished hand-drawn 2D storybook game art, bold warm dark-brown outline, chunky rounded shapes, flat cel-shaded colors with just one light and one shadow tone. Charming, tactile, memorable. Must read instantly at 42 pixels. Match the outlined 2D cute animal reference's art direction, but this is an OBJECT not a character. Composition: square canvas, item fills 75 percent of width/height, generous transparent margins. No face, eyes, mouth, text, letters, border, background, floor, cast shadow, sparkles or floating decorations. No 3D, realism, thin complex details or gradients. Genuinely transparent background.",
+      "source": "/Users/chendil/.codex/generated_images/01a10eaa-d944-78b1-a9e6-831c0389ea2d/exec-b6864987-4287-4925-ace6-59a7a583a907.png",
+      "file": "flower.webp"
+    }
+  ]
+}

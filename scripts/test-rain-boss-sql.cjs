@@ -1,5 +1,5 @@
 'use strict';
-const {PGlite}=require(process.argv[2]||'@electric-sql/pglite');const {readFileSync}=require('node:fs');const {join}=require('node:path');const {randomUUID}=require('node:crypto');const assert=require('node:assert/strict');const {bankedBefore}=require('../clackworks/expedition.js');
+const {PGlite}=require(process.argv[2]||'@electric-sql/pglite');const {readFileSync}=require('node:fs');const {join}=require('node:path');const {randomUUID}=require('node:crypto');const assert=require('node:assert/strict');const {bankedBefore}=require('../critter-cascade/expedition.js');
 (async()=>{const db=new PGlite(),admin='cf51ed16-ab31-41a7-8134-154688dfca14';
 await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;`);
 await db.query('insert into auth.users values ($1)',[admin]);await db.exec(readFileSync(join(__dirname,'fixtures/rain-admin-before-expedition.sql'),'utf8'));await db.exec(readFileSync(join(__dirname,'rain-expedition.sql'),'utf8'));

@@ -44,8 +44,8 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 /* The scene is open; the cards supply the structure instead of a dashboard box. */
 .landscape { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 50% 22%, #67847530, transparent 65%), radial-gradient(circle at 15% 12%, #ffc87817, transparent 35%), #172a32; }
 .landscape::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#a2c1bb16 1px, transparent 1px); background-size: 24px 24px; mask-image: linear-gradient(#000, transparent 85%); }
-.workshop-lamp { position: absolute; left: calc(50% - 440px); top: -6px; width: 170px; height: 120px; border-bottom: 5px solid #d9b37a1c; border-radius: 0 0 50% 50%; background: linear-gradient(#31505730, #d9b37a0a); box-shadow: 0 70px 100px #f2c48108; }
-.workshop-shelf { position: absolute; bottom: 10%; width: 100%; height: 20%; border-block: 1px solid #9dbfba0b; background: repeating-linear-gradient(90deg, transparent 0 139px, #9dbfba08 140px 141px, transparent 142px 280px); }
+.forest-canopy { position: absolute; inset: -140px -80px auto; height: 300px; opacity: .26; background: radial-gradient(ellipse at 10% 30%, #58865d 0 20%, transparent 21%), radial-gradient(ellipse at 80% 10%, #365f46 0 25%, transparent 26%); }
+.forest-floor { position: absolute; inset: auto -15% -180px; height: 350px; border-radius: 50%; background: #43604a20; box-shadow: 0 -35px 0 #58794a0b; }
 .board-area { position: relative; margin-top: 13px; }
 .board { position: relative; width: 100%; aspect-ratio: 600 / 590; }
 .tile { position: absolute; display: grid; place-items: center; width: 12%; height: 12.20339%; padding: 0; border: 2px solid #e9d4a8; border-radius: 7px; background: linear-gradient(145deg, #fff4d9, #d9c9a8); box-shadow: 0 4px 0 #0b1420, 0 5px 5px #0006, inset 0 1px 0 #dceaff30; transition: filter .15s, transform .15s, border-color .15s; isolation: isolate; }
@@ -642,3 +642,21 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
 
 .relic-portrait { position: relative; }
 .animal-sprite { position: absolute; inset: 4px; width: auto; height: auto; min-width: 0; min-height: 0; }
+
+/* Clear purpose first; precise targeting and recovery rules second. */
+.companion-effect { color: #fff0cc; font-size: 15px; font-weight: 650; line-height: 1.75; }
+.companion-rules { margin: 14px 0; padding: 12px 14px; background: #102a294d; border: 1px solid #91c4ae33; border-radius: 10px; }
+.companion-rules > b { font-size: 11px; color: #afd6bd; }
+.companion-rules p { margin: 5px 0 0; }
+.companion-basics { margin: 16px 0; color: #afc5c1; font-size: 11px; }
+.companion-basics summary { cursor: pointer; }
+.reward-choice > div > span:first-of-type { color: #f5eedc; font-weight: 600; }
+.reward-choice > div > .reward-rule { margin-top: 5px; font-size: 10px; color: #b6c6c3; }
+/* A long English subtitle must not enlarge the phone header's center column. */
+.site-header { grid-template-columns: 76px minmax(0, 1fr) 76px; }
+.brand { min-width: 0; width: 100%; }
+.brand small { white-space: normal; line-height: 1.5; letter-spacing: 1px; }
+@media (max-width: 350px) {
+  .site-header { grid-template-columns: 58px minmax(0, 1fr) 58px; }
+  .brand small { letter-spacing: .5px; }
+}
