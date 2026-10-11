@@ -575,7 +575,7 @@
     $('expedition-panel').hidden = !isExpedition();
     if (!isExpedition()) { document.body.classList.remove('boss-run'); $('proc-log').hidden = true; return; }
     const spec = RainExpedition.stageSpec(game.stage);
-    $('expedition-stage').textContent = t(game.trial ? game.bossKind === 'ward' ? 'bossWardTitle' : 'bossArmorTitle' : spec.theme === 'boss' && game.stage !== 10 ? 'expStorm' : 'exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1)) + ' · ' + t('expTotal', { n: game.recovered });
+    $('expedition-stage').textContent = (game.bossEncounter ? bossTitle(game.stage) : t(spec.theme === 'boss' ? 'expStorm' : 'exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1))) + ' · ' + t('expTotal', { n: game.recovered });
     captureTen();
     $('boss-status').hidden = !game.bossActive;
     const sealedCount = Object.keys(game.sealed).length;
@@ -588,16 +588,22 @@
     $('boss-status').classList.toggle('restored', !sealedCount);
     document.body.classList.toggle('boss-run', game.bossActive);
     document.body.dataset.boss = game.bossActive ? game.bossKind : '';
-    if (game.trial) {
-      $('boss-status').classList.toggle('restored', game.bossKind === 'ward' ? game.trial.broken.length === 3 : game.armorPhase === 2);
-      $('boss-meter').hidden = true;
-      $('boss-seals').textContent = t(game.bossKind === 'ward' ? 'bossWardStatus' : 'bossArmorStatus', { n: game.bossKind === 'ward' ? game.trial.broken.length : game.armorPhase + 1 });
-      $('boss-energy-label').textContent = game.bossKind === 'ward' ? game.trial.types.map(type => (game.trial.broken.includes(type) ? '✓ ' : '◇ ') + itemName(type)).join(' · ') : t('bossArmorProgress', {n: game.stageMatches, max: 6});
-    }
-    $('relic-slots').textContent = t('expSlots', { n: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'passive').length, max: RainExpedition.PASSIVE_SLOTS, evolutions: game.evolutionSlots });
+    if (game.bossActive) { const boss = RainExpedition.BOSSES[game.stage]; $('boss-status').style.setProperty('--boss-color', boss.color); $('boss-status').querySelector('.boss-sigil').textContent = boss.symbol; }
+    $('boss-trial').hidden = !game.trial;
+    $('boss-trial').textContent = bossProgress();
+    $('relic-slots').textContent = t('expSlots', { n: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'passive').length, active: game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === 'active').length, total: game.loadout().length });
     $('expedition-ten').hidden = !tenRecord; $('expedition-ten').disabled = animating || savePaused;
     $('expedition-ten').textContent = t('expTenButton', { time: formatTime(tenTime || 0, true) });
     const relicBar = $('relic-bar'); relicBar.replaceChildren();
+    const groups = {};
+    for (const kind of ['passive', 'active']) {
+      const count = game.loadout().filter(item => RainExpedition.RELICS[item.id].kind === kind).length;
+      const section = document.createElement('section'); section.className = 'relic-group'; section.dataset.kind = kind;
+      const title = document.createElement('h3'); title.textContent = t(kind === 'passive' ? 'slotPassive' : 'slotActive', { n: count });
+      groups[kind] = document.createElement('div'); groups[kind].className = 'relic-group-items';
+      if (!count) { const empty = document.createElement('span'); empty.className = 'relic-empty'; empty.textContent = t('slotEmpty'); groups[kind].append(empty); }
+      section.append(title, groups[kind]); relicBar.append(section);
+    }
     for (const { id, level } of game.loadout()) {
       const button = document.createElement('button'); button.className = 'relic-chip'; button.dataset.relic = id;
       button.dataset.rarity = RainExpedition.rarityAt(game.relics[id] || level);
@@ -609,9 +615,8 @@
       button.title += relicMeter(id) ? ' · ' + relicMeter(id) : '';
       button.setAttribute('aria-label', relicName(id) + ' · ' + button.title);
       button.addEventListener('click', () => showRelic(id));
-      relicBar.append(button);
+      groups[RainExpedition.RELICS[id].kind].append(button);
     }
-    if (!game.loadout().length) relicBar.textContent = t('expNoRelics');
     $('family-bonuses').innerHTML = Object.entries(RainExpedition.FAMILIES).map(([family]) => {
       const count = game.familyCount(family);
       return `<span data-family="${family}" class="family-bonus ${count >= 2 ? 'active' : ''}" title="${ClackCompanions.bonuses[language][family]}">${ClackCompanions.families[language][family].split(' · ')[0]} ${count}/4${count >= 2 ? ' ◆' : ''}${count >= 4 ? ' ◆' : ''}</span>`;
@@ -639,7 +644,7 @@
 
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
-    if (game.bossActive && !targeting) hint = t(game.trial ? game.bossKind === 'ward' ? 'bossWardRule' : 'bossArmorRule' : sealedCount ? 'expBossHint' : 'expBossFinish');
+    if (game.bossActive && !targeting) hint = sealedCount ? t(game.bossKind === 'dream' ? 'bossProgress_dream' : 'expBossHint') : game.trial ? bossProgress() : t('expBossFinish');
     if (!game.competitive) hint += ' · ' + t('expLegacyRun');
     $('expedition-hint').textContent = hint;
     $('lightning-status').hidden = !owned.ukulele;
@@ -660,7 +665,7 @@
     if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = RainExpedition.RELICS[id].kind === 'active';
-    return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicEffect(id, level + 1)}</span><span class="reward-rule">${relicRules(id, level + 1)}${level === 2 && game.evolved && Object.values(game.relics).filter(level => level >= 3).length >= game.evolutionSlots ? ' ' + t('expEvolutionSwap', { item: relicName(game.evolved) }) : ''}</span></div>`;
+    return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${t('role_' + id)}</em></b><span>${relicEffect(id, level + 1)}</span><span class="reward-rule">${relicRules(id, level + 1)}</span></div>`;
   }
   function rewardSkipMarkup() {
     return game.canSkipReward ? `<button class="secondary-button" id="reward-skip">${t('expSkipReward')}</button><p class="input-hint">${t('expSkipRewardCopy')}</p>` : '';
@@ -675,7 +680,7 @@
     if (!isExpedition() || !game.pendingReward || animating || savePaused) return;
     targeting = null;
     const first = !game.loadout().length;
-    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed, evolutions: game.evolutionSlots })}<br>${game.levelCap < 5 ? t('expMythicGate') : t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id] ? RainExpedition.rarityAt((game.relics[id] || 0) + 1) : 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
+    showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed })}<br>${game.levelCap < 5 ? t('expMythicGate') : t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id] ? RainExpedition.rarityAt((game.relics[id] || 0) + 1) : 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
@@ -703,7 +708,7 @@
     if (animate === true) music.sound('win');
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
-    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${[10,20,30].includes(game.stage) ? `<p class="boss-victory">${t(game.stage === 10 ? 'expBossClear' : game.stage === 20 ? 'bossWardClear' : 'bossArmorClear')}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.bossEncounter ? `<p class="boss-victory">${game.stage === 100 ? t('bossFinalVictory') : t('bossVictory', {name: t('bossName_' + game.bossKind)})}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
     $('stage-ten')?.addEventListener('click', showTenRecord);
     $('stage-extract').addEventListener('click', showExtract);
     $('stage-next').addEventListener('click', () => {
@@ -755,10 +760,28 @@
     if (!result.ok) return;
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
+  function bossTitle(stage) { return t('bossTitle', {n: stage, name: t('bossName_' + RainExpedition.BOSSES[stage].kind)}); }
+  function bossProgress() {
+    if (!game.trial) return '';
+    const kind = game.bossKind, cap = game.trialBurstLimit === game.normalBurstLimit ? t('bossFull') : game.trialBurstLimit;
+    const target = game.trial.lastType == null ? t('bossNoTarget') : itemName(game.trial.lastType);
+    const targets = game.protectedTypes.map(itemName).join(' / ');
+    const values = {cap, target, targets, manual: Math.min(9, game.stageMatches)};
+    if (['ward','crown','roots'].includes(kind)) values.n = Math.min(kind === 'roots' ? 4 : 3, game.trial.broken.length);
+    if (kind === 'armor') values.n = Math.min(6, game.stageMatches);
+    if (['tide','migrate'].includes(kind)) values.n = 2 - game.stageMatches % 2;
+    if (kind === 'roots') values.state = t(game.trial.broken.length >= 4 ? 'bossPierceOpen' : 'bossPierceClosed');
+    if (kind === 'tide') values.state = t(game.trialBurstLimit === 2 ? 'bossHighTide' : 'bossLowTide');
+    if (kind === 'echo') values.state = t(game.trial.open ? 'bossOpen' : 'bossClosed');
+    return t('bossProgress_' + kind, values);
+  }
+  function showBossCatalog() {
+    showDialog('bossCatalog', `<h2 id="modal-title">${t('bossCatalogTitle')}</h2><p>${t('bossCatalogCopy')}</p><div class="boss-catalog">${Object.entries(RainExpedition.BOSSES).map(([stage, boss]) => `<section style="--boss-color:${boss.color}"><span aria-hidden="true">${boss.symbol}</span><h3>${bossTitle(stage)}</h3><p>${t('bossRule_' + boss.kind)}</p></section>`).join('')}</div><button id="boss-catalog-close" class="secondary-button">${t('expStay')}</button>`);
+    $('boss-catalog-close').addEventListener('click', closeDialog);
+  }
   function showBossIntro() {
-    const kind = game.bossKind, title = kind === 'ward' ? 'bossWardTitle' : kind === 'armor' ? 'bossArmorTitle' : 'expBoss';
-    const rule = kind === 'ward' ? 'bossWardRule' : kind === 'armor' ? 'bossArmorRule' : 'expBossIntro';
-    showDialog('boss', `<div class="boss-emblem" data-boss="${kind}" aria-hidden="true"><i></i><i></i><span>${kind === 'ward' ? '❖' : kind === 'armor' ? '◈' : '◇'}</span></div><span class="modal-eyebrow">STAGE ${game.stage} / GUARDIAN</span><h2 id="modal-title">${t(title)}</h2><p>${t(rule)}</p><button class="primary-button" id="boss-start">${t('bossEnter')}</button>`);
+    const kind = game.bossKind, boss = RainExpedition.BOSSES[game.stage];
+    showDialog('boss', `<div class="boss-emblem" data-boss="${kind}" style="--boss-color:${boss.color}" aria-hidden="true"><i></i><i></i><span>${boss.symbol}</span></div><span class="modal-eyebrow">STAGE ${game.stage} / GUARDIAN</span><h2 id="modal-title">${bossTitle(game.stage)}</h2><p>${t('expBossIntro')}</p>${kind === 'seal' ? '' : `<p class="boss-special-rule">${t('bossRule_' + kind)}</p>`}<button class="primary-button" id="boss-start">${t('bossEnter')}</button>`);
     $('boss-start').addEventListener('click', () => {
       closeDialog(); playEffect(() => { music.sound('boss'); return fx.bossEntrance(kind); });
     });
@@ -806,10 +829,11 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('equipment-catalog').addEventListener('click', showCatalog);
+  $('boss-catalog').addEventListener('click', showBossCatalog);
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   $('reserve').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   for (const name of ['remove', 'undo', 'shuffle']) $(name).addEventListener('click', () => use(name));

@@ -37,3 +37,16 @@ Rules remain in `expedition.js`. The rename and visual update preserve targeting
 RNG, numeric balance, save IDs, score validation, drops and bosses. This release
 clarifies the existing roles rather than silently changing an ongoing build.
 Generated tile assets and exact prompts are in `assets/tiles/`.
+
+
+## Independent progression and guardians
+
+Six passive companions and one active companion occupy separate UI groups.
+There is no shared evolution quota; upgrading never lowers another companion.
+Rarity unlock stages and individual levels remain unchanged.
+
+Every tenth stage from 10 through 100 seals the entire team. The additional rules
+are listed in README and the in-game bilingual Boss route. They vary matching
+choices, target protection, burst windows and recovery pace while keeping manual
+triples possible. They do not add tiles, alter banking totals or force an ending
+at stage 100. Previously saved encounters are not sealed retroactively.

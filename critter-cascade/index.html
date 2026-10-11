@@ -8,20 +8,20 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-cascade-v1">
-  <script defer src="core.js?v=critter-cascade-v1"></script>
-  <script defer src="expedition.js?v=critter-cascade-v1"></script>
-  <script defer src="expedition-save.js?v=critter-cascade-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-cascade-v1"></script>
-  <script defer src="companions.js?v=critter-cascade-v1"></script>
-  <script defer src="i18n.js?v=critter-cascade-v1"></script>
-  <script defer src="config.js?v=critter-cascade-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-100-bosses-v1">
+  <script defer src="core.js?v=critter-100-bosses-v1"></script>
+  <script defer src="expedition.js?v=critter-100-bosses-v1"></script>
+  <script defer src="expedition-save.js?v=critter-100-bosses-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-100-bosses-v1"></script>
+  <script defer src="companions.js?v=critter-100-bosses-v1"></script>
+  <script defer src="i18n.js?v=critter-100-bosses-v1"></script>
+  <script defer src="config.js?v=critter-100-bosses-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-cascade-v1"></script>
-  <script defer src="leaderboard.js?v=critter-cascade-v1"></script>
-  <script defer src="effects.js?v=critter-cascade-v1"></script>
-  <script defer src="music.js?v=critter-cascade-v1"></script>
-  <script defer src="game.js?v=critter-cascade-v1"></script>
+  <script defer src="presence.js?v=critter-100-bosses-v1"></script>
+  <script defer src="leaderboard.js?v=critter-100-bosses-v1"></script>
+  <script defer src="effects.js?v=critter-100-bosses-v1"></script>
+  <script defer src="music.js?v=critter-100-bosses-v1"></script>
+  <script defer src="game.js?v=critter-100-bosses-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -61,8 +61,9 @@
             <div class="boss-readout"><strong id="boss-seals"></strong><span id="boss-energy-label"></span>
               <div id="boss-meter" class="boss-meter" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><i></i><i></i><i></i></div>
             </div>
-          </div><p id="relic-slots" class="expedition-hint"></p>
-          <button id="equipment-catalog" class="text-button equipment-library" data-i18n="expCatalog">装备图鉴 · 16</button>
+          </div><p id="boss-trial" class="boss-trial" hidden></p><p id="relic-slots" class="expedition-hint"></p>
+          <button id="equipment-catalog" class="text-button equipment-library" data-i18n="expCatalog">伙伴图鉴 · 16</button>
+          <button id="boss-catalog" class="text-button equipment-library" data-i18n="bossCatalog">Boss 路线 · 10</button>
           <div id="family-bonuses" class="family-bonuses" aria-label="Companion families"></div>
           <div id="relic-bar" class="relic-bar"></div>
           <div class="expedition-controls"><button id="expedition-feather" class="text-button"></button><button id="expedition-active" class="text-button"></button><button id="expedition-ten" class="text-button" hidden></button><button id="expedition-continue" class="text-button" hidden></button></div>

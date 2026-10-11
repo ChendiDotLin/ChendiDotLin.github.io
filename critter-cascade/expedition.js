@@ -4,6 +4,19 @@
   const core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.RainMatch;
   const VERSION = 3;
   const PASSIVE_SLOTS = 6;
+  const BOSSES = {
+    10: { kind: 'seal', symbol: '◇', color: '#ddb296' },
+    20: { kind: 'ward', symbol: '❖', color: '#8dd5b8' },
+    30: { kind: 'armor', symbol: '◈', color: '#9badff' },
+    40: { kind: 'mirror', symbol: '◐', color: '#9ce7ef' },
+    50: { kind: 'roots', symbol: '♧', color: '#a5d875' },
+    60: { kind: 'tide', symbol: '≈', color: '#72c7ec' },
+    70: { kind: 'echo', symbol: '◎', color: '#e5b5f6' },
+    80: { kind: 'migrate', symbol: '✧', color: '#f6c682' },
+    90: { kind: 'dream', symbol: '☾', color: '#bdadf1' },
+    100: { kind: 'crown', symbol: '♛', color: '#f3d78d' }
+  };
+  const isBossStage = stage => Object.hasOwn(BOSSES, stage);
   const RELICS = {
     feather: { kind: 'passive', icon: 'module-grabber', symbol: '↟', rarity: 'uncommon', weight: 60 },
     shield: { kind: 'passive', icon: 'module-cushion', symbol: '◈', rarity: 'void', weight: 35 },
@@ -45,7 +58,7 @@
     const layers = Array(Math.min(18, 2 * stage + 2)).fill(6);
     const pileSize = fog ? 18 : stage < 3 ? 6 : stage < 5 ? 9 : 12;
     return { mode: 'rain', layers, pileSize, kinds: Math.min(12, 4 + 2 * stage),
-      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: [10, 20, 30].includes(stage) ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
+      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: isBossStage(stage) ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
   }
   function bankedBefore(stage) {
     let sum = 0;
@@ -74,14 +87,55 @@
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
-    get bossActive() { return (this.stage === 10 || !!this.trial) && this.cleared < this.tiles.length; }
+    get bossEncounter() { return this.stage === 10 || !!this.trial; }
+    get bossActive() { return this.bossEncounter && this.cleared < this.tiles.length; }
     get bossKind() { return this.trial?.kind || 'seal'; }
     familyCount(family) { return FAMILIES[family].filter(id => this.relics[id]).length; }
     get armorPhase() { return Math.min(2, Math.floor(this.stageMatches / 3)); }
-    procAllowed(tile) { return !this.trial || this.trial.kind !== 'ward' || !this.trial.types.includes(tile.type) || this.trial.broken.includes(tile.type); }
+    get normalBurstLimit() { return this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length; }
+    get trialBurstLimit() {
+      if (!this.trial) return this.normalBurstLimit;
+      switch (this.bossKind) {
+        case 'armor': return this.armorPhase < 2 ? [3, 6][this.armorPhase] : this.normalBurstLimit;
+        case 'tide': return Math.floor(this.stageMatches / 2) % 2 === 0 ? 2 : this.normalBurstLimit;
+        case 'echo': return this.trial.open ? this.normalBurstLimit : 0;
+        case 'crown': return this.trial.broken.length < 3 ? 2 : this.stageMatches < 9 ? 3 : this.normalBurstLimit;
+        default: return this.normalBurstLimit;
+      }
+    }
+    get protectedTypes() {
+      if (!this.trial) return [];
+      if (['ward', 'crown'].includes(this.bossKind)) return this.trial.types.filter(type => !this.trial.broken.includes(type));
+      if (this.bossKind === 'migrate') {
+        const start = Math.floor(this.stageMatches / 2) * 2 % this.trial.types.length;
+        return [this.trial.types[start], this.trial.types[(start + 1) % this.trial.types.length]];
+      }
+      return [];
+    }
+    procAllowed(tile) {
+      if (this.protectedTypes.includes(tile.type)) return false;
+      if (this.bossKind === 'mirror' && this.trial) return tile.type === this.trial.lastType;
+      if (this.bossKind === 'roots' && this.trial.broken.length < 4 && tile.zone === 'board') return this.blockers(tile).length === 0;
+      return true;
+    }
+    advanceTrial(type, events) {
+      if (!this.trial) return;
+      const trial = this.trial, before = this.trialBurstLimit;
+      if (['ward', 'crown', 'roots'].includes(trial.kind) && trial.types.includes(type) && !trial.broken.includes(type)) {
+        trial.broken.push(type); events.push({ kind: 'wardBreak', type, ids: [] });
+      }
+      if (trial.kind === 'echo') trial.open = trial.lastType !== null && trial.lastType !== type;
+      if (['echo', 'mirror'].includes(trial.kind)) trial.lastType = type;
+      // Called before any automatic effects for this manual match. Every path uses this budget.
+      this.burstLeft = this.trialBurstLimit;
+      if (trial.kind === 'armor' && [3, 6].includes(this.stageMatches)) events.push({kind: 'armorBreak', phase: this.armorPhase, ids: []});
+      else if ((trial.kind === 'tide' && this.stageMatches % 2 === 0) ||
+        (trial.kind === 'echo' && before !== this.trialBurstLimit) ||
+        (trial.kind === 'crown' && (before !== this.trialBurstLimit || (trial.broken.length === 3 && this.stageMatches === 9))))
+        events.push({kind: 'trialShift', ids: []});
+    }
     get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (RELICS[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
     get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
-    get evolutionSlots() { return this.stage < 6 ? 0 : this.stage < 10 ? 2 : 6; }
     ownedRelics() { return { ...this.relics, ...this.sealed }; }
     get recovered() { return this.banked + this.cleared; }
     get totalMoves() { return this.bankedMoves + this.moves; }
@@ -92,7 +146,6 @@
     get rewardTarget() { return this.stage === 1 ? 3 : Math.min(12, 4 + this.stage); }
     get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
     get levelCap() { return levelCapAt(this.stage); }
-    get evolved() { return Object.keys(this.relics).filter(id => this.relics[id] >= 3).sort((a, b) => this.relics[a] - this.relics[b])[0] || null; }
     snapshot() {
       return { ...super.snapshot(), ...JSON.parse(JSON.stringify(Object.fromEntries(PICK_FIELDS.map(key => [key, this[key]])))) };
     }
@@ -188,8 +241,7 @@
       this.comboQueue = [];
       this.bossChainAwarded = false;
       this.lightningFired = false; this.echoFired = false; this.capacitorFired = false;
-      this.burstLeft = this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
-      if (this.trial?.kind === 'armor' && this.armorPhase < 2) this.burstLeft = [3, 6][this.armorPhase];
+      this.burstLeft = this.trialBurstLimit;
     }
     get lightningLimit() { return this.familyCount('dragons') >= 2 ? 3 : 4; }
     get lightningDepth() { return 0; }
@@ -242,26 +294,21 @@
       if (!Object.keys(this.sealed).length) this.bossEnergy = 0;
     }
     chargeSeal(events, manual) {
-      if (this.stage !== 10 || !Object.keys(this.sealed).length) return;
+      if (!isBossStage(this.stage) || !Object.keys(this.sealed).length) return;
       if (manual && !this.bossStarted) {
         this.bossStarted = true; this.reclaim(events); return;
       }
       // A whole action's procs share one point, regardless of burst size.
       if (!manual && this.bossChainAwarded) return;
       if (!manual) this.bossChainAwarded = true;
-      this.bossEnergy += manual ? 2 : 1;
-      events.push({ kind: 'sealEnergy', amount: manual ? 2 : 1, ids: [] });
+      const amount = manual && this.bossKind !== 'dream' ? 2 : 1;
+      this.bossEnergy += amount;
+      events.push({ kind: 'sealEnergy', amount, ids: [] });
       if (this.bossEnergy >= 3) { this.bossEnergy -= 3; this.reclaim(events); }
     }
     onTriple(events, manual = false, source = null, type = null, depth = 0) {
       this.chargeSeal(events, manual);
-      if (manual && this.trial?.kind === 'ward' && this.trial.types.includes(type) && !this.trial.broken.includes(type)) {
-        this.trial.broken.push(type); events.push({ kind: 'wardBreak', type, ids: [] });
-      }
-      if (manual && this.trial?.kind === 'armor' && [3, 6].includes(this.stageMatches)) {
-        this.burstLeft = this.armorPhase === 1 ? 6 : this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length;
-        events.push({ kind: 'armorBreak', phase: this.armorPhase, ids: [] });
-      }
+      if (manual) this.advanceTrial(type, events);
       if (!manual && source) {
         if (this.relics.turbine && ++this.turbineCharge >= (this.familyCount('shells') >= 4 ? 2 : 3)) {
           const activeBefore = this.charge * this.recharge + this.energy;
@@ -305,7 +352,7 @@
       }
       this.comboQueue = [];
       // Winning must restore gear even if the final burst skipped the return phase.
-      if (this.cleared === this.tiles.length && this.stage === 10 && !events.some(event => event.kind === 'bossBreak')) {
+      if (this.cleared === this.tiles.length && this.bossEncounter && !events.some(event => event.kind === 'bossBreak')) {
         while (Object.keys(this.sealed).length) this.reclaim(events, true);
         this.bossEnergy = 0;
         events.push({ kind: 'bossBreak', ids: [] });
@@ -341,7 +388,7 @@
       if (this.relics.recycler && this.tiles.length - this.cleared <= 6 + 3 * this.relics.recycler) {
         // The finisher promises to sweep the remainder, even after a capped chain.
         // Its separate allowance is bounded by five triples and cannot loop.
-        if (this.trial?.kind !== 'armor' || this.armorPhase === 2) this.burstLeft = Math.max(this.burstLeft, (this.tiles.length - this.cleared) / 3);
+        if (this.trialBurstLimit === this.normalBurstLimit) this.burstLeft = Math.max(this.burstLeft, (this.tiles.length - this.cleared) / 3);
         this.pulse(events, 'recycler', Math.ceil((6 + 3 * this.relics.recycler) / 3), 50); this.drainBurst(events);
       }
       if (this.fuse?.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
@@ -394,7 +441,7 @@
     }
     canActivate() {
       if (this.finished || this.pendingReward || this.status !== 'playing' || !this.charge) return false;
-      return this.equipment === 'blackhole' ? this.cubeTargets().length > 0 : this.equipment === 'radar' && !this.radarActive;
+      return this.equipment === 'blackhole' ? this.trialBurstLimit > 0 && this.cubeTargets().length > 0 : this.equipment === 'radar' && !this.radarActive;
     }
     markRadar() {
       const types = [...new Set(this.tiles.filter(t => t.zone === 'board').map(t => t.type))];
@@ -462,7 +509,7 @@
       } else {
         if (!RELICS[id] || (this.relics[id] || 0) >= this.levelCap) return false;
         const passives = Object.keys(this.relics).filter(key => RELICS[key].kind === 'passive');
-        if (RELICS[id].kind === 'passive' && !this.relics[id] && passives.length === PASSIVE_SLOTS) {
+        if (RELICS[id].kind === 'passive' && !this.relics[id] && passives.length >= PASSIVE_SLOTS) {
           if (!passives.includes(replace)) return false;
           delete this.relics[replace];
           if (replace === 'feather') { this.featherCharge = 0; this.featherEnergy = 0; }
@@ -472,8 +519,7 @@
           if (replace === 'ukulele') { this.spark = 0; this.lightningReady = false; }
         }
         const oldLevel = this.relics[id] || 0;
-        if (oldLevel === 2 && Object.values(this.relics).filter(level => level >= 3).length >= this.evolutionSlots)
-          this.relics[this.evolved] = 2;
+        // Each companion owns its level. Upgrading never spends another companion's levels.
         if (RELICS[id].kind === 'active') {
           const first = !this.equipment;
           if (this.equipment && this.equipment !== id) delete this.relics[this.equipment];
@@ -497,14 +543,12 @@
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
       this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.fuse = null;
-      if (this.stage === 20) {
-        const types = [...new Set(this.tiles.map(tile => tile.type))];
-        this.trial = { kind: 'ward', types: types.slice(0, 3), broken: [] };
-        this.midRewardTaken = true;
-      } else if (this.stage === 30) {
-        this.trial = { kind: 'armor', types: [], broken: [] }; this.midRewardTaken = true;
+      if (isBossStage(this.stage) && this.stage !== 10) {
+        const kind = BOSSES[this.stage].kind, types = [...new Set(this.tiles.map(tile => tile.type))].sort((a,b) => a-b);
+        this.trial = { kind, types: ['ward','crown'].includes(kind) ? types.slice(0,3) : ['roots','migrate'].includes(kind) ? types : [], broken: [] };
+        if (['mirror','echo'].includes(kind)) Object.assign(this.trial, {lastType: null, open: false});
       }
-      if (this.stage === 10) {
+      if (isBossStage(this.stage)) {
         this.sealed = { ...this.relics }; this.relics = {}; this.equipment = null;
         this.charge = 0; this.energy = 0; this.featherCharge = 0; this.featherEnergy = 0;
         this.lightningReady = false; this.spark = 0; this.blastCharge = 0; this.midRewardTaken = true;
@@ -548,8 +592,8 @@
     if (!data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics) ||
       !data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed)) return false;
     if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 5))) return false;
-    return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, 3) &&
-      stage === 10 && data.cleared < count && (data.relics[id] || 0) < target &&
+    return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, levelCapAt(stage)) &&
+      isBossStage(stage) && (stage === 10 || data.trial?.kind === BOSSES[stage].kind) && data.cleared < count && (data.relics[id] || 0) < target &&
       !(RELICS[id].kind === 'active' && data.relics[id])) &&
       (Object.keys(data.sealed).length > 0 || data.bossEnergy === 0);
   }
@@ -585,21 +629,23 @@
     for (const state of [data, data.previous].filter(Boolean)) {
       if (state.trial !== null && state.trial !== undefined) {
         const trial = state.trial;
-        if (!trial || !['ward', 'armor'].includes(trial.kind) || data.stage !== (trial.kind === 'ward' ? 20 : 30) ||
+        if (!trial || !isBossStage(data.stage) || data.stage === 10 || BOSSES[data.stage].kind !== trial.kind ||
           !Array.isArray(trial.types) || !Array.isArray(trial.broken) ||
-          trial.types.length !== (trial.kind === 'ward' ? 3 : 0) || new Set(trial.types).size !== trial.types.length ||
-          trial.types.some(type => !integer(type, 0, core.ITEMS.length - 1)) ||
-          new Set(trial.broken).size !== trial.broken.length || trial.broken.some(type => !trial.types.includes(type))) return false;
+          trial.types.length !== (['ward','crown'].includes(trial.kind) ? 3 : ['roots','migrate'].includes(trial.kind) ? core.ITEMS.length : 0) ||
+          new Set(trial.types).size !== trial.types.length || trial.types.some(type => !integer(type, 0, core.ITEMS.length - 1)) ||
+          new Set(trial.broken).size !== trial.broken.length || trial.broken.some(type => !trial.types.includes(type)) ||
+          (trial.kind === 'migrate' && trial.broken.length) ||
+          (['mirror','echo'].includes(trial.kind) && (!(trial.lastType === null || integer(trial.lastType, 0, core.ITEMS.length-1)) || typeof trial.open !== 'boolean'))) return false;
       }
     }
     if (!validSnapshot(data, count) || data.banked !== bankedBefore(data.stage) || !integer(data.bankedMoves) ||
       typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
       !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
       !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
-    if (!validSeals(data, data.stage, count) || (data.stage !== 10 && (data.bossEnergy || data.bossStarted))) return false;
+    if (!validSeals(data, data.stage, count) || (!(data.stage === 10 || data.trial) && (data.bossEnergy || data.bossStarted))) return false;
     const relics = Object.entries({ ...data.relics, ...data.sealed });
     if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, levelCapAt(data.stage))) ||
-      relics.filter(([, level]) => level >= 3).length > (data.stage < 6 ? 0 : data.stage < 10 ? 2 : 6) || relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
+      relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
     const actives = Object.entries(data.relics).filter(([id]) => RELICS[id].kind === 'active');
     if (relics.filter(([id]) => RELICS[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
     if (data.charge > 1 + (data.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.relics[id]).length >= 2) || (!data.equipment && (data.charge || data.energy)) ||
@@ -612,14 +658,14 @@
         !['recharge', 'restore_remove', 'restore_undo', 'restore_shuffle'].includes(id)))) return false;
     if (data.previous && (!validSeals(data.previous, data.stage, count) ||
       JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
-      (data.stage !== 10 && (data.previous.bossEnergy || data.previous.bossStarted)) ||
+      (!(data.stage === 10 || data.previous.trial) && (data.previous.bossEnergy || data.previous.bossStarted)) ||
       (Object.keys(data.previous.relics).find(id => RELICS[id].kind === 'active') || null) !== data.previous.equipment)) return false;
     if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.previous.relics[id]).length >= 2) ||
       (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
       (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit };
+  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -660,3 +660,26 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
   .site-header { grid-template-columns: 58px minmax(0, 1fr) 58px; }
   .brand small { letter-spacing: .5px; }
 }
+
+/* Boss-specific progress stays separate from companion recovery, at a fixed height. */
+.boss-trial { height: 44px; overflow: auto; margin: 6px 0; padding: 6px 9px; color: #c5dbd6; background: #739bb016; border-radius: 6px; font-size: 10px; line-height: 1.6; }
+.boss-status { border-color: var(--boss-color, #ddb296); }
+.boss-sigil { color: var(--boss-color, #ddb296); }
+.boss-special-rule { border-left: 2px solid #9badff; padding-left: 12px; }
+
+.relic-bar { display: block; }
+.relic-group { margin: 9px 0; }
+.relic-group h3 { margin: 0 0 6px; color: #b8c8d2; font-size: 10px; font-weight: 600; }
+.relic-group[data-kind="active"] h3 { color: #efc077; }
+.relic-group-items { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); grid-auto-rows: 78px; gap: 5px; }
+.relic-empty { font-size: 10px; color: #8599a6; border: 1px dashed #92a8af38; border-radius: 8px; padding: 12px; }
+.boss-catalog section { position: relative; padding: 12px 12px 12px 46px; margin: 10px 0; border: 1px solid var(--boss-color); border-radius: 9px; }
+.boss-catalog section > span { position: absolute; left: 13px; top: 15px; color: var(--boss-color); font-size: 22px; }
+.boss-catalog h3 { margin: 0; font-size: 13px; }
+.boss-catalog section p { font-size: 11px; margin-bottom: 0; }
+.boss-emblem[data-boss] { color: var(--boss-color, #ddb296); }
+.fx-boss-glyph { position: fixed; z-index: 60; border: 2px solid currentColor; border-radius: 50%; width: 46px; height: 46px; display: grid; place-items: center; font-size: 30px; box-shadow: 0 0 18px currentColor; }
+@media (max-width: 500px) { .relic-group-items { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+.relic-group-items:has(.relic-empty) { grid-auto-rows: 30px; }
+.relic-empty { padding: 6px 10px; }

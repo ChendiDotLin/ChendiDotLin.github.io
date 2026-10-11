@@ -50,11 +50,11 @@ for(const stage of [20,30])for(let i=0;i<12;i++) {
  const after=g.toSave();assert.deepEqual(R.Expedition.fromSave(after).toSave(),after);
  assert.ok(g.use('undo'));assert.equal(g.trial.broken.length,0);
  const retry=g.pick(g.tiles.filter(t=>t.zone==='board'&&t.type===type)[0].id);assert.ok(retry.ok);assert.deepEqual(g.trial,after.trial);
- const old={...initial};delete old.trial;delete old.previous;old.previous=null;assert.equal(R.Expedition.fromSave(old).trial,null,'old mid-stage saves are not retroactively given wards');
+ const old=structuredClone(initial);old.relics={...old.sealed};old.sealed={};delete old.trial;delete old.previous;old.previous=null;assert.equal(R.Expedition.fromSave(old).trial,null,'old mid-stage saves are not retroactively given wards');
 }
 // Armor budgets count all automatic paths; later phases restore huge chains.
 {
- const g=enter(30,{prism:5,behemoth:5,clover:5,echo:5,gasoline:5,capacitor:5});flat(g);
+ const g=enter(30,{prism:5,behemoth:5,clover:5,echo:5,gasoline:5,capacitor:5});flat(g);g.relics={...g.sealed};g.sealed={};
  let sawFull=false;
  while(g.status==='playing') {
   const r=match(g);const cap=g.stageMatches<3?3:g.stageMatches<6?6:52;

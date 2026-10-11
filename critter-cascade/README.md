@@ -56,28 +56,42 @@ Each family can actually reach four members within the six-passive/one-active
 limit. Mixing families preserves the original targeting interactions.
 
 White / green / blue / purple / red correspond to levels 1 / 2 / 3 / 4 / 5.
-The caps unlock at stages 1 / 3 / 6 / 11 / 21. The existing two level-3+ slots
-before stage 10 and six afterwards remain; upgrading a seventh companion past
-level 2 warns before downgrading the lowest evolved companion. Level-five
+The caps unlock at stages 1 / 3 / 6 / 11 / 21. All six passives and the one active
+have independent levels: upgrading never downgrades another companion. The HUD
+separates passive and active slots and shows the seven-companion total. Level-five
 upgrades use a separate legendary offer roll (25% from stage 21); newly
 obtained species always start at level 1. Unwanted offers can be skipped.
 Level 4/5 cooldown floors prevent zero/negative intervals. Level 4/5 fuse marks
 six/nine tiles of one type; only those marks detonate. Marks remain triple-balanced.
 
-- **Stage 10 — Seal Guardian:** existing gradual equipment-return rules retained.
-- **Stage 20 — Three Wards:** three marked tile types resist all automatic clears.
-  A manual triple of a marked type permanently unlocks that type for the team.
-  Other types remain available to all gear. Clear the whole board to win.
-- **Stage 30 — Armored Dragon:** keep the full build. Bonus clears per action are
-  capped at 3 groups, then 6 after 3 manual triples. At 6 manual triples, armor
-  breaks and the normal chain allowance returns. Clear the whole board to win.
-- All three Boss stages have no mid-stage supply. Stage-clear supply and endless
-  continuation remain available; there is no forced ending at stage 30.
-- New Boss effects use the inert overlay and guarded cleanup lifecycle; the live
-  board is never transformed. Wards/armor have distinct entrance and break effects.
+All ten guardians first seal the entire team and return it gradually using the
+stage-ten rules below. The first manual triple returns one level; later manual
+triples give two unlock points (one for stage 90), and a whole automatic chain
+adds at most one point. Three points return one level. Clear the board to restore
+all remaining original levels. Bosses never offer mid-stage supply.
+
+| Stage | Guardian | Additional rule |
+| --- | --- | --- |
+| 10 | Seal Guardian | Learn the shared sealing/recovery mechanic. |
+| 20 | Warden of Three Wards | Three marked pictures resist automatic clears until manually matched. |
+| 30 | Armored Dragon | Automatic clears per action capped at 3 groups, then 6 after 3 manual matches; normal after 6 matches. |
+| 40 | Mirrorlake Fox | Automatic clears can only target the last manually matched picture. |
+| 50 | Rootbound Sloth | Covered tiles resist automatic clears until four different pictures have been manually matched. |
+| 60 | Tidal Whale | Every two manual matches alternate a 2-group automatic-clear cap and normal chains. |
+| 70 | Echo Mandrill | Alternating manual-match pictures enables automatic clears; repeating one disables them. |
+| 80 | Wandering Butterfly Queen | Two pictures resist automatic clears; protection moves every two manual matches. |
+| 90 | Dream-Eating Tapir | After the first recovery, each manual match gives only one unlock point. |
+| 100 | Crowned Forest Sovereign | Three wards plus armor: automatic cap 2 until wards break, then 3 until nine manual matches, then normal. |
+
+Manual matching remains available under every restriction. Active matching and
+finisher effects respect the same target restrictions and chain caps. Stage-clear
+supply and endless continuation remain available after stage 100. A bilingual
+Boss route guide explains the encounters before players reach them. Each guardian
+has a colored emblem/entrance with shared sealing effects. Animation stays on the
+inert overlay and never transforms the live board.
 
 Old v3 checkpoints receive `trial: null` in live and Undo snapshots. A run already
-inside old stage 20/30 is not given new restrictions retroactively. New guardians
+inside an old stage 20–100 is not sealed retroactively. Existing trial rules continue. New guardians
 activate when entering their stages. Board counts and score banking are unchanged.
 Stage-10 speed records, failed submission payloads and old leaderboard rows retain
 original IDs/levels. This is an additive rules update on the existing casual board;
@@ -317,9 +331,8 @@ Open `/critter-cascade/?mode=expedition`. Classic difficulties keep their own ru
 - Carry **six passive types plus one active equipment**. The pool now includes
   Welding Torch, Overload Boiler and Precision Calibrator. A seventh passive requires a
   replacement; two active items cannot coexist.
-- Level 2 unlocks at stage 3. Stage 6 allows two simultaneous level-3 evolutions;
-  stage 10 onward allows six. At the evolution cap, a new evolution downgrades
-  the oldest equipped evolution to level 2, with a warning before choosing.
+- Levels 2/3/4/5 unlock at stages 3/6/11/21. There is no shared evolution quota
+  or automatic downgrade; all seven companions can independently reach level 5.
 - Each normal stage offers at most one mid-stage and one clear supply. The first
   stage uses a 36-tile mixed-set deal; later boards grow to 144, or 156 in fog.
   Initial deals have a legal witness. Automatic clears and player choices can
@@ -360,7 +373,8 @@ card contrast or accept pointer input, and reduced motion skips their waits.
 There is no mid-stage supply, and emergency powers keep their remaining uses.
 Recovering all items alone does not win: the full board must be cleared. A final
 clear restores every remaining level. The stage reward and travel then continue
-into stage 11 and the normal endless sequence. Later stages do not repeat this Boss.
+into stage 11 and the endless sequence. Every tenth stage through 100 repeats
+the sealing mechanic with the additional rules listed above.
 
 Undo includes partial levels, seal energy, the first-return flag, proc counters
 and RNG state. Repeating the same pickup after Undo produces the same return.
@@ -558,3 +572,15 @@ below the playfield and tools. Updates no longer move the board or tray when a
 label wraps, a fuse arms, scanning ends, or a burst adds more item summaries.
 `test-clackworks-layout-browser.cjs` measures document and viewport positions
 through 96 status changes in both languages at four widths, plus Boss restores.
+
+
+## Hundred-stage guardian regression checks
+
+- `node scripts/test-critter-bosses.cjs`: independent upgrades for all seven slots,
+  replacement limits, 60 complete guardian witnesses, high-level seals, exact
+  save/Undo replay, each restriction and legacy checkpoint compatibility.
+- `node scripts/test-critter-bosses-browser.cjs`: all ten actual entrances,
+  bilingual route guide, separated 6+1 slots, first recovery, reload and Undo,
+  mobile width checks and usable input after effects. Uses mocked leaderboard RPCs.
+- Existing save, arsenal, seal, expedition, translation, stable-layout and input
+  regression suites remain applicable. No database migration is required.

@@ -231,11 +231,13 @@
     if (motion.matches) return Promise.resolve();
     const board = document.getElementById('board'), rect = board.getBoundingClientRect(), pending = [];
     if (kind !== 'seal') {
-      const count = kind === 'ward' ? 3 : 6;
+      const definition = Object.values(RainExpedition.BOSSES).find(boss => boss.kind === kind);
+      const count = kind === 'ward' ? 3 : kind === 'armor' ? 6 : 4;
       for (let i = 0; i < count; i++) {
         const angle = i / count * Math.PI * 2, radius = rect.width * .32;
         const point = {x: rect.left + rect.width / 2 + Math.cos(angle) * radius, y: rect.top + rect.height / 2 + Math.sin(angle) * radius};
-        const shard = node(kind === 'ward' ? 'fx-ward-shard' : 'fx-armor-shard', point);
+        const shard = node(kind === 'ward' ? 'fx-ward-shard' : kind === 'armor' ? 'fx-armor-shard' : 'fx-boss-glyph', point, definition?.color);
+        if (!['ward','armor'].includes(kind)) shard.textContent = definition?.symbol || '◇';
         pending.push(animate(shard, [
           {transform: 'translate(-50%,-50%) scale(.2) rotate(-45deg)', opacity: 0},
           {transform: 'translate(-50%,-50%) scale(1) rotate(0)', opacity: .9, offset: .35},
@@ -243,7 +245,6 @@
           {transform: 'translate(-50%,-50%) scale(1.3) rotate(20deg)', opacity: 0}
         ], {duration: 1800, delay: i * 70, fill: 'backwards'}, true));
       }
-      return Promise.all(pending);
     }
     const seal = node('fx-seal-ring fx-seal-lock', center(rect), '#ddb296');
     seal.style.width = `${rect.width * .7}px`; seal.style.height = `${rect.width * .7}px`;
@@ -386,6 +387,8 @@
             {transform: `translate(${Math.cos(angle)*160}px,${Math.sin(angle)*160}px) rotate(${i*60}deg) scale(.15)`, opacity: 0}
           ], {duration: 1250, delay, fill: 'backwards'}, true));
         }
+      } else if (event.kind === 'trialShift') {
+        pending.push(sealShatter(center(board), board.width * .35, delay));
       } else if (event.kind === 'bossBreak') {
         pending.push(sealShatter(center(board), board.width * .7, delay, true));
       } else if (event.kind === 'reclaim') {

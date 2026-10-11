@@ -109,10 +109,10 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.pendingReward = ['feather']; assert.equal(game.choose('feather'), false);
   game.stage = 3; assert.ok(game.choose('feather')); assert.equal(game.relics.feather, 2);
   game.pendingReward = ['feather']; assert.equal(game.choose('feather'), false);
-  game.stage = 6; assert.ok(game.choose('feather')); assert.equal(game.evolved, 'feather');
+  game.stage = 6; assert.ok(game.choose('feather')); assert.equal(game.relics.feather, 3);
   game.relics.ukulele = 2; game.pendingReward = ['ukulele']; assert.ok(game.choose('ukulele'));
   assert.equal(game.relics.feather, 3); assert.equal(game.relics.ukulele, 3);
-  game.relics.shield = 2; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.relics.feather, 2);
+  game.relics.shield = 2; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.relics.feather, 3);
   delete game.relics.shield; game.shieldSpent = true; game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
   game.pendingReward = ['shield']; assert.ok(game.choose('shield')); assert.equal(game.shieldSpent, true);
   for (let n = 0; n < 3; n++) {
@@ -170,4 +170,4 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.radarUntil = 6; game.radarMark = 0;
   assert.equal(game.pick(2).recovered, 9); assert.equal(game.radarMark, 3); counts(game);
 }
-console.log('PASS: growth gates, stage-based evolution slots, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');
+console.log('PASS: growth gates, independent companion levels, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');
