@@ -19,7 +19,8 @@
   const MODES = {
     drizzle: { name: '细雨热身', count: 36, kinds: 6 },
     rain: { name: '暴雨挑战', count: 108, kinds: 12 },
-    monsoon: { name: '季风试炼', count: 144, kinds: 12 }
+    monsoon: { name: '季风试炼', count: 144, kinds: 12 },
+    eclipse: { name: '蚀夜极限', count: 180, kinds: 12 }
   };
   function shuffled(list, random) {
     const result = [...list];
@@ -39,7 +40,7 @@
     } else {
       // A deep, irregular core and thin side shelves create distinct resources:
       // digging reveals more tiles; spending a shelf tile does not.
-      const layers = options.layers || (mode === 'rain' ? [8, 9, 8, 9, 8, 9, 8, 9, 10] : Array(12).fill(9));
+      const layers = options.layers || (mode === 'rain' ? [8, 9, 8, 9, 8, 9, 8, 9, 10] : Array(mode === 'eclipse' ? 16 : 12).fill(9));
       const patterns = [
         [0, 1, 3, 4, 5, 6, 8, 10, 11, 7, 2, 9],
         [1, 2, 4, 5, 7, 8, 9, 10, 11, 0, 3, 6],
@@ -56,7 +57,7 @@
       for (const x of [29, 496]) for (let row = 0; row < 3; row++) for (let z = 0; z < 2; z++)
         add(x + (x < 300 ? z * 9 : -z * 9), 92 + row * 103 + z * 12, z, 'shelf');
     }
-    const pileSize = options.pileSize || (mode === 'drizzle' ? 6 : mode === 'monsoon' ? 12 : 9);
+    const pileSize = options.pileSize || (mode === 'drizzle' ? 6 : ['monsoon', 'eclipse'].includes(mode) ? 12 : 9);
     for (const pile of ['left', 'right']) for (let i = 0; i < pileSize; i++)
       add(pile === 'left' ? 72 + i * 3 : 456 - i * 3, 464 + i * 2.5, 30 + i, pile);
     return tiles;
@@ -76,7 +77,7 @@
     const remaining = Array(kinds).fill(0);
     for (let i = 0; i < tiles.length / 3; i++) remaining[i % kinds] += 3;
     const held = Array(kinds).fill(0);
-    const target = options.target || (mode === 'monsoon' ? 6 : 5);
+    const target = options.target || (['monsoon', 'eclipse'].includes(mode) ? 6 : 5);
     for (const id of order) {
       const occupied = held.reduce((a, b) => a + b, 0);
       const candidates = [];

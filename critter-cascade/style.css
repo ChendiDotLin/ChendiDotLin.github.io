@@ -770,3 +770,15 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
   .welcome-mode { padding: 18px; gap: 8px; }
   .welcome-resume { align-items: stretch; flex-direction: column; }
 }
+
+/* Replacement decisions show full descriptions at the actual owned level. */
+.replacement-label { margin: 18px 0 9px; font-size: 13px; color: #e4d9bd; }
+.replacement-incoming { border-color: #8ecdb9; }
+.replacement-incoming + .replacement-label { margin-top: 24px; }
+.reward-choice[data-replace] { flex-wrap: wrap; align-items: flex-start; }
+.reward-choice[data-replace] > div { flex: 1; min-width: 0; }
+.replace-action { flex-basis: 100%; font-size: 11px; text-align: right; color: #eac78a; }
+.eclipse-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 12px; margin: 12px 0; border: 1px solid #ab98da66; border-radius: 10px; background: #9a7bc112; font-size: 11px; }
+.eclipse-status > span { flex: 1; min-width: 160px; min-height: 32px; line-height: 16px; color: #c3c8db; }
+.eclipse-choice { border-color: #ab98da66; }
+.welcome-modes .expedition-choice { grid-column: 1 / -1; }

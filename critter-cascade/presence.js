@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const KEY = 'rain-match-online-id-v1', CHANNEL = 'rain-match-online-v1', IDLE_MS = 180000;
-  const modes = new Set(['drizzle', 'rain', 'monsoon', 'expedition']);
+  const modes = new Set(['drizzle', 'rain', 'monsoon', 'eclipse', 'expedition']);
   const validId = id => typeof id === 'string' && /^[a-f0-9-]{36}$/.test(id);
   function summarize(state) {
     const players = new Map();

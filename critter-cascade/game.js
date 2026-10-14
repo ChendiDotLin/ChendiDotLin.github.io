@@ -37,7 +37,7 @@
   function updateClock() {
     const now = performance.now();
     if (clockActive && timerStarted) elapsed += now - tick;
-    if (clockActive && isExpedition()) {
+    if (clockActive && (isExpedition() || game.mode === 'eclipse')) {
       const delta = now - tick;
       game.advanceEnvironment(delta);
       const hit = game.advancePressure(delta);
@@ -323,7 +323,7 @@
     cancelEffects();
     const outgoing = runId && game ? fx.captureBoard() : null;
     animating = !!runId;
-    closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
+    closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : mode === 'eclipse' ? new CritterEclipse.Eclipse() : new RainMatch.Game(mode);
     targeting = null; stageRewardClaimed = false; replacementItem = null; timerStarted = false; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
     tenTime = null; tenRecord = null; tenSubmitting = false;
@@ -338,14 +338,16 @@
     if (animating) {
       playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (isExpedition()) showExpeditionReward();
+        else if (game.mode === 'eclipse') showEclipseIntro();
       });
     } else {
       render(true); syncClock();
       if (isExpedition()) showExpeditionReward();
+      else if (game.mode === 'eclipse') showEclipseIntro();
     }
   }
   function render(enter = false) {
-    if (isExpedition()) game.refreshEnvironment();
+    game.refreshEnvironment?.();
     lightningMarks = new Set(isExpedition() ? game.lightningTarget || [] : []);
     $('timer').title = t(timerStarted ? 'time' : 'timerWaiting');
     $('mode-title').textContent = isExpedition() ? t('expStage', { n: game.stage }) + ' · ' + modeName(game.mode) : modeName(game.mode);
@@ -467,14 +469,14 @@
     const canSubmit = !isExpedition() || game.competitive || !!submissionPayload;
     const rescue = !won && !finalized && (game.canUse('remove') || game.canUse('undo'));
     showDialog('result', `${fx.resultScene(won, t(won ? 'escapeSignal' : 'defeatSignal'), animateScene === true)}<span class="modal-eyebrow">${modeName(game.mode)}</span>
-      <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : 'lostTitle')}</h2>
-      <p>${t(game.pressure?.hearts === 0 ? 'pressureDefeat' : rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
+      <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : game.pressure?.hearts === 0 ? 'pressureLostTitle' : 'lostTitle')}</h2>
+      <p>${t(game.pressure?.hearts === 0 ? game.mode === 'eclipse' ? 'eclipseDefeat' : 'pressureDefeat' : rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
       <div class="result-stats"><span>${t('recovered')}<b>${recovered()}${isExpedition() ? '' : ' / ' + game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t(isExpedition() ? 'expReached' : 'moves')}<b>${isExpedition() ? game.stage : game.moves}</b></span></div>${isExpedition() ? loadoutMarkup() + `<p class="build-summary">${t('expBestChain', { n: game.bestChain })}</p>` : ''}
       ${rescue && game.canUse('remove') ? `<button class="secondary-button" data-rescue="remove">${t('rescueRemove')}</button>` : ''}
       ${rescue && game.canUse('undo') ? `<button class="secondary-button" data-rescue="undo">${t('rescueUndo')}</button>` : ''}
       <div class="score-entry"><p class="scope-note">${t('rankingScope')}</p>
       ${!canSubmit ? `<p>${t('expLegacyRun')}</p>` : receipt ? `<p id="save-feedback" class="save-feedback" role="status" tabindex="-1">${t(receipt.improved ? 'saved' : 'notBest', { rank: receipt.rank })}</p>` :
-        `<form id="score-form" novalidate><label for="player-id">${t('player')}</label><div class="score-input-row"><input id="player-id" name="player-id" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="id-rules score-error" placeholder="${t('playerPlaceholder')}" required><button class="primary-button" type="submit" ${submitting || !leaderboard.configured ? 'disabled' : ''}>${t(submitting ? 'sending' : rescue ? 'submitEnd' : 'submit')}</button></div><p id="id-rules" class="input-hint">${t('idRules')}</p><p id="score-error" class="form-error" role="alert">${formError ? t(isExpedition() && formError === 'notConfigured' ? 'expDatabase' : formError) : !leaderboard.configured ? t('notConfigured') : ''}</p></form>`}
+        `<form id="score-form" novalidate><label for="player-id">${t('player')}</label><div class="score-input-row"><input id="player-id" name="player-id" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="id-rules score-error" placeholder="${t('playerPlaceholder')}" required><button class="primary-button" type="submit" ${submitting || !leaderboard.configured ? 'disabled' : ''}>${t(submitting ? 'sending' : rescue ? 'submitEnd' : 'submit')}</button></div><p id="id-rules" class="input-hint">${t('idRules')}</p><p id="score-error" class="form-error" role="alert">${formError ? t(formError === 'notConfigured' ? game.mode === 'eclipse' ? 'eclipseDatabase' : isExpedition() ? 'expDatabase' : formError : formError) : !leaderboard.configured ? t('notConfigured') : ''}</p></form>`}
       <button class="text-button" id="view-result-rankings">${t('seeRankings')}</button></div>
       <button class="primary-button" data-new-run>${t(won && game.mode === 'drizzle' ? 'nextRain' : 'again')}</button>`);
     $('modal-content').querySelectorAll('[data-rescue]').forEach(button => button.addEventListener('click', () => use(button.dataset.rescue)));
@@ -515,6 +517,7 @@
   function renderRankings() {
     const content = $('inline-ranking-content');
     const expeditionRanking = rankingMode.startsWith('expedition');
+    $('leaderboard-title').textContent = t('modeRankingTitle', {mode: t(expeditionRanking ? 'expedition' : rankingMode)});
     $('ranking-period-tabs').hidden = !expeditionRanking;
     $('ranking-period-tabs').setAttribute('aria-label', t('rankingPeriod'));
     $('ranking-period-tabs').querySelectorAll('button').forEach(button => {
@@ -539,6 +542,7 @@
       if (rankingError === 'notConfigured') {
         if (rankingPeriod === 'beta') message = 'betaPending';
         else if (rankingMode.startsWith('expedition')) message = 'expDatabase';
+        else if (rankingMode === 'eclipse') message = 'eclipseDatabase';
       }
       content.innerHTML = `<p class="form-error" role="status">${t(message)}</p>`; return;
     }
@@ -787,14 +791,22 @@
     bindRewardSkip();
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
       const id = button.dataset.reward;
+      if (RainExpedition.RELICS[id]?.kind === 'active' && game.equipment && game.equipment !== id) { showReplacement(id); return; }
       if (!game.choose(id)) { showReplacement(id); return; }
       afterReward();
     }));
   }
   function showReplacement(id) {
     replacementItem = id;
-    const passives = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === 'passive');
-    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('expReplaceCopy')}</p><div class="reward-choices">${passives.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.rarityAt(relic.level)}">${relicIcon(relic.id)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(relic.level))}</small><b>${relicName(relic.id)}</b><span>${t('expLevel', { n: relic.level })} → ${relicName(id, 1)} 1</span></div></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    const active = RainExpedition.RELICS[id]?.kind === 'active';
+    const candidates = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === (active ? 'active' : 'passive'));
+    const ability = (key, level, incoming = false) => {
+      // An outgoing choice changes family bonuses. Show the incoming base
+      // ability rather than promising bonuses from a team that may be replaced.
+      const profile = ClackCompanions.profile(key, level, incoming ? null : game, language);
+      return `${relicIcon(key, level)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level))} · ${t('expLevel', {n: level})}</small><b>${relicName(key, level)} <em class="equipment-role">${t('role_' + key)}</em></b><span>${profile.effect}</span><span class="reward-rule">${profile.rules}</span></div>`;
+    };
+    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('replaceCompare')}</p><h3 class="replacement-label">${t('replaceIncoming')}</h3><div class="reward-choice replacement-incoming" data-rarity="common">${ability(id, 1, true)}</div><p class="input-hint">${t('replaceTeamNote')}</p><h3 class="replacement-label">${t('replaceOutgoing')}</h3><div class="reward-choices">${candidates.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.rarityAt(relic.level)}">${ability(relic.id, relic.level)}<strong class="replace-action">${t('replaceChoose')}</strong></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
     $('reward-back').addEventListener('click', showExpeditionReward);
@@ -865,16 +877,18 @@
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
   function renderEnvironment() {
-    const env = isExpedition() ? game.environment : null;
+    const env = game.environment;
     document.body.classList.toggle('environment-mono', env?.kind === 'mono');
     $('environment-status').hidden = !env;
+    $('eclipse-status').hidden = game.mode !== 'eclipse';
+    if (game.mode === 'eclipse') $('eclipse-memory').textContent = t(!env.started ? 'eclipseWaiting' : env.preview > 0 ? 'eclipseObserve' : 'eclipseMemory', {n: Math.ceil(env.preview / 1000)});
     if (env) {
       $('environment-name').textContent = t('environmentName_' + env.kind);
       const seconds = Math.ceil(Math.max(env.preview, ...env.cards.map(card => card.remaining)) / 1000);
       $('environment-progress').textContent = t(env.kind === 'mono' ? 'environmentMonoHint' : game.radarActive ? 'environmentScout' : seconds > 0 ? 'environmentObserve' : 'environmentRemember', {n: seconds});
     }
     for (const el of $('board').children) {
-      const id = Number(el.dataset.id), hidden = isExpedition() && game.memoryHidden(id);
+      const id = Number(el.dataset.id), hidden = game.memoryHidden?.(id);
       el.classList.toggle('memory-hidden', !!hidden);
       el.classList.toggle('memory-mark', !!env?.cards.some(card => card.id === id));
       const blind = el.classList.contains('blind');
@@ -893,19 +907,19 @@
     if (dialogView === 'environment' || (dialogView === 'boss' && game.pressure && !game.pressure.started)) { event.preventDefault(); closeDialog(); render(); }
   });
   function renderPressure() {
-    const p = isExpedition() ? game.pressure : null;
+    const p = game.pressure;
     $('pressure-status').hidden = !p;
     if (!p) return;
     $('pressure-hearts').textContent = '♥'.repeat(p.hearts) + '♡'.repeat(3 - p.hearts);
     $('pressure-hearts').setAttribute('aria-label', t('pressureHearts', {n: p.hearts}));
-    $('pressure-time').textContent = t(!p.hearts ? 'pressureEnded' : !p.started ? 'pressureReady' : clockActive ? 'pressureTime' : 'pressurePaused', {n: (p.remaining / 1000).toFixed(1)});
+    $('pressure-time').textContent = t(!p.hearts ? 'pressureEnded' : !p.started ? game.mode === 'eclipse' ? 'eclipsePressureReady' : 'pressureReady' : clockActive ? 'pressureTime' : 'pressurePaused', {n: (p.remaining / 1000).toFixed(1)});
     $('pressure-fill').style.transform = `scaleX(${p.remaining / 8000})`;
     $('pressure-status').classList.toggle('urgent', p.started && p.hearts > 0 && p.remaining <= 3000);
     $('pressure-pause').disabled = game.status !== 'playing' || finalized || savePaused;
   }
   function showPressurePause() {
     if (!game.pressure || game.status !== 'playing') return;
-    showDialog('pressurePause', `<h2 id="modal-title">${t('pressurePauseTitle')}</h2><p>${t('pressureRule')}</p><button id="pressure-resume" class="primary-button">${t('pressureResume')}</button>`);
+    showDialog('pressurePause', `<h2 id="modal-title">${t('pressurePauseTitle')}</h2><p>${t(game.mode === 'eclipse' ? 'eclipsePressureRule' : 'pressureRule')}</p><button id="pressure-resume" class="primary-button">${t('pressureResume')}</button>`);
     $('pressure-resume').addEventListener('click', () => { closeDialog(); renderPressure(); });
     renderPressure();
   }
@@ -968,7 +982,13 @@
     else { targeting = targeting === 'blackhole' ? null : 'blackhole'; render(); }
   });
 
+  function showEclipseIntro() {
+    showDialog('eclipse', `<span class="modal-eyebrow">ECLIPSE / CHALLENGE</span><h2 id="modal-title">${t('eclipseTitle')}</h2><ol>${t('eclipseRules').map(rule => `<li>${rule}</li>`).join('')}</ol><button id="eclipse-start" class="primary-button">${t(timerStarted ? 'pressureResume' : 'welcomePlay')}</button>`);
+    $('eclipse-start').addEventListener('click', closeDialog);
+  }
+  $('eclipse-info').addEventListener('click', showEclipseIntro);
   function showHelp() {
+    if (game.mode === 'eclipse') { showEclipseIntro(); return; }
     if (isExpedition()) { showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('expHelpTitle')}</h2><ol>${t('expHelpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('expHelpNote')}</p><p>${t('helpRanking')}</p>`); return; }
     showDialog('help', `<div class="modal-symbol">◇</div><h2 id="modal-title">${t('helpTitle')}</h2><ol>${t('helpSteps').map(step => `<li>${step}</li>`).join('')}</ol><p>${t('helpStrategy')}</p><p>${t('helpPowers')}</p><p>${t('helpRanking')}</p><p class="keyboard-note">${t('helpKeys')}</p>`);
   }
@@ -979,7 +999,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ pressurePause: showPressurePause, environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ eclipse: showEclipseIntro, pressurePause: showPressurePause, environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('welcome-language').addEventListener('click', toggleLanguage);
@@ -1051,7 +1071,7 @@
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });
-  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); renderPressure(); if (isExpedition() && game.environment) renderEnvironment(); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
+  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); renderPressure(); if (game.environment) renderEnvironment(); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
   document.addEventListener('visibilitychange', () => {
     updateClock();
     if (document.hidden) { activeEffect?.skip(); fx.reset(); }

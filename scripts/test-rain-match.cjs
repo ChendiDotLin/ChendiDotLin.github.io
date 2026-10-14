@@ -13,7 +13,7 @@ for (const mode of Object.keys(MODES)) for (let seed = 0; seed < 100; seed++) {
   assert.ok(game.tiles.every(t => t.x >= 0 && t.y >= 0 && t.x + 72 <= 600 && t.y + 72 <= 590));
   if (mode !== 'drizzle') {
     const core = game.tiles.filter(t => t.pile === 'main');
-    assert.equal(new Set(core.map(t => t.z)).size, mode === 'rain' ? 9 : 12);
+    assert.equal(new Set(core.map(t => t.z)).size, mode === 'rain' ? 9 : mode === 'eclipse' ? 16 : 12);
     assert.equal(game.tiles.filter(t => t.pile === 'shelf').length, 12);
     assert.equal(new Set(Object.values(counts(game))).size, 1); // Balanced item counts.
     // Each shelf has two layers; deep core cards begin underneath real blockers.
@@ -22,7 +22,7 @@ for (const mode of Object.keys(MODES)) for (let seed = 0; seed < 100; seed++) {
   }
   for (const pile of ['left', 'right']) {
     assert.equal(game.available().filter(t => t.pile === pile).length, 1);
-    const expected = mode === 'drizzle' ? 6 : mode === 'monsoon' ? 12 : 9;
+    const expected = mode === 'drizzle' ? 6 : ['monsoon', 'eclipse'].includes(mode) ? 12 : 9;
     assert.equal(game.tiles.filter(t => t.pile === pile).length, expected);
   }
   const blocked = game.tiles.find(t => !game.available().includes(t));
@@ -97,4 +97,4 @@ assert.equal(fresh.use('remove'), false); assert.equal(fresh.use('undo'), false)
   assert.ok(game.use('undo'));
   assert.deepEqual(game.available().filter(t => t.pile === 'left').map(t => t.id), [top.id]);
 }
-console.log('PASS: 300 solvable deals, main and supply stacks, blocked tiles, matching, inventory limits, all powers, rescue, reserve, and resets.');
+console.log('PASS: 400 solvable deals, main and supply stacks, blocked tiles, matching, inventory limits, all powers, rescue, reserve, and resets.');

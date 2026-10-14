@@ -6,7 +6,7 @@ In this GitHub Pages repository the game lives at `/critter-cascade/`.
 No build step, external JavaScript, ads, or paid actions are required to play.
 The optional shared leaderboard requires the public Supabase configuration below.
 
-- Three difficulties: 36, 108, and 144 tiles.
+- Four standalone difficulties: 36, 108, 144, and 180 tiles (Eclipse).
 - Centered portrait playfield: layered main board, two lower supply stacks,
   seven-slot tray, and three square power buttons. Each supply stack exposes
   only its top card and shares the main board's matching and power rules.
@@ -164,7 +164,7 @@ The configured client requires HTTPS Supabase project URLs ending in
 
 ### Ranking and submission rules
 
-- Separate boards for Drizzle, Rainstorm, and Monsoon; top 10 displayed.
+- Separate boards for Drizzle, Rainstorm, Monsoon, and Eclipse; top 10 displayed.
 - Recovered tiles descending, then active play time ascending, to the millisecond.
   Exact ties use record time and then player ID for a stable display order.
 - Each case-sensitive ID keeps its best result per mode. IDs support 1–20
@@ -474,7 +474,7 @@ replay. `node scripts/test-rain-rarity-browser.cjs` checks covered-card contrast
 rarity labels, bilingual supply odds and resume behavior with mocked networking.
 
 The main URL opens an introduction and mode chooser. It recommends Drizzle,
-explains three basic rules and offers all four modes. Existing Expedition saves
+explains three basic rules and offers all five modes. Existing Expedition saves
 appear as a Continue card. Staying on this screen neither starts the clock nor
 creates/writes/locks an Expedition save; trying classics preserves that save.
 Explicit `?mode=drizzle`, `?mode=rain`, `?mode=monsoon` and `?mode=expedition`
@@ -754,7 +754,7 @@ it from elapsed time or total moves, preserving accumulated time. Cancelling an
 initial Continue/locked-save dialog returns to the welcome chooser rather than
 exposing its paused Drizzle preview; an existing active run is unaffected.
 
-`test-critter-first-pick-browser.cjs` covers all four modes, invalid taps, help,
+`test-critter-first-pick-browser.cjs` covers the original four modes, invalid taps, help,
 tools, Undo back to zero moves, reload before/after the first pick, legacy saves,
 and continuation cancellation via close/Escape followed by supply-pile input.
 Leaderboard RPCs, Presence and Analytics are mocked.
@@ -771,3 +771,39 @@ scrolling. No global touch listeners, scroll locking or synthetic picks are used
 320/390px. It first reproduces unwanted panning under the previous `manipulation`
 policy, then checks both swipe directions on main/supply tiles and a tool,
 slightly sliding supply taps, and normal scrolling from the page margin.
+
+
+### Eclipse challenge and companion comparisons
+
+Eclipse is a separate classic challenge with 180 tiles, 16 core layers, 12 tile
+kinds, a seven-slot tray and the same three once-per-run powers. It never acquires
+Expedition save ownership or alters a saved Expedition. The first successful pick
+starts both the score timer and its eight-second hunt. Only successful picks reset
+the hunt; a timeout permanently costs one of three hearts. All hearts gone is a
+terminal loss with no tool rescue. Dialogs, backgrounding, pause and power effects
+use the existing pause gate. Undo restores the board without rewinding hearts,
+remaining time or the started flag.
+
+Memory fog marks at most five exposed tiles. It gives five seconds after the first
+pick, then three seconds for newly marked tiles; triples reveal all marks for at
+least two seconds and Shuffle for at least three. The rules are displayed before
+play and accessible from the persistent challenge HUD. Both English and Chinese
+are supported. Classic and challenge boards use their own mode names in headings.
+
+Replacement screens show the incoming level-one companion and every outgoing
+candidate's current rarity, level, effect and trigger rules. Active replacements
+also open this comparison before changing the team. Back, Skip and language
+switching preserve the pending choice; confirming replaces only that companion.
+
+Run `scripts/critter-eclipse.sql` in Supabase after the existing migrations. It
+adds an independent Eclipse board, its score RPCs and admin support without
+changing scores, beta archives, whitelist entries or Expedition submission rules.
+Before migration the game remains playable and the board shows a setup message.
+Do not rerun older setup migrations afterwards: their older mode constraints omit
+Eclipse. Reapplying this new migration is safe.
+
+Verification: `test-critter-eclipse.cjs` checks seeded legal solutions, memory,
+hearts and powers; `test-critter-eclipse-browser.cjs` checks mobile layouts, actual
+clock/pause/fog/result behavior, score routing and both replacement types;
+`test-critter-eclipse-sql.cjs` checks migration preservation, ranking, retry safety,
+permissions, reruns and admin deletion. Browser test networking is mocked.
