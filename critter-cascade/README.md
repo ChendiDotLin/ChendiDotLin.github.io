@@ -473,11 +473,15 @@ unchanged. Existing equipment and already saved offers are retained.
 replay. `node scripts/test-rain-rarity-browser.cjs` checks covered-card contrast,
 rarity labels, bilingual supply odds and resume behavior with mocked networking.
 
-The main game URL defaults to Expedition and the farthest-stage leaderboard.
-Existing saves are previewed while paused and require Continue before play or
-writes resume. Explicit `?mode=drizzle`, `?mode=rain`, and `?mode=monsoon` links
-still open their classic modes. `node scripts/test-rain-default-browser.cjs`
-checks fresh entry, saved runs, tab locks, unavailable storage and classic links.
+The main URL opens an introduction and mode chooser. It recommends Drizzle,
+explains three basic rules and offers all four modes. Existing Expedition saves
+appear as a Continue card. Staying on this screen neither starts the clock nor
+creates/writes/locks an Expedition save; trying classics preserves that save.
+Explicit `?mode=drizzle`, `?mode=rain`, `?mode=monsoon` and `?mode=expedition`
+links still enter their modes directly. `test-rain-default-browser.cjs` checks
+entry, all choices, saved runs, tab locks, unavailable storage and explicit links.
+Other gameplay regression scripts can use `RAIN_GAME_URL` with `?mode=expedition`
+to bypass the introduction when testing an already selected Expedition.
 
 ## Online players
 
@@ -679,7 +683,7 @@ The migration marker makes rerunning safe even after new formal submissions.
 An exception rolls back the entire transaction. The final query reports archived
 and current row counts per mode. Do not rerun older schema installation scripts.
 
-The game defaults to Current and offers a separate Beta switch for every mode.
+The game defaults to Current and offers a separate Beta switch for Expedition.
 Both periods show the top ten; distance, speed and legacy modes keep their original
 ordering. Beta entries cannot be submitted to or cleared by the current-board
 admin controls. Until the SQL runs, selecting Beta shows a migration-pending note;
@@ -708,3 +712,14 @@ loads Google's real tag but intercepts collect requests to avoid inflating count
 `test-critter-columns-browser.cjs` checks column positions, a full loadout, details,
 clicks, classic mode and responsive reparenting. Production browser QA must mock
 Google tag / collection requests as well as score RPCs.
+
+### Restore the classic boards
+
+After the beta cutover, run `scripts/critter-restore-classic-leaderboards.sql` in
+Supabase SQL Editor. It moves Drizzle, Rainstorm and Monsoon back to the formal
+boards. If a player also has a new formal result, keep the better recovered count,
+then faster time, then earliest timestamp. Exact source rows remain in a private
+backup for recovery; the public beta archive no longer contains classic scores.
+Expedition rows and run receipts are untouched. A migration marker protects new
+scores on rerun, and all writes share the submission lock in one transaction.
+The UI shows the beta switch only for Expedition. No browser action moves scores.

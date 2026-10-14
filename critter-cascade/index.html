@@ -8,27 +8,46 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-columns-v1">
-  <script defer src="analytics.js?v=critter-columns-v1"></script>
-  <script defer src="layout.js?v=critter-columns-v1"></script>
-  <script defer src="core.js?v=critter-columns-v1"></script>
-  <script defer src="expedition.js?v=critter-columns-v1"></script>
-  <script defer src="expedition-save.js?v=critter-columns-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-columns-v1"></script>
-  <script defer src="companions.js?v=critter-columns-v1"></script>
-  <script defer src="i18n.js?v=critter-columns-v1"></script>
-  <script defer src="config.js?v=critter-columns-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-welcome-v1">
+  <script defer src="analytics.js?v=critter-welcome-v1"></script>
+  <script defer src="layout.js?v=critter-welcome-v1"></script>
+  <script defer src="core.js?v=critter-welcome-v1"></script>
+  <script defer src="expedition.js?v=critter-welcome-v1"></script>
+  <script defer src="expedition-save.js?v=critter-welcome-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-welcome-v1"></script>
+  <script defer src="companions.js?v=critter-welcome-v1"></script>
+  <script defer src="i18n.js?v=critter-welcome-v1"></script>
+  <script defer src="config.js?v=critter-welcome-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-columns-v1"></script>
-  <script defer src="leaderboard.js?v=critter-columns-v1"></script>
-  <script defer src="effects.js?v=critter-columns-v1"></script>
-  <script defer src="music.js?v=critter-columns-v1"></script>
-  <script defer src="game.js?v=critter-columns-v1"></script>
+  <script defer src="presence.js?v=critter-welcome-v1"></script>
+  <script defer src="leaderboard.js?v=critter-welcome-v1"></script>
+  <script defer src="effects.js?v=critter-welcome-v1"></script>
+  <script defer src="music.js?v=critter-welcome-v1"></script>
+  <script defer src="game.js?v=critter-welcome-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
   <div class="landscape" aria-hidden="true"><div class="forest-canopy"></div><div class="forest-floor"></div></div>
-  <div class="play-space">
+  <section id="welcome-screen" class="welcome-screen" aria-labelledby="welcome-title">
+    <div class="welcome-top"><a href="/" data-i18n="siteHome">← 主页</a><button id="welcome-language" class="language-button" disabled>EN</button></div>
+    <header class="welcome-hero">
+      <p class="welcome-eyebrow" data-i18n="welcomeEyebrow">小动物，大连锁</p>
+      <h1 id="welcome-title">Critter Cascade</h1>
+      <p data-i18n="welcomeIntro">从三张相同的牌开始，慢慢组建你的动物伙伴队伍。</p>
+      <div class="welcome-tiles" aria-hidden="true"><img src="assets/tiles/acorn.webp" alt=""><img src="assets/tiles/acorn.webp" alt=""><img src="assets/tiles/acorn.webp" alt=""><span>✦</span></div>
+    </header>
+    <ol class="welcome-rules"><li data-i18n="welcomeRulePick">点击没有被挡住的牌，放入七格背包。</li><li data-i18n="welcomeRuleMatch">三张相同自动消除；背包装满就失败。</li><li data-i18n="welcomeRuleTools">移出、撤回、洗牌，每局各免费一次。</li></ol>
+    <div id="welcome-resume" class="welcome-resume" hidden><div><strong data-i18n="saveFound">发现远征存档</strong><p id="welcome-save-summary"></p></div><button id="welcome-continue" class="primary-button" data-i18n="saveContinue" disabled>继续远征</button></div>
+    <p class="welcome-prompt" data-i18n="welcomeChoose">第一次玩？推荐先从「细雨」开始。</p>
+    <div class="welcome-modes">
+      <button class="welcome-mode recommended" data-welcome-mode="drizzle" disabled><span class="welcome-tag" data-i18n="welcomeRecommended">新手推荐</span><strong data-i18n="drizzle">细雨</strong><p data-i18n="welcomeDrizzle">36 张牌，先熟悉三消和七格背包。</p><span class="welcome-go" data-i18n="welcomeBegin">从这里开始 →</span></button>
+      <button class="welcome-mode" data-welcome-mode="rain" disabled><span class="welcome-tag" data-i18n="welcomeClassic">经典挑战</span><strong data-i18n="rain">暴雨</strong><p data-i18n="welcomeRain">108 张牌，更多遮挡，需要提前留意第三张。</p><span class="welcome-go" data-i18n="welcomePlay">开始挑战 →</span></button>
+      <button class="welcome-mode" data-welcome-mode="monsoon" disabled><span class="welcome-tag" data-i18n="welcomeHard">进阶挑战</span><strong data-i18n="monsoon">季风</strong><p data-i18n="welcomeMonsoon">144 张牌，更深叠层，考验规划和道具使用。</p><span class="welcome-go" data-i18n="welcomePlay">开始挑战 →</span></button>
+      <button class="welcome-mode expedition-choice" data-welcome-mode="expedition" disabled><span class="welcome-tag" data-i18n="welcomeRogue">伙伴肉鸽</span><strong data-i18n="expedition">远征</strong><p data-i18n="welcomeExpedition">熟悉三消后，收集伙伴、搭配连锁，挑战 Boss 和无尽关卡。</p><span class="welcome-go" data-i18n="welcomeExplore">探索远征 →</span></button>
+    </div>
+    <p id="welcome-loading" class="welcome-loading" role="status" data-i18n="welcomeLoading">正在准备游戏…</p>
+  </section>
+  <div class="play-space" hidden inert>
   <div class="game-shell">
     <header class="site-header">
       <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>

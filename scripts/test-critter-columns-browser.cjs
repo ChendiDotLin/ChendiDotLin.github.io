@@ -6,7 +6,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  // Keep browser tests from generating real Analytics traffic, including live QA.
  await page.route('https://www.googletagmanager.com/**',r=>r.fulfill({body:''}));
  await page.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:await response.text()+'\nconst Base=RainExpedition.Expedition;RainExpedition.Expedition=class extends Base {constructor(){super();window.testGame=this;}};'});});
- await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();
+ await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/?mode=expedition');await page.locator('[data-reward=ukulele]').click();
  const panel=page.locator('#expedition-panel'),board=page.locator('#board');
  for(const width of [1024,1280,1440,1920]){
   await page.setViewportSize({width,height:1000});

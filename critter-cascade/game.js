@@ -22,6 +22,7 @@
   const t = (key, values) => RainI18n.translate(language, key, values);
   const itemName = type => language === 'en' ? ITEMS[type].en : ITEMS[type].name;
   const modeName = mode => t(`${mode}Title`);
+  let welcomeOpen = true;
   let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = readPreference('rain-match-effects') === 'on', comboTimeout;
   music.setEffects(sound);
   let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance', rankingPeriod = 'formal';
@@ -59,7 +60,7 @@
     tick = now;
   }
   function syncClock() {
-    clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward && !savePaused;
+    clockActive = !welcomeOpen && !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward && !savePaused;
   }
   function closeDialog() {
     updateClock();
@@ -164,7 +165,7 @@
       if (id === 'board') $(id).removeAttribute('title');
       else $(id).title = t(key);
     }
-    for (const id of ['language', 'modal-language']) {
+    for (const id of ['language', 'modal-language', 'welcome-language']) {
       $(id).textContent = language === 'zh' ? 'EN' : '中文'; $(id).setAttribute('aria-label', t('language')); $(id).title = t('language');
     }
     for (const tool of ['remove', 'undo', 'shuffle']) $(tool).title = t(`${tool}Hint`);
@@ -178,9 +179,24 @@
     $('inline-ranking-tabs').setAttribute('aria-label', t('rankingModes'));
     renderRankings();
     renderPresence();
+    renderWelcome();
     $('effects').textContent = t(sound ? 'soundOff' : 'soundOn');
     $('effects').setAttribute('aria-pressed', String(sound));
     $('wins').textContent = String(wins).padStart(2, '0');
+  }
+  function renderWelcome() {
+    const record = saveState.record;
+    $('welcome-resume').hidden = !record;
+    $('welcome-save-summary').textContent = record ? t('saveSummary', {
+      stage: record.game.stage, n: record.game.banked + record.game.cleared, time: formatTime(record.elapsedMs)
+    }) : '';
+  }
+  function enterPlay() {
+    if (!welcomeOpen) return;
+    welcomeOpen = false;
+    $('welcome-screen').hidden = true;
+    const space = document.querySelector('.play-space'); space.hidden = false; space.inert = false;
+    window.scrollTo(0, 0);
   }
   function renderPresence() {
     const state = presenceView.status;
@@ -252,6 +268,7 @@
     else { start('expedition'); }
   }
   function restoreRun(record) {
+    enterPlay();
     cancelEffects(); closeDialog(); clockActive = false;
     game = RainExpedition.Expedition.fromSave(record.game); elapsed = record.elapsedMs; tick = performance.now();
     runId = record.runId; finalized = record.finalized; receipt = record.receipt; submissionPayload = record.submissionPayload;
@@ -285,6 +302,7 @@
 
   function start(mode = game?.mode || 'expedition') {
     if (mode === 'expedition' && !saveStore.owned) { requestExpedition(); return; }
+    enterPlay();
     if (isExpedition()) { updateClock(); checkpoint(); }
     if (mode !== 'expedition') saveStore.release();
     savePaused = false;
@@ -479,6 +497,8 @@
   }
   function renderRankings() {
     const content = $('inline-ranking-content');
+    const expeditionRanking = rankingMode.startsWith('expedition');
+    $('ranking-period-tabs').hidden = !expeditionRanking;
     $('ranking-period-tabs').setAttribute('aria-label', t('rankingPeriod'));
     $('ranking-period-tabs').querySelectorAll('button').forEach(button => {
       const selected = button.dataset.rankingPeriod === rankingPeriod;
@@ -527,6 +547,7 @@
   }
   async function refreshRankings(mode = rankingMode, force = false) {
     if (mode === 'expedition') mode = expeditionBoard;
+    if (!mode.startsWith('expedition') && rankingPeriod !== 'formal') { rankingPeriod = 'formal'; force = true; }
     // A tab change never starts a game. Ignore responses for previously selected tabs.
     if (!force && rankingLoading && mode === rankingMode) return;
     rankingMode = mode;
@@ -943,6 +964,13 @@
     if (modal.open) ({ pressurePause: showPressurePause, environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
+  $('welcome-language').addEventListener('click', toggleLanguage);
+  $('welcome-continue').addEventListener('click', () => { enterPlay(); requestExpedition(); });
+  document.querySelectorAll('[data-welcome-mode]').forEach(button => button.addEventListener('click', () => {
+    enterPlay();
+    if (button.dataset.welcomeMode === 'expedition') requestExpedition();
+    else start(button.dataset.welcomeMode);
+  }));
   $('equipment-catalog').addEventListener('click', showCatalog);
   $('boss-catalog').addEventListener('click', showBossCatalog);
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
@@ -997,7 +1025,7 @@
   $('language').addEventListener('click', toggleLanguage); $('modal-language').addEventListener('click', toggleLanguage);
   document.addEventListener('keydown', event => {
     suppressEffectClick = false;
-    if (modal.open || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.target.matches('input, textarea, select, [contenteditable]')) return;
+    if (welcomeOpen || modal.open || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.target.matches('input, textarea, select, [contenteditable]')) return;
     if (event.key === 'Escape' && targeting) { targeting = null; render(); return; }
     if (activeEffect && ['Enter', ' '].includes(event.key) && event.target.closest(gameplayControls)) {
       activeEffect.skip(); if (modal.open) { event.preventDefault(); return; }
@@ -1027,18 +1055,19 @@
     if (event.key !== RainSave.KEY) return;
     if (isExpedition() && saveStore.owned && event.newValue !== saveStore.expected) {
       updateClock(); savePaused = true; saveStore.release(); showSaveLocked(); render(); syncClock();
-    } else { saveState = saveStore.read(); renderResumeBanner(); }
+    } else { saveState = saveStore.read(); renderResumeBanner(); renderWelcome(); }
   });
-  localizePage();
+  // Prepare a paused classic preview; opening the welcome screen never creates
+  // an Expedition save, acquires its lock, or consumes any gameplay time.
+  game = new RainMatch.Game('drizzle'); savePaused = true;
+  localizePage(); render();
+  document.querySelectorAll('#welcome-screen button').forEach(button => { button.disabled = false; });
+  $('welcome-loading').hidden = true;
   const requestedMode = new URLSearchParams(location.search).get('mode');
-  if (Object.hasOwn(MODES, requestedMode)) start(requestedMode);
-  else {
-    // A paused preview keeps the landing screen in Expedition while the player
-    // chooses to resume and while the cross-tab save lock is being acquired.
-    game = saveState.record ? RainExpedition.Expedition.fromSave(saveState.record.game) : new RainExpedition.Expedition();
-    elapsed = saveState.record?.elapsedMs || 0; savePaused = true;
-    $('timer').textContent = formatTime(elapsed);
-    render(); refreshRankings('expedition'); requestExpedition();
+  if (requestedMode === 'expedition' || Object.hasOwn(MODES, requestedMode)) {
+    enterPlay();
+    if (requestedMode === 'expedition') requestExpedition();
+    else start(requestedMode);
   }
   if (window.RainPresence) {
     presence = new RainPresence.Presence(window.RAIN_CONFIG, {

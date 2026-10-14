@@ -725,3 +725,43 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
   .play-space > .expedition-panel .relic-meter { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-width: none; }
   .play-space > .expedition-panel .family-bonuses { grid-template-columns: repeat(2, minmax(0, 1fr)); height: 60px; }
 }
+
+/* An immediate introduction, not a forced wait or an automatic new run. */
+.play-space[hidden], .welcome-screen[hidden], #ranking-period-tabs[hidden] { display: none; }
+.welcome-screen { width: min(100%, 820px); margin: 0 auto; padding: 26px 24px 42px; }
+.welcome-top { display: flex; align-items: center; justify-content: space-between; color: #a9c6bf; font-size: 12px; }
+.welcome-hero { text-align: center; padding: 25px 0 8px; }
+.welcome-eyebrow { color: #b6d7b9; font-size: 12px; letter-spacing: 3px; }
+.welcome-hero h1 { margin: 12px 0; font-size: clamp(30px, 6vw, 48px); letter-spacing: 1px; color: #f1d39c; }
+.welcome-hero > p:last-of-type { color: #b4c8c9; font-size: 14px; line-height: 1.8; }
+.welcome-tiles { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 22px 0; }
+.welcome-tiles img { width: 56px; height: 64px; padding: 5px; object-fit: contain; border-radius: 10px; border: 2px solid #d7cba6; background: #e5dec3; box-shadow: 0 5px 0 #0b1a22; }
+.welcome-tiles span { margin-left: 6px; color: #f1d39c; font-size: 30px; }
+.welcome-rules { display: grid; gap: 10px; margin: 12px 0 24px; padding: 18px 22px 18px 42px; border: 1px solid #9cb8ac35; border-radius: 14px; background: #25403c60; color: #d0ded8; font-size: 13px; line-height: 1.65; }
+.welcome-rules li::marker { color: #e8c883; }
+.welcome-prompt { font-size: 14px; color: #d5e4cb; margin: 24px 0 14px; }
+.welcome-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.welcome-mode { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; text-align: left; padding: 22px; color: #dbe8e3; border: 1px solid #95adbc50; border-radius: 16px; background: #253b43df; }
+.welcome-mode.recommended { border-color: #a6d7a3; background: linear-gradient(130deg, #375a45, #233e3c); }
+.welcome-mode.expedition-choice { border-color: #b3a0d077; background: linear-gradient(130deg, #3a374b, #243c43); }
+.welcome-tag { color: #a8c5c3; font-size: 11px; letter-spacing: .7px; }
+.recommended .welcome-tag { color: #c5edb0; }
+.welcome-mode strong { font-size: 23px; }
+.welcome-mode p { margin: 0; color: #b4c8cd; font-size: 13px; line-height: 1.75; }
+.welcome-go { margin-top: auto; padding-top: 8px; color: #e5d29f; font-size: 12px; }
+.welcome-mode:hover { border-color: #d6e2c3; background-color: #35504f; }
+.welcome-mode:focus-visible { outline: 3px solid #e5d29f; outline-offset: 4px; }
+.welcome-mode:disabled { opacity: .6; }
+.welcome-resume { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 18px; border: 1px solid #c7b1df66; background: #4a3d5338; border-radius: 14px; }
+.welcome-resume[hidden] { display: none; }
+.welcome-resume strong { font-size: 14px; color: #e2d6f1; }
+.welcome-resume p { margin: 7px 0 0; font-size: 12px; color: #b5c5c8; line-height: 1.6; }
+.welcome-resume .primary-button { width: auto; flex-shrink: 0; margin: 0; font-size: 12px; }
+.welcome-loading { text-align: center; color: #a9c6bf; font-size: 12px; }
+@media (max-width: 500px) {
+  .welcome-screen { padding: 16px 18px 28px; }
+  .welcome-hero { padding-top: 16px; }
+  .welcome-modes { grid-template-columns: 1fr; gap: 12px; }
+  .welcome-mode { padding: 18px; gap: 8px; }
+  .welcome-resume { align-items: stretch; flex-direction: column; }
+}
