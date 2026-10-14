@@ -88,6 +88,22 @@
       .then(finish);
     if (document.hidden) effect.skip();
   }
+  // State has already settled before effects start. A fresh press may finish
+  // presentation immediately; enable the original button before its native click.
+  const gameplayControls = '#board button, #reserve button, #remove, #undo, #shuffle, #expedition-feather, #expedition-active';
+  let suppressEffectClick = false;
+  document.addEventListener('pointerdown', event => {
+    suppressEffectClick = false;
+    if (event.button !== 0 || !activeEffect || modal.open || !event.target.closest(gameplayControls)) return;
+    activeEffect.skip();
+    // Touch browsers can retarget the generated click to the new dialog.
+    suppressEffectClick = modal.open;
+  }, true);
+  document.addEventListener('click', event => {
+    if (suppressEffectClick || (modal.open && event.target.closest(gameplayControls))) {
+      suppressEffectClick = false; event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
   function beep(matched = false) { music.sound(matched ? 'match' : 'pick'); }
 
   function tileElement(tile, interactive = true) {
@@ -305,9 +321,16 @@
       else slot.setAttribute('aria-label', t('emptySlot', { n: i + 1 }));
       $('rack').append(slot);
     }
-    $('reserve').replaceChildren(...game.reserve.map(id => {
-      const el = tileElement(game.tiles[id]); el.disabled = finalized || animating || savePaused || !!game.pendingReward || !!targeting || game.status !== 'playing'; return el;
-    }));
+    const oldReserve = [...$('reserve').children];
+    const reserveTiles = game.reserve.map(id => {
+      const tile = game.tiles[id];
+      const el = oldReserve.find(el => Number(el.dataset.id) === id && Number(el.dataset.type) === tile.type) || tileElement(tile);
+      el.disabled = finalized || animating || savePaused || !!game.pendingReward || !!targeting || game.status !== 'playing';
+      el.title = itemName(tile.type); el.setAttribute('aria-label', itemName(tile.type)); decorateTarget(el, tile);
+      return el;
+    });
+    // Preserve the native press target when an effect is skipped on pointerdown.
+    if (oldReserve.length !== reserveTiles.length || reserveTiles.some((el, i) => el !== oldReserve[i])) $('reserve').replaceChildren(...reserveTiles);
     $('reserve-area').hidden = !game.reserve.length;
     $('capacity').innerHTML = `${game.rack.length} <span>/ 7</span>`;
     $('cleared').textContent = game.cleared; $('total').textContent = ` / ${game.tiles.length}`;
@@ -336,7 +359,7 @@
     presence?.setMode(game.mode);
   }
   function pick(id) {
-    if (finalized || animating || savePaused) return;
+    if (modal.open || finalized || animating || savePaused) return;
     const before = fx.snapshot();
     updateClock();
     if (isExpedition() && targeting === 'blackhole') { activateExpedition(id); return; }
@@ -357,6 +380,7 @@
     if (game.status !== 'playing') showResult(true);
   }
   function use(name) {
+    if (activeEffect && !modal.open) { activeEffect.skip(); if (modal.open) return; }
     if (finalized || animating || savePaused) return;
     const before = fx.snapshot();
     updateClock(); if (!game.use(name)) return;
@@ -881,8 +905,12 @@
   $('rankings').addEventListener('click', () => showRankings()); $('result-button').addEventListener('click', showResult);
   $('language').addEventListener('click', toggleLanguage); $('modal-language').addEventListener('click', toggleLanguage);
   document.addEventListener('keydown', event => {
+    suppressEffectClick = false;
     if (modal.open || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.target.matches('input, textarea, select, [contenteditable]')) return;
     if (event.key === 'Escape' && targeting) { targeting = null; render(); return; }
+    if (activeEffect && ['Enter', ' '].includes(event.key) && event.target.closest(gameplayControls)) {
+      activeEffect.skip(); if (modal.open) { event.preventDefault(); return; }
+    }
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });

@@ -3,11 +3,12 @@
   'use strict';
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const active = new Set();
+  const MAX_ANIMATIONS = 96;
   const layer = document.createElement('div');
   layer.className = 'fx-layer'; layer.inert = true; layer.setAttribute('aria-hidden', 'true'); document.body.append(layer);
   const center = rect => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
   function animate(el, frames, options, temporary = false) {
-    if (motion.matches || !el.animate) { if (temporary) el.remove(); return Promise.resolve(); }
+    if (motion.matches || !el.animate || active.size >= MAX_ANIMATIONS) { if (temporary) el.remove(); return Promise.resolve(); }
     // Native animation promises may stop progressing in a suspended document.
     // Our completion and cleanup must not depend on the browser settling them.
     return new Promise(resolve => {
@@ -265,8 +266,22 @@
   }
   function relic(events, before, recoveredCount) {
     if (motion.matches) return Promise.resolve();
+    const fullTotal = recoveredCount ?? new Set(events.flatMap(event => event.ids)).size;
+    if (events.length > 24) {
+      const seen = new Set();
+      const important = events.map((event, index) => {
+        const first = !seen.has(event.kind); seen.add(event.kind);
+        return first || ['bossBreak', 'reclaim', 'wardBreak', 'armorBreak', 'trialShift'].includes(event.kind) ? index : -1;
+      }).filter(index => index >= 0);
+      const selected = new Set([events.length - 1, ...important].slice(0, 24));
+      for (let i = 0; selected.size < 24 && i < 24; i++) selected.add(Math.floor(i * (events.length - 1) / 23));
+      events = [...selected].sort((a, b) => a - b).map(index => events[index]);
+    }
     const board = document.getElementById('board').getBoundingClientRect();
     const rack = document.getElementById('rack').getBoundingClientRect();
+    // Read positions together, before adding animated DOM nodes.
+    const chipRects = new Map([...document.querySelectorAll('[data-relic]')].map(el => [el, el.getBoundingClientRect()]));
+    const meterRect = document.getElementById('boss-meter').getBoundingClientRect();
     const pending = [];
     const step = events.length > 1 ? Math.min(180, 1600 / (events.length - 1)) : 0;
     const heavy = events.filter(event => ['behemoth', 'gasoline'].includes(event.kind));
@@ -291,7 +306,7 @@
         pending.push(animate(portal, [{ transform: 'translate(-50%,-50%) scale(.15) rotate(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.65) rotate(80deg)', opacity: .95, offset: .45 }, { transform: 'translate(-50%,-50%) scale(.1) rotate(180deg)', opacity: 0 }], { duration: 1250, delay, fill: 'backwards' }, true));
       } else if (['ukulele', 'capacitor'].includes(event.kind)) {
         const chip = document.querySelector(`[data-relic="${event.kind}"]`);
-        let origin = chip ? center(chip.getBoundingClientRect()) : center(rack);
+        let origin = chip ? center(chipRects.get(chip)) : center(rack);
         event.ids.forEach((id, i) => {
           if (!before.has(id)) return;
           const point = center(before.get(id).rect), dx = point.x - origin.x, dy = point.y - origin.y;
@@ -326,7 +341,7 @@
         });
       } else if (['prism', 'seeker', 'echo', 'recycler'].includes(event.kind)) {
         const chip = document.querySelector(`[data-relic="${event.kind}"]`);
-        const origin = chip ? center(chip.getBoundingClientRect()) : center(rack);
+        const origin = chip ? center(chipRects.get(chip)) : center(rack);
         event.ids.forEach((id, i) => {
           if (!before.has(id)) return;
           const point = center(before.get(id).rect), at = delay + i * 100;
@@ -361,12 +376,10 @@
         });
       } else if (event.kind === 'turbine') {
         const chip = document.querySelector('[data-relic="turbine"]');
-        const point = chip ? center(chip.getBoundingClientRect()) : center(rack);
+        const point = chip ? center(chipRects.get(chip)) : center(rack);
         const ring = node('fx-echo', point);
         pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(1.4)', opacity: 0 }, { opacity: .9, offset: .25 }, { transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }], { duration: 850, delay, fill: 'backwards' }, true));
       } else if (event.kind === 'sealEnergy') {
-        const meter = document.getElementById('boss-meter');
-        const meterRect = meter.getBoundingClientRect();
         const target = meterRect.width ? center(meterRect) : { x: board.left + board.width / 2, y: board.top }, origin = center(rack);
         for (let i = 0; i < event.amount; i++) {
           const mote = node('fx-seal-energy', origin, '#d6beff');
@@ -393,7 +406,7 @@
         pending.push(sealShatter(center(board), board.width * .7, delay, true));
       } else if (event.kind === 'reclaim') {
         const chip = event.relic ? document.querySelector(`[data-relic="${event.relic}"]`) : null;
-        const point = chip ? center(chip.getBoundingClientRect()) : event.ids.length && before.has(event.ids[0]) ? center(before.get(event.ids[0]).rect) : center(board);
+        const point = chip ? center(chipRects.get(chip)) : event.ids.length && before.has(event.ids[0]) ? center(before.get(event.ids[0]).rect) : center(board);
         pending.push(sealShatter(point, 46, delay));
         const label = node('fx-seal-level', { x: point.x, y: point.y - 12 }, '#dbc8ff');
         label.textContent = `Lv.${event.level}`;
@@ -410,20 +423,10 @@
           pending.push(animate(ring, [{ transform: 'translate(-50%,-50%) scale(.5)', opacity: .8 }, { transform: 'translate(-50%,-100%) scale(1.5)', opacity: 0 }], { duration: 950 }, true)); }
       }
     }
-    const firstBlast = events.findIndex(event => event.kind === 'behemoth');
-    if (firstBlast >= 0) {
-      // One restrained board kick avoids stacking dozens of competing shakes.
-      const strength = Math.min(5, board.width / 80);
-      const kick = [
-        { transform: 'translate(0,0)' }, { transform: `translate(${-strength}px,${strength / 2}px)`, offset: .22 },
-        { transform: `translate(${strength}px,${-strength / 2}px)`, offset: .4 },
-        { transform: `translate(${-strength / 2}px,0)`, offset: .62 }, { transform: 'translate(0,0)' }
-      ];
-      for (const id of ['board', 'rack']) pending.push(surface(document.getElementById(id), copy =>
-        animate(copy, kick, { duration: 420, delay: firstBlast * step + 260 })));
-    }
+    // Impact rings carry the blast; do not clone/repaint an entire live board
+    // and tray just to shake them during every chain.
     const recovered = new Set(events.filter(event => event.ids.length === 3).flatMap(event => event.ids)).size;
-    const total = recoveredCount ?? recovered;
+    const total = fullTotal;
     if (total >= 36) {
       const wave = node('fx-blast-wave fx-chain-wave', { x: board.left + board.width / 2, y: board.top + board.height * .4 });
       wave.style.width = `${board.width * .9}px`; wave.style.height = `${board.height * .75}px`;

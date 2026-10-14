@@ -584,3 +584,21 @@ through 96 status changes in both languages at four widths, plus Boss restores.
   mobile width checks and usable input after effects. Uses mocked leaderboard RPCs.
 - Existing save, arsenal, seal, expedition, translation, stable-layout and input
   regression suites remain applicable. No database migration is required.
+
+
+## Responsive animation input
+
+A pointer press on a tile, reserve tile or gameplay tool finishes the current
+presentation before the same native click is handled. Keyboard tools also finish
+pending effects first. Game state has already settled; animations never replay or
+change a move. A reward/result opened by completion blocks that press from
+passing through to the board. Reserve controls retain their DOM identity.
+
+Large chains sample at most 24 visual events and use at most 96 concurrent native
+animations; the game and proc log retain every real event. Companion/meter bounds
+are read together before animation writes. Explosion rings remain, while expensive
+whole-board/tray shake copies are removed. Stage-transition copies remain inert.
+
+`test-critter-responsive-fx-browser.cjs` exercises real mouse and emulated touch
+presses during explosions, reserve input, keyboard/tool interruption, supply
+transitions, valid saves, animation bounds and cleanup. RPC/Presence are mocked.
