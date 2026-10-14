@@ -723,3 +723,19 @@ backup for recovery; the public beta archive no longer contains classic scores.
 Expedition rows and run receipts are untouched. A migration marker protects new
 scores on rerun, and all writes share the submission lock in one transaction.
 The UI shows the beta switch only for Expedition. No browser action moves scores.
+
+### Stable mobile supply-pile viewport
+
+The Expedition action grid reserves two 46px rows plus its 7px gap (99px total).
+Previously, with Feather and an active companion present, revealing Continue for
+mid-stage rewards or victory added a third button and a new row. This increased
+content above the board by 53px; Chrome's mobile scroll anchoring moved the page
+by the same amount, then reversed when the reward closed. Keeping the grid height
+stable also accommodates the ten-stage score button without moving the board.
+No focus, touch scrolling, or browser scroll-anchor behavior is globally disabled.
+
+`test-critter-supply-scroll-browser.cjs` reproduces the old 53px jump, then checks
+real touch taps through the last main pair, remaining bottom supply stacks,
+mid-stage reward, stage victory and ten-stage button at 320/390px in both languages.
+Board, tray and page scroll stay within 1px; deliberate scrolling still works.
+Leaderboard RPCs, Presence and Analytics are mocked.
