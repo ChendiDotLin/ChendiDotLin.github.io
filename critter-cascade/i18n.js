@@ -2,6 +2,13 @@
   'use strict';
   const messages = {
   "zh": {
+    "formalBoard": "正式榜",
+    "betaBoard": "内测榜",
+    "rankingPeriod": "榜单时期",
+    "formalBoardNote": "新成绩进入正式榜，各模式独立排名。",
+    "betaBoardNote": "保留内测时期的成绩与阵容，不再新增。",
+    "betaPending": "内测榜迁移尚未完成，请稍后刷新。",
+
     "pressureRule": "追猎挑战：3 颗心，每 8 秒必须手动拿到一张有效牌（含飞羽取牌和暂存牌）。超时扣一颗心并重新计时，三颗心耗尽则本次远征结束。空点、道具、主动技能不会刷新倒计时，撤销不会恢复时间或心。动画、弹窗、后台和暂停期间不计时。",
     "pressurePause": "暂停",
     "pressurePauseTitle": "追猎已暂停",
@@ -488,6 +495,13 @@
     "expFx_trialShift": "Boss 阶段切换"
   },
   "en": {
+    "formalBoard": "Current",
+    "betaBoard": "Beta",
+    "rankingPeriod": "Leaderboard period",
+    "formalBoardNote": "New scores enter the current boards, ranked separately by mode.",
+    "betaBoardNote": "Archived beta scores and builds. Closed to new entries.",
+    "betaPending": "The beta archive is not ready yet. Please refresh later.",
+
     "pressureRule": "Hunt challenge: 3 hearts. Manually take a valid tile every 8 seconds, including Bird Reach and reserve tiles. A timeout costs one heart and restarts the timer; losing all three ends the expedition. Invalid taps, tools and active skills do not reset it. Undo restores neither time nor hearts. Effects, dialogs, background time and Pause stop the clock.",
     "pressurePause": "Pause",
     "pressurePauseTitle": "Hunt paused",

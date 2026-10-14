@@ -667,3 +667,20 @@ permanent heart loss/Undo, final defeat, saves and victory cleanup.
 `test-critter-pressure-browser.cjs` covers entry, real clock transitions,
 pausing/background/animation exclusion, defeat/reload, mobile HUD, motion
 preferences and an actual mouse click during a tremor. RPCs and Presence are mocked.
+
+### Beta leaderboard cutover
+
+Run `scripts/critter-beta-leaderboard.sql` once in Supabase SQL Editor. It atomically
+copies every row from all six existing score modes into a private, read-only beta
+archive, then empties the current boards. All timestamps, builds and run receipts
+are preserved. Submissions are serialized with the cutover; existing run IDs
+cannot recreate migrated scores. New run IDs can enter the current boards.
+The migration marker makes rerunning safe even after new formal submissions.
+An exception rolls back the entire transaction. The final query reports archived
+and current row counts per mode. Do not rerun older schema installation scripts.
+
+The game defaults to Current and offers a separate Beta switch for every mode.
+Both periods show the top ten; distance, speed and legacy modes keep their original
+ordering. Beta entries cannot be submitted to or cleared by the current-board
+admin controls. Until the SQL runs, selecting Beta shows a migration-pending note;
+no browser operation moves or deletes real scores.

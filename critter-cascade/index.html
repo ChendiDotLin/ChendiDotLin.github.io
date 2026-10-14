@@ -8,20 +8,20 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-pressure-v1">
-  <script defer src="core.js?v=critter-pressure-v1"></script>
-  <script defer src="expedition.js?v=critter-pressure-v1"></script>
-  <script defer src="expedition-save.js?v=critter-pressure-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-pressure-v1"></script>
-  <script defer src="companions.js?v=critter-pressure-v1"></script>
-  <script defer src="i18n.js?v=critter-pressure-v1"></script>
-  <script defer src="config.js?v=critter-pressure-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-beta-v1">
+  <script defer src="core.js?v=critter-beta-v1"></script>
+  <script defer src="expedition.js?v=critter-beta-v1"></script>
+  <script defer src="expedition-save.js?v=critter-beta-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-beta-v1"></script>
+  <script defer src="companions.js?v=critter-beta-v1"></script>
+  <script defer src="i18n.js?v=critter-beta-v1"></script>
+  <script defer src="config.js?v=critter-beta-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-pressure-v1"></script>
-  <script defer src="leaderboard.js?v=critter-pressure-v1"></script>
-  <script defer src="effects.js?v=critter-pressure-v1"></script>
-  <script defer src="music.js?v=critter-pressure-v1"></script>
-  <script defer src="game.js?v=critter-pressure-v1"></script>
+  <script defer src="presence.js?v=critter-beta-v1"></script>
+  <script defer src="leaderboard.js?v=critter-beta-v1"></script>
+  <script defer src="effects.js?v=critter-beta-v1"></script>
+  <script defer src="music.js?v=critter-beta-v1"></script>
+  <script defer src="game.js?v=critter-beta-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -101,6 +101,11 @@
   <aside id="leaderboard-panel" class="leaderboard-panel" aria-labelledby="leaderboard-title" tabindex="-1">
     <div class="leaderboard-heading"><h2 id="leaderboard-title" data-i18n="rankingTitle">远征排行榜</h2><button id="refresh-rankings" class="text-button"><span aria-hidden="true">↻</span> <span data-i18n="refreshRankings">刷新</span></button></div>
     <p class="scope-note" data-i18n="rankingScope">全站榜 · 成绩跨设备共享</p>
+    <div id="ranking-period-tabs" class="ranking-tabs" role="group" aria-label="榜单时期">
+      <button data-ranking-period="formal" data-i18n="formalBoard" class="selected" aria-pressed="true">正式榜</button>
+      <button data-ranking-period="beta" data-i18n="betaBoard" aria-pressed="false">内测榜</button>
+    </div>
+    <p id="ranking-period-note" class="scope-note"></p>
     <div id="inline-ranking-tabs" class="ranking-tabs" role="group" aria-label="排行榜模式">
       <button data-leaderboard-mode="drizzle" data-i18n="drizzle" aria-pressed="false">细雨</button>
       <button data-leaderboard-mode="rain" data-i18n="rain" aria-pressed="false">暴雨</button>

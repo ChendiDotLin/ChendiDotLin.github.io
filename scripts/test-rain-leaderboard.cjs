@@ -45,5 +45,9 @@ const { messages } = require('../critter-cascade/i18n.js');
  const boardClient=new Leaderboard(config,async(url,options)=>{requested={url,payload:JSON.parse(options.body)};return {ok:true,json:async()=>({entries:[],total:0})}});
  await boardClient.list('expedition_speed');assert.ok(requested.url.endsWith('rain_expedition_v3_leaderboard'));assert.deepEqual(requested.payload,{p_board:'speed'});
  await boardClient.list('expedition_legacy');assert.ok(requested.url.endsWith('rain_expedition_leaderboard'));
+ for(const mode of ['drizzle','rain','monsoon','expedition_legacy','expedition_distance','expedition_speed']) {
+  await boardClient.list(mode,'beta');assert.ok(requested.url.endsWith('critter_beta_leaderboard'));assert.deepEqual(requested.payload,{p_mode:mode==='expedition_legacy'?'expedition':mode});
+ }
+ await assert.rejects(()=>boardClient.list('rain','unknown'),/networkError/);
  console.log('PASS: language parity, player IDs, score ordering, RPC requests, validation, failed requests, malformed responses, and missing configuration.');
 })().catch(error=>{console.error(error);process.exit(1)});

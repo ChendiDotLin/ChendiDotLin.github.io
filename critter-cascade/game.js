@@ -24,7 +24,7 @@
   const modeName = mode => t(`${mode}Title`);
   let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = readPreference('rain-match-effects') === 'on', comboTimeout;
   music.setEffects(sound);
-  let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance';
+  let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance', rankingPeriod = 'formal';
   let tenTime = null, tenRecord = null, tenSubmitting = false, expeditionBoard = 'expedition_distance';
   let submitting = false, submissionPayload = null, rankingRequest = 0;
   let rankingData = null, rankingError = '', rankingLoading = false;
@@ -469,8 +469,8 @@
         if (!result.ok) formError = result.error;
         else {
           receipt = result; playerDraft = result.playerId; savePreference('rain-match-player', playerDraft);
-          rankingCache.delete('expedition_distance'); rankingCache.delete('expedition_speed');
-          rankingCache.delete(game.mode); refreshRankings(game.mode, true);
+          rankingCache.delete('formal:expedition_distance'); rankingCache.delete('formal:expedition_speed');
+          rankingCache.delete('formal:' + game.mode); rankingPeriod = 'formal'; refreshRankings(game.mode, true);
         }
         render();
         if (modal.open && dialogView === 'result') { showResult(); (receipt ? $('save-feedback') : $('score-error')).focus(); }
@@ -479,6 +479,12 @@
   }
   function renderRankings() {
     const content = $('inline-ranking-content');
+    $('ranking-period-tabs').setAttribute('aria-label', t('rankingPeriod'));
+    $('ranking-period-tabs').querySelectorAll('button').forEach(button => {
+      const selected = button.dataset.rankingPeriod === rankingPeriod;
+      button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+    $('ranking-period-note').textContent = t(rankingPeriod === 'beta' ? 'betaBoardNote' : 'formalBoardNote');
     content.setAttribute('aria-busy', String(rankingLoading));
     $('refresh-rankings').disabled = rankingLoading || !leaderboard.configured;
     $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => {
@@ -492,7 +498,12 @@
       content.innerHTML = `<p class="empty-ranking" role="status">${t('loading')}</p>`; return;
     }
     if (rankingError) {
-      content.innerHTML = `<p class="form-error" role="status">${t(rankingMode.startsWith('expedition') && rankingError === 'notConfigured' ? 'expDatabase' : rankingError)}</p>`; return;
+      let message = rankingError;
+      if (rankingError === 'notConfigured') {
+        if (rankingPeriod === 'beta') message = 'betaPending';
+        else if (rankingMode.startsWith('expedition')) message = 'expDatabase';
+      }
+      content.innerHTML = `<p class="form-error" role="status">${t(message)}</p>`; return;
     }
     const { entries = [], total = 0 } = rankingData || {};
     content.innerHTML = entries.length ? `<div class="ranking-scroll" tabindex="0" role="region" aria-label="${modeName(rankingMode)}"><table class="ranking-table"><caption class="visually-hidden">${modeName(rankingMode)}</caption><thead><tr><th scope="col">${t('rank')}</th><th scope="col">${t('player')}</th><th scope="col">${t(['expedition_distance', 'expedition_speed'].includes(rankingMode) ? 'expCompleted' : 'score')}</th><th scope="col">${t('duration')}</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p class="ranking-count">${t('leaderboardCount', { n: total })}</p>`
@@ -520,7 +531,8 @@
     if (!force && rankingLoading && mode === rankingMode) return;
     rankingMode = mode;
     const request = ++rankingRequest;
-    const cached = rankingCache.get(mode);
+    const period = rankingPeriod, cacheKey = period + ':' + mode;
+    const cached = rankingCache.get(cacheKey);
     rankingError = '';
     if (!force && cached && Date.now() - cached.loadedAt < 30000) {
       rankingLoading = false; rankingData = cached.data; renderRankings(); return;
@@ -530,9 +542,9 @@
     renderRankings();
     if (!leaderboard.configured) return;
     try {
-      const data = await leaderboard.list(mode);
+      const data = await leaderboard.list(mode, period);
       if (request !== rankingRequest) return;
-      rankingCache.set(mode, { data, loadedAt: Date.now() }); rankingData = data;
+      rankingCache.set(cacheKey, { data, loadedAt: Date.now() }); rankingData = data;
     } catch (error) {
       if (request !== rankingRequest) return;
       rankingError = error.message === 'notConfigured' ? 'notConfigured' : 'rankingLoadError';
@@ -541,7 +553,7 @@
     rankingLoading = false; renderRankings();
   }
   function showRankings(mode = game.mode) {
-    closeDialog(); refreshRankings(mode);
+    closeDialog(); rankingPeriod = 'formal'; refreshRankings(mode, true);
     $('leaderboard-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     $('leaderboard-panel').focus({ preventScroll: true });
   }
@@ -902,7 +914,7 @@
           cleared: milestone.cleared, elapsedMs: milestone.elapsedMs, stage: 10, completedStages: 10, tenMs: milestone.elapsedMs, loadout: milestone.loadout });
         if (currentRun !== runId || tenRecord !== milestone) return;
         tenSubmitting = false;
-        if (result.ok) { tenRecord.receipt = result; savePreference('rain-match-player', id); rankingCache.delete('expedition_distance'); rankingCache.delete('expedition_speed'); refreshRankings('expedition', true); }
+        if (result.ok) { tenRecord.receipt = result; savePreference('rain-match-player', id); rankingCache.delete('formal:expedition_distance'); rankingCache.delete('formal:expedition_speed'); refreshRankings('expedition', true); }
         checkpoint();
         if (modal.open && dialogView === 'ten') { showTenRecord(); if (!result.ok) $('ten-error').textContent = t(result.error === 'notConfigured' ? 'expDatabase' : result.error); }
       });
@@ -974,6 +986,10 @@
     localizePage(); beep();
   });
   $('help').addEventListener('click', showHelp); $('credits').addEventListener('click', showCredits);
+  $('ranking-period-tabs').querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+    if (rankingPeriod === button.dataset.rankingPeriod) return;
+    rankingPeriod = button.dataset.rankingPeriod; refreshRankings(rankingMode, true);
+  }));
   $('refresh-rankings').addEventListener('click', () => refreshRankings(rankingMode, true));
   $('inline-ranking-tabs').querySelectorAll('[data-leaderboard-mode]').forEach(button => button.addEventListener('click', () => refreshRankings(button.dataset.leaderboardMode)));
   $('expedition-ranking-tabs').querySelectorAll('button').forEach(button => button.addEventListener('click', () => { expeditionBoard = button.dataset.expBoard; refreshRankings(expeditionBoard); }));

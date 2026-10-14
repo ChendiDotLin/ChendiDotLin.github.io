@@ -45,10 +45,11 @@
       } catch (error) { throw Error(error.message === 'notConfigured' ? 'notConfigured' : 'networkError'); }
       finally { clearTimeout(timeout); }
     }
-    async list(mode) {
+    async list(mode, period = 'formal') {
+      if (!['formal', 'beta'].includes(period)) throw Error('networkError');
       if (mode === 'expedition_legacy') mode = 'expedition';
       const modern = ['expedition_distance','expedition_speed'].includes(mode);
-      const result = await this.request(modern ? 'rain_expedition_v3_leaderboard' : mode === 'expedition' ? 'rain_expedition_leaderboard' : 'rain_leaderboard', modern ? { p_board: mode.slice(11) } : mode === 'expedition' ? {} : { p_mode: mode });
+      const result = period === 'beta' ? await this.request('critter_beta_leaderboard', { p_mode: mode }) : await this.request(modern ? 'rain_expedition_v3_leaderboard' : mode === 'expedition' ? 'rain_expedition_leaderboard' : 'rain_leaderboard', modern ? { p_board: mode.slice(11) } : mode === 'expedition' ? {} : { p_mode: mode });
       if (!Array.isArray(result?.entries) || !Number.isInteger(result.total) || result.total < 0 ||
           result.entries.length > 100 || result.entries.some(entry => !validEntry(entry) || entry.mode !== mode)) throw Error('networkError');
       return result;
