@@ -739,3 +739,22 @@ real touch taps through the last main pair, remaining bottom supply stacks,
 mid-stage reward, stage victory and ten-stage button at 320/390px in both languages.
 Board, tray and page scroll stay within 1px; deliberate scrolling still works.
 Leaderboard RPCs, Presence and Analytics are mocked.
+
+### First-pick score clock and cancelled continuation
+
+Every mode starts its score clock on the first successful manual tile pick of the
+run (main board, supply pile or reserve, including a Feather-assisted pick).
+Inspecting the board, invalid taps and using a power before the first pick do not
+start it. Undo never resets the clock; later Expedition stages keep the same run
+clock. Existing dialog/background/effect pauses still apply. Boss pressure and
+environment timers remain independent and follow their existing start rules.
+
+Schema-3 checkpoints store an optional `timerStarted` boolean. Older saves infer
+it from elapsed time or total moves, preserving accumulated time. Cancelling an
+initial Continue/locked-save dialog returns to the welcome chooser rather than
+exposing its paused Drizzle preview; an existing active run is unaffected.
+
+`test-critter-first-pick-browser.cjs` covers all four modes, invalid taps, help,
+tools, Undo back to zero moves, reload before/after the first pick, legacy saves,
+and continuation cancellation via close/Escape followed by supply-pile input.
+Leaderboard RPCs, Presence and Analytics are mocked.

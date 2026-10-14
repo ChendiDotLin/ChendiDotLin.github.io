@@ -23,7 +23,7 @@
   const itemName = type => language === 'en' ? ITEMS[type].en : ITEMS[type].name;
   const modeName = mode => t(`${mode}Title`);
   let welcomeOpen = true;
-  let game, elapsed = 0, tick = performance.now(), clockActive = false, sound = readPreference('rain-match-effects') === 'on', comboTimeout;
+  let game, timerStarted = false, elapsed = 0, tick = performance.now(), clockActive = false, sound = readPreference('rain-match-effects') === 'on', comboTimeout;
   music.setEffects(sound);
   let savedWin = false, finalized = false, receipt = null, runId, dialogView = null, rankingMode = 'expedition_distance', rankingPeriod = 'formal';
   let tenTime = null, tenRecord = null, tenSubmitting = false, expeditionBoard = 'expedition_distance';
@@ -36,7 +36,7 @@
   const formatTime = (ms, precise = false) => `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}${precise ? '.' + String(ms % 1000).padStart(3, '0') : ''}`;
   function updateClock() {
     const now = performance.now();
-    if (clockActive) elapsed += now - tick;
+    if (clockActive && timerStarted) elapsed += now - tick;
     if (clockActive && isExpedition()) {
       const delta = now - tick;
       game.advanceEnvironment(delta);
@@ -69,6 +69,19 @@
     if (dialogView === 'environment' && game?.environment && !game.environment.started) { game.startEnvironment(); checkpoint(); }
     if (modal.open) modal.close(); dialogView = null; syncClock();
     if (startingPressure) $('pressure-status').scrollIntoView({block: 'start'});
+  }
+  function dismissDialog() {
+    // Cancelling Continue before any run starts must not expose the disabled
+    // Drizzle preview that was prepared behind the welcome screen.
+    const returnToWelcome = !runId && ['resume', 'saveLocked'].includes(dialogView);
+    closeDialog();
+    if (returnToWelcome) {
+      navigationToken++; saveStore.release(); welcomeOpen = true; savePaused = true; clockActive = false;
+      const space = document.querySelector('.play-space'); space.hidden = true; space.inert = true;
+      saveState = saveStore.read(); renderWelcome(); $('welcome-screen').hidden = false;
+      window.scrollTo(0, 0);
+      (saveState.record ? $('welcome-continue') : document.querySelector('[data-welcome-mode=drizzle]')).focus({ preventScroll: true });
+    }
   }
   function cancelEffects() {
     clearTimeout(activeEffect?.timer); activeEffect = null;
@@ -220,7 +233,7 @@
     if (!isExpedition() || !saveStore.owned || savePaused || !runId) { updateSaveLabel(); return; }
     lastCheckpoint = performance.now();
     captureTen();
-    const record = { schema: 3, savedAt: Date.now(), runId, elapsedMs: elapsed, finalized, receipt,
+    const record = { schema: 3, savedAt: Date.now(), runId, elapsedMs: elapsed, timerStarted, finalized, receipt,
       submissionPayload, stageRewardClaimed, playerDraft, tenTime, tenRecord, game: game.toSave() };
     const result = saveStore.write(record);
     if (result.ok) { saveNote = null; saveState = { record, raw: saveStore.expected, error: null, recovered: false }; }
@@ -271,6 +284,7 @@
     enterPlay();
     cancelEffects(); closeDialog(); clockActive = false;
     game = RainExpedition.Expedition.fromSave(record.game); elapsed = record.elapsedMs; tick = performance.now();
+    timerStarted = record.timerStarted ?? (elapsed > 0 || game.totalMoves > 0);
     runId = record.runId; finalized = record.finalized; receipt = record.receipt; submissionPayload = record.submissionPayload;
     tenTime = record.tenTime; tenRecord = record.tenRecord; tenSubmitting = false;
     stageRewardClaimed = record.stageRewardClaimed; playerDraft = record.playerDraft;
@@ -310,7 +324,7 @@
     const outgoing = runId && game ? fx.captureBoard() : null;
     animating = !!runId;
     closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : new RainMatch.Game(mode);
-    targeting = null; stageRewardClaimed = false; replacementItem = null; elapsed = 0; tick = performance.now();
+    targeting = null; stageRewardClaimed = false; replacementItem = null; timerStarted = false; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
     tenTime = null; tenRecord = null; tenSubmitting = false;
     runId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
@@ -333,6 +347,7 @@
   function render(enter = false) {
     if (isExpedition()) game.refreshEnvironment();
     lightningMarks = new Set(isExpedition() ? game.lightningTarget || [] : []);
+    $('timer').title = t(timerStarted ? 'time' : 'timerWaiting');
     $('mode-title').textContent = isExpedition() ? t('expStage', { n: game.stage }) + ' · ' + modeName(game.mode) : modeName(game.mode);
     const available = new Set(game.available().map(tile => tile.id));
     const targets = new Set(isExpedition() && targeting ? (targeting === 'feather' ? game.featherTargets() : game.cubeTargets()).map(tile => tile.id) : []);
@@ -409,7 +424,9 @@
     const before = fx.snapshot();
     updateClock();
     if (isExpedition() && targeting === 'blackhole') { activateExpedition(id); return; }
-    const result = game.pick(id, targeting === 'feather'); syncClock(); if (!result.ok) return;
+    const result = game.pick(id, targeting === 'feather');
+    if (result.ok && !timerStarted) { timerStarted = true; tick = performance.now(); }
+    syncClock(); if (!result.ok) return;
     targeting = null;
     lastStatus = null; beep(result.matched); render();
     if (!result.events?.some(event => event.kind === 'shield')) {
@@ -872,6 +889,7 @@
   }
   $('environment-info').addEventListener('click', showEnvironmentIntro);
   modal.addEventListener('cancel', event => {
+    if (!runId && ['resume', 'saveLocked'].includes(dialogView)) { event.preventDefault(); dismissDialog(); return; }
     if (dialogView === 'environment' || (dialogView === 'boss' && game.pressure && !game.pressure.started)) { event.preventDefault(); closeDialog(); render(); }
   });
   function renderPressure() {
@@ -976,9 +994,9 @@
   $('board').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   $('reserve').addEventListener('click', event => { const tile = event.target.closest('button[data-id]'); if (tile) pick(Number(tile.dataset.id)); });
   for (const name of ['remove', 'undo', 'shuffle']) $(name).addEventListener('click', () => use(name));
-  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { if (button.dataset.mode !== game.mode) { navigationToken++; if (button.dataset.mode === 'expedition') requestExpedition(); else start(button.dataset.mode); } }));
+  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { if (button.dataset.mode !== game.mode || !runId || (savePaused && !isExpedition())) { navigationToken++; if (button.dataset.mode === 'expedition') requestExpedition(); else start(button.dataset.mode); } }));
   $('restart').addEventListener('click', () => isExpedition() ? confirmRestart() : start());
-  $('close-modal').addEventListener('click', closeDialog);
+  $('close-modal').addEventListener('click', dismissDialog);
   modal.addEventListener('close', () => { if (!modal.open) { dialogView = null; updateClock(); syncClock(); } });
   function toggleMusic() {
     const open = $('music-panel').hidden;

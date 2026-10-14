@@ -2,6 +2,7 @@
   'use strict';
   const messages = {
   "zh": {
+    "timerWaiting": "成功拿到第一张牌后开始计时",
     "welcomeEyebrow": "小动物，大连锁",
     "welcomeIntro": "从三张相同的牌开始，慢慢组建你的动物伙伴队伍。",
     "welcomeRulePick": "点击没有被挡住的牌，放入七格背包。",
@@ -514,6 +515,7 @@
     "expFx_trialShift": "Boss 阶段切换"
   },
   "en": {
+    "timerWaiting": "Time starts with your first successful tile pick",
     "welcomeEyebrow": "Tiny critters. Big cascades.",
     "welcomeIntro": "Start with three matching tiles. Build a team of animal companions as you explore.",
     "welcomeRulePick": "Pick uncovered tiles to place them in your seven-slot tray.",

@@ -19,6 +19,7 @@
   function valid(record) {
     if (!record || record.schema !== 3 || !uuid(record.runId) || !Number.isSafeInteger(record.savedAt) || record.savedAt < 0 ||
       !Number.isFinite(record.elapsedMs) || record.elapsedMs < 0 || record.elapsedMs > 604800000 ||
+      (record.timerStarted !== undefined && typeof record.timerStarted !== 'boolean') ||
       typeof record.finalized !== 'boolean' || typeof record.stageRewardClaimed !== 'boolean' ||
       typeof record.playerDraft !== 'string' || record.playerDraft.length > 100 || !rules.validSave(record.game)) return false;
     if (record.finalized && record.game.status === 'playing') return false;

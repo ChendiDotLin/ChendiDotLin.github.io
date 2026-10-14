@@ -91,9 +91,10 @@ const game = new Expedition(seed(5)); game.choose('blackhole');
 const record = () => ({ schema: 3, tenTime: null, tenRecord: null, savedAt: Date.now(), runId: '12345678-1234-4123-8123-123456789abc', elapsedMs: 1256.4,
   finalized: false, receipt: null, submissionPayload: null, stageRewardClaimed: false, playerDraft: '玩家', game: game.toSave() });
 assert.ok(valid(record()));
+for (const timerStarted of [false, true]) { const r = {...record(),timerStarted}; assert.equal(parse(JSON.stringify(r)).timerStarted,timerStarted); }
 for (const mutate of [r => r.game.tiles[0].type = 99, r => r.game.rack.push(999), r => r.game.relics.bad = 1,
   r => r.game.tiles[0].x = Infinity, r => r.game.banked++, r => r.game.previous = {}, r => r.game.version = 1,
-  r => r.runId = 'bad', r => r.elapsedMs = -1, r => r.submissionPayload = undefined, r => r.receipt = {}]) {
+  r => r.timerStarted = 'yes', r => r.runId = 'bad', r => r.elapsedMs = -1, r => r.submissionPayload = undefined, r => r.receipt = {}]) {
   const r = record(); mutate(r); assert.equal(valid(r), false);
 }
 assert.equal(parse('{bad'), null); assert.equal(parse('x'.repeat(160001)), null);
