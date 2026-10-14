@@ -684,3 +684,27 @@ Both periods show the top ten; distance, speed and legacy modes keep their origi
 ordering. Beta entries cannot be submitted to or cleared by the current-board
 admin controls. Until the SQL runs, selecting Beta shows a migration-pending note;
 no browser operation moves or deletes real scores.
+
+### Desktop columns and page analytics
+
+At 1024px and wider, `layout.js` moves the existing expedition panel to the right
+column: leaderboard / game / companions. Below the breakpoint the same node
+returns to its original position above the board. No duplicate controls or game
+state are created; its listeners, hidden state and focus are preserved. The right
+panel scrolls independently, with full-width companion cards. The pressure HUD
+remains above the board. Resizing never changes the current run.
+
+The standalone game does not use Jekyll's shared head, so it explicitly loads
+`analytics.js`. It uses the homepage's GA4 measurement ID, G-1WHG4EGXB3, and the
+standard automatic page_view. It loads only on HTTPS chendilin.com / www, once per
+page, never on localhost. There are no custom player IDs or score/loadout events;
+page_location excludes query strings and fragments. Historical untracked visits
+cannot be recovered. Keep this ID in sync with `_config.yml` if it changes.
+
+Verify GA in Realtime using a normal visit to /critter-cascade/. Standard reports
+may take 24–48 hours. Account/property settings require access to Google Analytics
+and are not verified by the browser tests. `test-critter-analytics-browser.cjs`
+loads Google's real tag but intercepts collect requests to avoid inflating counts;
+`test-critter-columns-browser.cjs` checks column positions, a full loadout, details,
+clicks, classic mode and responsive reparenting. Production browser QA must mock
+Google tag / collection requests as well as score RPCs.
