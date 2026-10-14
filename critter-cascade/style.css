@@ -48,6 +48,9 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 .forest-floor { position: absolute; inset: auto -15% -180px; height: 350px; border-radius: 50%; background: #43604a20; box-shadow: 0 -35px 0 #58794a0b; }
 .board-area { position: relative; margin-top: 13px; }
 .board { position: relative; width: 100%; aspect-ratio: 600 / 590; }
+/* A slightly sliding tap must not pan the page. Keep pinch zoom and allow
+   ordinary scrolling when a gesture starts outside the gameplay surfaces. */
+#board, #reserve, .tools, #expedition-feather, #expedition-active { touch-action: pinch-zoom; -webkit-user-select: none; user-select: none; }
 .tile { position: absolute; display: grid; place-items: center; width: 12%; height: 12.20339%; padding: 0; border: 2px solid #e9d4a8; border-radius: 7px; background: linear-gradient(145deg, #fff4d9, #d9c9a8); box-shadow: 0 4px 0 #0b1420, 0 5px 5px #0006, inset 0 1px 0 #dceaff30; transition: filter .15s, transform .15s, border-color .15s; isolation: isolate; }
 .tile::after { content: ""; position: absolute; bottom: 4px; left: calc(50% - 7px); width: 14px; height: 2px; border-radius: 2px; background: var(--rarity, #c3cedd); opacity: .85; }
 .tile img { width: 96%; height: 96%; object-fit: contain; border-radius: 4px; pointer-events: none; user-select: none; filter: drop-shadow(0 2px 2px #0004); }

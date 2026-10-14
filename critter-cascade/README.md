@@ -758,3 +758,16 @@ exposing its paused Drizzle preview; an existing active run is unaffected.
 tools, Undo back to zero moves, reload before/after the first pick, legacy saves,
 and continuation cancellation via close/Escape followed by supply-pile input.
 Leaderboard RPCs, Presence and Analytics are mocked.
+
+### Touch drift while tapping
+
+The board (including its supply piles and gaps), reserve, tools and two companion
+action buttons use `touch-action: pinch-zoom`. A one-finger gesture starting there
+cannot pan the page; slight sliding taps keep native click behavior. Pinch zoom
+remains allowed. Other page surfaces, including the margins, retain normal touch
+scrolling. No global touch listeners, scroll locking or synthetic picks are used.
+
+`test-critter-touch-pan-browser.cjs` uses native Chromium touch sequences at
+320/390px. It first reproduces unwanted panning under the previous `manipulation`
+policy, then checks both swipe directions on main/supply tiles and a tool,
+slightly sliding supply taps, and normal scrolling from the page margin.
