@@ -602,3 +602,37 @@ whole-board/tray shake copies are removed. Stage-transition copies remain inert.
 `test-critter-responsive-fx-browser.cjs` exercises real mouse and emulated touch
 presses during explosions, reserve input, keyboard/tool interruption, supply
 transitions, valid saves, animation bounds and cleanup. RPC/Presence are mocked.
+
+
+## Special environments (from stage 15)
+
+Every stage ending in 5 from stage 15 alternates Memory (15, 35, 55…) and
+Monochrome (25, 45, 65…). Boss rules, tile counts and banked scoring stay unchanged.
+Legacy checkpoints receive `environment: null`; already-entered stages retain
+their old rules, while the next eligible stage uses its new environment.
+
+Memory marks at most five currently exposed tiles. The introductory observation
+window is 5 seconds; each newly selected tile is shown for 2 seconds. Hidden tiles
+remain playable. Each manual triple reveals all marked tiles for at least 2 seconds;
+Shuffle also gives a 2-second observation window. Owl Scout reveals them while
+active, pausing their timers. Tray and reserve cards remain readable. Covered
+stack layers retain their ordinary treatment. Selection/refill uses stable tile
+order without consuming the gameplay RNG.
+
+Observation advances only with active gameplay time, excluding animations,
+dialogs, background and offline time. Remaining windows and marked IDs live in
+normal/Undo snapshots and checkpoints. Reload does not grant fresh observation.
+The HUD countdown updates without a full game render or checkpoint every tick.
+Monochrome changes tile art and identifying color strips; layer contrast,
+companion art and skill/selection indicators remain visible.
+
+After normal clear supply, each special stage awards a separate three-companion
+offer (respecting ordinary rarity/level/slot rules). Both offers can be skipped.
+The bonus claim flag and pending offer are saved together to prevent reload
+rerolls or duplicate claims. No SQL migration is needed.
+
+Tests: `scripts/test-critter-environments.cjs` covers stage schedules, 30 full
+manual witnesses, visibility windows, Owl/Shuffle/Undo, one-time rewards and save
+validation. `scripts/test-critter-environments-browser.cjs` covers bilingual entry,
+real timers and pauses, hidden labels, mobile contrast/layout, resume, both reward
+screens and cleanup on the next stage. Scores/Presence are mocked.

@@ -2,6 +2,20 @@
   'use strict';
   const messages = {
   "zh": {
+    "environmentName_memory": "迷雾林地 · 记忆挑战",
+    "environmentName_mono": "月影山谷 · 黑白挑战",
+    "environmentInfo": "规则",
+    "environmentStart": "准备好了，开始",
+    "environmentBonus": "领取额外伙伴奖励",
+    "environmentClear": "特殊关通关：普通补给之外，再获得一次伙伴三选一；两次均可跳过。",
+    "environmentRule_memory": "最多 5 张可点击的牌带虚线标记。开场有 5 秒观察，之后图案被迷雾遮住；新加入的标记牌展示 2 秒。每次手动三消会让它们全部显露至少 2 秒，猫头鹰侦察生效期间持续显露。已拿入背包或暂存区的牌保持可见。动画、弹窗和后台暂停观察计时，刷新会保留剩余时间。",
+    "environmentRule_mono": "本关牌面图案变为黑白，依靠形状辨认。被上层覆盖的牌仍然更暗，选中和技能提示保留。伙伴技能照常生效。",
+    "environmentMonoHint": "靠轮廓辨认 · 被压住的牌仍更暗",
+    "environmentObserve": "观察窗口 · 最长还剩 {n} 秒",
+    "environmentRemember": "记住虚线牌 · 手动三消可再次看清",
+    "environmentScout": "猫头鹰侦察中 · 迷雾暂时驱散",
+    "environmentHidden": "迷雾牌（可点击，凭记忆选择）",
+
     "expMythicGate": "第 21 关起开放五级红色神兽。",
     "expRarity_rare": "蓝色 · 成熟",
     "bossWardTitle": "第二十关 · 三色结界守卫",
@@ -197,10 +211,11 @@
     "expFx_radar": "小灰鸮 · 侦察找牌",
     "expHelpTitle": "让伙伴一起成长。",
     "expHelpSteps": [
-      "六个被动伙伴槽，加一个独立主动伙伴槽，共七位。每位独立升级，不会让其他伙伴降级。每关最多一次中途补给和一次过关补给，可以跳过不想要的选择。",
+      "六个被动伙伴槽，加一个独立主动伙伴槽，共七位。每位独立升级，不会让其他伙伴降级。普通关最多一次中途补给和一次过关补给，可以跳过不想要的选择。",
       "白、绿、蓝、紫、红对应一至五级，每级有不同形态。第 3、6、11、21 关开放二、三、四、五级；等级上限对每位伙伴独立生效，不再限制高等级伙伴数量。",
       "猫科负责暴击追击，蛇龙负责元素连锁，飞羽负责找牌补对，甲壳负责防护回能。同族 2 / 4 种伙伴有加成，可跨族混搭；图鉴展示全部形态与规则。",
       "第 10 到 100 关，每 10 关一位 Boss。每位都封印全队，首次手动三消夺回一级，之后累积解锁进度逐级归还；清空牌阵后全部恢复。各 Boss 的额外机制见 Boss 路线；Boss 关无中途补给。",
+      "第 15、35、55…关是局部记忆挑战，第 25、45、65…关是黑白挑战。每个特殊关通关后额外获得一次伙伴三选一；规则可随时打开查看。",
       "前三类应急道具每次远征各一次，补给最多再补充两次。防护伙伴每关只挡住一次爆包；成长和联动不会重置这次保护。",
       "最快 10 关记录在击败第 10 关 Boss 时锁定，可登记后继续；最远榜先比已通关数，再比回收数量和用时。",
       "进度自动保存在当前浏览器，刷新可继续。后台、弹窗、动画和离线期间不计时。失败后可用剩余应急道具救场，或撤离提交成绩。"
@@ -462,6 +477,20 @@
     "expFx_trialShift": "Boss 阶段切换"
   },
   "en": {
+    "environmentName_memory": "Misty Woods · Memory challenge",
+    "environmentName_mono": "Moonlit Valley · Monochrome challenge",
+    "environmentInfo": "Rules",
+    "environmentStart": "Ready — begin",
+    "environmentBonus": "Claim bonus companion offer",
+    "environmentClear": "Special-stage reward: one extra three-companion offer after the normal supply. Either offer can be skipped.",
+    "environmentRule_memory": "Up to 5 playable tiles have dashed outlines. Study them for 5 seconds before mist hides their pictures. Newly marked tiles stay visible for 2 seconds. Each manual triple reveals them all for at least 2 seconds; Owl Scout keeps them visible while active. Tray and reserve cards stay visible. Observation timers pause during effects, dialogs and background time; reloading keeps the remaining time.",
+    "environmentRule_mono": "Tile pictures become monochrome: identify them by shape. Covered tiles stay darker, and targeting and skill highlights remain visible. All companions work normally.",
+    "environmentMonoHint": "Match by shape · Covered tiles stay darker",
+    "environmentObserve": "Observation window · Up to {n}s left",
+    "environmentRemember": "Remember dashed tiles · Match to reveal",
+    "environmentScout": "Owl Scout active · Mist cleared",
+    "environmentHidden": "Misty tile (playable; choose from memory)",
+
     "expMythicGate": "Level-5 red mythic forms unlock at stage 21.",
     "expRarity_rare": "Blue · Mature",
     "bossWardTitle": "Stage 20 · Warden of Three Wards",
@@ -657,10 +686,11 @@
     "expFx_radar": "Owlet · Scout tiles",
     "expHelpTitle": "Grow your companions together.",
     "expHelpSteps": [
-      "Six passive companions plus one independent active companion: seven total. Each levels independently; upgrades never downgrade others. One mid-stage and one clear supply per stage; unwanted offers can be skipped.",
+      "Six passive companions plus one independent active companion: seven total. Each levels independently; upgrades never downgrade others. Ordinary stages have one mid-stage and one clear supply; unwanted offers can be skipped.",
       "White, green, blue, purple and red correspond to levels 1–5 with distinct forms. Levels 2/3/4/5 unlock at stages 3/6/11/21. Each companion levels independently; there is no shared limit on evolved companions.",
       "Felines pursue critical hits; dragons chain elements; birds scout and finish pairs; shells guard and recharge. Family bonuses activate at 2/4 distinct species. Mixing families is welcome; open the catalog for all forms and rules.",
       "A Boss every 10 stages from 10 through 100. Every Boss seals the team: the first manual triple returns one level, then unlock progress returns more. Victory restores all remaining levels. See the Boss route for special rules. No mid-stage Boss supply.",
+      "Stages 15, 35, 55… test tile memory; stages 25, 45, 65… use monochrome pictures. Each special stage awards one extra companion offer. Open Rules at any time for details.",
       "Each emergency tool starts with one use per run; supplies can restore tools twice total. Guard prevents one overflow per stage; upgrades and family bonuses do not reset that protection.",
       "The ten-stage time locks when stage 10 is cleared; register it and continue. Distance ranks completed stages, then recovered tiles, then time.",
       "Progress autosaves in this browser. Reload to resume. Background tabs, dialogs, animations and offline time do not count. Rescue a loss with remaining tools or extract to submit."

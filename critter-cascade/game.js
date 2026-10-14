@@ -35,14 +35,16 @@
   const formatTime = (ms, precise = false) => `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}${precise ? '.' + String(ms % 1000).padStart(3, '0') : ''}`;
   function updateClock() {
     const now = performance.now();
-    if (clockActive) elapsed += now - tick;
+    if (clockActive) { elapsed += now - tick; if (isExpedition()) game.advanceEnvironment(now - tick); }
     tick = now;
   }
   function syncClock() {
     clockActive = !!game && game.status === 'playing' && !finalized && !animating && !document.hidden && !modal.open && !game.pendingReward && !savePaused;
   }
   function closeDialog() {
-    updateClock(); if (modal.open) modal.close(); dialogView = null; syncClock();
+    updateClock();
+    if (dialogView === 'environment' && game?.environment && !game.environment.started) { game.startEnvironment(); checkpoint(); }
+    if (modal.open) modal.close(); dialogView = null; syncClock();
   }
   function cancelEffects() {
     clearTimeout(activeEffect?.timer); activeEffect = null;
@@ -241,6 +243,7 @@
     $('timer').textContent = formatTime(elapsed); render(); refreshRankings('expedition');
     if (game.pendingReward) showExpeditionReward();
     else if (game.status !== 'playing') showResult();
+    else if (game.environment && !game.environment.started) showEnvironmentIntro();
     syncClock();
   }
   function confirmRestart() {
@@ -286,6 +289,7 @@
     }
   }
   function render(enter = false) {
+    if (isExpedition()) game.refreshEnvironment();
     lightningMarks = new Set(isExpedition() ? game.lightningTarget || [] : []);
     $('mode-title').textContent = isExpedition() ? t('expStage', { n: game.stage }) + ' · ' + modeName(game.mode) : modeName(game.mode);
     const available = new Set(game.available().map(tile => tile.id));
@@ -354,7 +358,7 @@
     document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
     music.setScene(isExpedition() ? game.stage : 1, !!game.bossActive, danger);
-    renderExpedition();
+    renderExpedition(); renderEnvironment();
     checkpoint(); renderResumeBanner();
     presence?.setMode(game.mode);
   }
@@ -599,7 +603,7 @@
     $('expedition-panel').hidden = !isExpedition();
     if (!isExpedition()) { document.body.classList.remove('boss-run'); $('proc-log').hidden = true; return; }
     const spec = RainExpedition.stageSpec(game.stage);
-    $('expedition-stage').textContent = (game.bossEncounter ? bossTitle(game.stage) : t(spec.theme === 'boss' ? 'expStorm' : 'exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1))) + ' · ' + t('expTotal', { n: game.recovered });
+    $('expedition-stage').textContent = (game.environment ? t('environmentName_' + game.environment.kind) : game.bossEncounter ? bossTitle(game.stage) : t(spec.theme === 'boss' ? 'expStorm' : 'exp' + spec.theme[0].toUpperCase() + spec.theme.slice(1))) + ' · ' + t('expTotal', { n: game.recovered });
     captureTen();
     $('boss-status').hidden = !game.bossActive;
     const sealedCount = Object.keys(game.sealed).length;
@@ -732,13 +736,14 @@
     if (animate === true) music.sound('win');
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
-    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.bossEncounter ? `<p class="boss-victory">${game.stage === 100 ? t('bossFinalVictory') : t('bossVictory', {name: t('bossName_' + game.bossKind)})}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(stageRewardClaimed ? 'expNext' : 'expStageReward')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.environment ? `<p class="environment-clear">${t('environmentClear')}</p>` : ''}${game.bossEncounter ? `<p class="boss-victory">${game.stage === 100 ? t('bossFinalVictory') : t('bossVictory', {name: t('bossName_' + game.bossKind)})}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(!stageRewardClaimed ? 'expStageReward' : game.environment && !game.environment.bonusClaimed ? 'environmentBonus' : 'expNext')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
     $('stage-ten')?.addEventListener('click', showTenRecord);
     $('stage-extract').addEventListener('click', showExtract);
     $('stage-next').addEventListener('click', () => {
       if (!stageRewardClaimed) {
         stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
       }
+      if (game.claimEnvironmentBonus()) { render(); showExpeditionReward(); return; }
       if (animating || savePaused) return;
       cancelEffects(); const outgoing = fx.captureBoard();
       if (!game.nextStage()) { outgoing?.remove(); return; }
@@ -746,6 +751,7 @@
       closeDialog(); $('board').replaceChildren();
       playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (game.bossActive) showBossIntro();
+        else if (game.environment) showEnvironmentIntro();
       });
     });
   }
@@ -784,6 +790,33 @@
     if (!result.ok) return;
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
   }
+  function renderEnvironment() {
+    const env = isExpedition() ? game.environment : null;
+    document.body.classList.toggle('environment-mono', env?.kind === 'mono');
+    $('environment-status').hidden = !env;
+    if (env) {
+      $('environment-name').textContent = t('environmentName_' + env.kind);
+      const seconds = Math.ceil(Math.max(env.preview, ...env.cards.map(card => card.remaining)) / 1000);
+      $('environment-progress').textContent = t(env.kind === 'mono' ? 'environmentMonoHint' : game.radarActive ? 'environmentScout' : seconds > 0 ? 'environmentObserve' : 'environmentRemember', {n: seconds});
+    }
+    for (const el of $('board').children) {
+      const id = Number(el.dataset.id), hidden = isExpedition() && game.memoryHidden(id);
+      el.classList.toggle('memory-hidden', !!hidden);
+      el.classList.toggle('memory-mark', !!env?.cards.some(card => card.id === id));
+      const blind = el.classList.contains('blind');
+      const label = hidden ? t('environmentHidden') : blind ? t('blindTile') : itemName(game.tiles[id].type) + (el.classList.contains('blocked') ? t('covered') : '');
+      if (el.title !== label) { el.title = label; el.setAttribute('aria-label', label); }
+    }
+  }
+  function showEnvironmentIntro() {
+    if (!game.environment) return;
+    showDialog('environment', `<span class="modal-eyebrow">${t('expStage', {n: game.stage})}</span><h2 id="modal-title">${t('environmentName_' + game.environment.kind)}</h2><p>${t('environmentRule_' + game.environment.kind)}</p><p class="environment-clear">${t('environmentClear')}</p><button id="environment-start" class="primary-button">${t(game.environment.started ? 'expStay' : 'environmentStart')}</button>`);
+    $('environment-start').addEventListener('click', () => { closeDialog(); render(); });
+  }
+  $('environment-info').addEventListener('click', showEnvironmentIntro);
+  modal.addEventListener('cancel', event => {
+    if (dialogView === 'environment') { event.preventDefault(); closeDialog(); render(); }
+  });
   function bossTitle(stage) { return t('bossTitle', {n: stage, name: t('bossName_' + RainExpedition.BOSSES[stage].kind)}); }
   function bossProgress() {
     if (!game.trial) return '';
@@ -853,7 +886,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('equipment-catalog').addEventListener('click', showCatalog);
@@ -914,7 +947,7 @@
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });
-  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
+  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); if (isExpedition() && game.environment) renderEnvironment(); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
   document.addEventListener('visibilitychange', () => {
     updateClock();
     if (document.hidden) { activeEffect?.skip(); fx.reset(); }

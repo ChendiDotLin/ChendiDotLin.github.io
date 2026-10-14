@@ -60,6 +60,7 @@
     return { mode: 'rain', layers, pileSize, kinds: Math.min(12, 4 + 2 * stage),
       target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: isBossStage(stage) ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
   }
+  const environmentAt = stage => stage >= 15 && stage % 10 === 5 ? (Math.floor((stage - 15) / 10) % 2 ? 'mono' : 'memory') : null;
   function bankedBefore(stage) {
     let sum = 0;
     for (let i = 1; i < Math.min(stage, 9); i++) sum += stageSpec(i).count;
@@ -71,14 +72,14 @@
       game.rngState = n >>> 0; return game.rngState / 4294967296; };
   }
   const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
-    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial'];
+    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial', 'environment'];
   const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
-      this.bossEnergy = 0; this.bossStarted = false; this.trial = null;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null;
       this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
       this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
       this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
@@ -86,6 +87,34 @@
       this.seekerCharge = 0; this.fuse = null; this.turbineCharge = 0; this.capacitorCharge = 0;
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
+    }
+    startEnvironment() {
+      if (!this.environment || this.environment.started) return false;
+      this.environment.started = true; this.refreshEnvironment(); return true;
+    }
+    refreshEnvironment() {
+      const env = this.environment;
+      if (env?.kind !== 'memory') return;
+      const available = this.available(), ids = new Set(available.map(tile => tile.id));
+      env.cards = env.cards.filter(card => ids.has(card.id));
+      for (const tile of available) {
+        if (env.cards.length >= 5) break;
+        if (!env.cards.some(card => card.id === tile.id)) env.cards.push({id: tile.id, remaining: 2000});
+      }
+    }
+    advanceEnvironment(ms) {
+      const env = this.environment;
+      if (env?.kind !== 'memory' || !env.started || this.status !== 'playing' || this.pendingReward || this.radarActive || !Number.isFinite(ms) || ms <= 0) return;
+      env.preview = Math.max(0, env.preview - ms);
+      env.cards.forEach(card => { card.remaining = Math.max(0, card.remaining - ms); });
+    }
+    memoryHidden(id) {
+      const env = this.environment;
+      return !!(env?.kind === 'memory' && env.started && !env.preview && !this.radarActive && env.cards.some(card => card.id === id && !card.remaining));
+    }
+    claimEnvironmentBonus() {
+      if (!this.environment || this.environment.bonusClaimed || this.status !== 'won' || this.pendingReward || this.finished) return false;
+      this.environment.bonusClaimed = true; this.offerReward(true); return true;
     }
     get bossEncounter() { return this.stage === 10 || !!this.trial; }
     get bossActive() { return this.bossEncounter && this.cleared < this.tiles.length; }
@@ -171,6 +200,10 @@
       // Shuffle changes types, so retarget the fuse while preserving its countdown.
       if (ok && tool === 'shuffle' && ticks) {
         const ids = this.findFuseTarget(Math.max(1, this.relics.resin - 2)); this.fuse = ids ? { ids, ticks } : null;
+      }
+      if (ok) {
+        this.refreshEnvironment();
+        if (tool === 'shuffle' && this.environment?.kind === 'memory') this.environment.preview = Math.max(2000, this.environment.preview);
       }
       return ok;
     }
@@ -422,9 +455,10 @@
         if (this.relics.shield >= 3) this.pulse(events, 'shield', this.relics.shield - 1);
         this.drainBurst(events);
         this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
-        this.check(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
+        this.check(); this.refreshEnvironment(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
       }
       if (result.matched) {
+        if (this.environment?.kind === 'memory') this.environment.preview = Math.max(2000, this.environment.preview);
         this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(this.familyCount('birds') >= 2 ? 1.25 : 1);
         if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
@@ -437,6 +471,7 @@
           if (this.status !== 'won') this.offerReward();
         }
       }
+      this.refreshEnvironment();
       return { ...result, events, recovered: this.cleared - before.cleared };
     }
     canActivate() {
@@ -472,12 +507,13 @@
         this.markRadar(); events.push({ kind: 'radar', ids: [] });
       }
       this.check(); this.bestChain = Math.max(this.bestChain, this.cleared - before);
+      this.refreshEnvironment();
       return { ok: true, events, recovered: this.cleared - before };
     }
-    offerReward() {
+    offerReward(companionsOnly = false) {
       if (this.finished || this.pendingReward || this.bossActive) return;
       const pool = Object.keys(RELICS).filter(id => (this.relics[id] || 0) < this.levelCap && (id !== 'cell' || this.equipment) && (id !== 'turbine' || this.equipment || this.relics.feather));
-      if (this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
+      if (!companionsOnly && this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
       const choices = [];
       // Roll the red slot separately so capped common gear cannot force red drops.
       // Newly obtained companions are white; only level-four upgrades enter the red slot.
@@ -542,7 +578,7 @@
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
-      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.fuse = null;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.fuse = null;
       if (isBossStage(this.stage) && this.stage !== 10) {
         const kind = BOSSES[this.stage].kind, types = [...new Set(this.tiles.map(tile => tile.type))].sort((a,b) => a-b);
         this.trial = { kind, types: ['ward','crown'].includes(kind) ? types.slice(0,3) : ['roots','migrate'].includes(kind) ? types : [], broken: [] };
@@ -554,6 +590,9 @@
         this.lightningReady = false; this.spark = 0; this.blastCharge = 0; this.midRewardTaken = true;
         this.seekerCharge = 0; this.turbineCharge = 0; this.capacitorCharge = 0;
       }
+      const environmentKind = environmentAt(this.stage);
+      this.environment = environmentKind ? {kind: environmentKind, started: false, preview: environmentKind === 'memory' ? 5000 : 0, cards: [], bonusClaimed: false} : null;
+      this.refreshEnvironment();
       return true;
     }
     end() {
@@ -582,6 +621,7 @@
     for (const state of [copy, copy.previous].filter(Boolean)) {
       for (const key of ['seekerCharge', 'turbineCharge', 'capacitorCharge']) if (state[key] === undefined) state[key] = 0;
       if (state.fuse === undefined) state.fuse = null;
+      if (state.environment === undefined) state.environment = null;
       if (state.trial === undefined) state.trial = null;
       if (state.bossEnergy === undefined) state.bossEnergy = 0;
       if (state.bossStarted === undefined) state.bossStarted = copy.stage === 10 && state.stageMatches > 0;
@@ -627,6 +667,13 @@
     if (!data || data.version !== VERSION || !integer(data.stage, 1, 1000000)) return false;
     const count = stageSpec(data.stage).count;
     for (const state of [data, data.previous].filter(Boolean)) {
+      const env = state.environment;
+      if (env != null && (!env || env.kind !== environmentAt(data.stage) || !['memory','mono'].includes(env.kind) ||
+        typeof env.started !== 'boolean' || typeof env.bonusClaimed !== 'boolean' ||
+        !Number.isFinite(env.preview) || env.preview < 0 || env.preview > 5000 ||
+        !Array.isArray(env.cards) || env.cards.length > 5 || new Set(env.cards.map(c => c?.id)).size !== env.cards.length ||
+        env.cards.some(c => !c || !integer(c.id, 0, count-1) || !Number.isFinite(c.remaining) || c.remaining < 0 || c.remaining > 2000) ||
+        (env.kind === 'mono' && (env.preview || env.cards.length)) || (env.bonusClaimed && state.cleared !== count))) return false;
       if (state.trial !== null && state.trial !== undefined) {
         const trial = state.trial;
         if (!trial || !isBossStage(data.stage) || data.stage === 10 || BOSSES[data.stage].kind !== trial.kind ||
@@ -665,7 +712,7 @@
       (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES };
+  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES, environmentAt };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

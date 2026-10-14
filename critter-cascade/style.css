@@ -683,3 +683,16 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
 
 .relic-group-items:has(.relic-empty) { grid-auto-rows: 30px; }
 .relic-empty { padding: 6px 10px; }
+
+/* Fixed environment readout: countdown changes never move the board. */
+.environment-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 64px; margin: 8px 0; padding: 9px 12px; border: 1px solid #9ebcb277; border-radius: 9px; background: #93bcb010; }
+.environment-status > div { min-width: 0; }
+.environment-status strong { display: block; font-size: 12px; color: #d9e9cf; }
+.environment-status span { display: block; font-size: 10px; line-height: 1.6; color: #afc5c5; }
+.environment-clear { color: #e6c38f !important; }
+.environment-mono .tile img, .environment-mono .fx-loot img { filter: grayscale(1); }
+.environment-mono .tile::after { background: #adb7b5; }
+.tile.memory-mark { outline: 2px dashed #b4cacf; outline-offset: -4px; }
+.tile.memory-hidden { background: #283c46; border-color: #b4cacf; }
+.tile.memory-hidden img, .tile.memory-hidden .fuse-count { visibility: hidden; }
+.tile.memory-hidden::after { content: '?'; inset: 0; width: auto; height: auto; display: grid; place-items: center; background: none; color: #d3e4e6; opacity: 1; font-size: 25px; font-weight: 700; }
