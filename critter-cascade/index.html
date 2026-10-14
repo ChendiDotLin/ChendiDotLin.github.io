@@ -8,20 +8,20 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-environments-v1">
-  <script defer src="core.js?v=critter-environments-v1"></script>
-  <script defer src="expedition.js?v=critter-environments-v1"></script>
-  <script defer src="expedition-save.js?v=critter-environments-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-environments-v1"></script>
-  <script defer src="companions.js?v=critter-environments-v1"></script>
-  <script defer src="i18n.js?v=critter-environments-v1"></script>
-  <script defer src="config.js?v=critter-environments-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-pressure-v1">
+  <script defer src="core.js?v=critter-pressure-v1"></script>
+  <script defer src="expedition.js?v=critter-pressure-v1"></script>
+  <script defer src="expedition-save.js?v=critter-pressure-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-pressure-v1"></script>
+  <script defer src="companions.js?v=critter-pressure-v1"></script>
+  <script defer src="i18n.js?v=critter-pressure-v1"></script>
+  <script defer src="config.js?v=critter-pressure-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-environments-v1"></script>
-  <script defer src="leaderboard.js?v=critter-environments-v1"></script>
-  <script defer src="effects.js?v=critter-environments-v1"></script>
-  <script defer src="music.js?v=critter-environments-v1"></script>
-  <script defer src="game.js?v=critter-environments-v1"></script>
+  <script defer src="presence.js?v=critter-pressure-v1"></script>
+  <script defer src="leaderboard.js?v=critter-pressure-v1"></script>
+  <script defer src="effects.js?v=critter-pressure-v1"></script>
+  <script defer src="music.js?v=critter-pressure-v1"></script>
+  <script defer src="game.js?v=critter-pressure-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -74,6 +74,7 @@
           <p id="expedition-hint" class="expedition-hint" role="status"></p>
           <p id="equipment-feedback" class="equipment-feedback" role="status"></p>
         </section>
+          <div id="pressure-status" class="pressure-status" hidden><div class="pressure-readout"><strong id="pressure-hearts"></strong><span id="pressure-time"></span><button id="pressure-pause" class="text-button" data-i18n="pressurePause">暂停</button></div><div class="pressure-track"><i id="pressure-fill"></i></div></div>
         <div class="board-area">
           <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
           <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>

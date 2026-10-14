@@ -636,3 +636,34 @@ manual witnesses, visibility windows, Owl/Shuffle/Undo, one-time rewards and sav
 validation. `scripts/test-critter-environments-browser.cjs` covers bilingual entry,
 real timers and pauses, hidden labels, mobile contrast/layout, resume, both reward
 screens and cleanup on the next stage. Scores/Presence are mocked.
+
+
+## Stage 70 hunt and atmospheric motion
+
+New entries to stage 70 keep the echo/alternating-picture rule and full-team seal,
+and add a hunt with three hearts. After the intro is dismissed, a valid manual
+pick (including reserve and Bird Reach) grants a fresh 8-second window. A timeout
+costs one heart and restarts the window; exhausting all hearts ends the run.
+Invalid picks, skills and tools do not refill it. Pressure is run-level state,
+outside Undo snapshots, so Undo cannot restore time or hearts. Once timeout ends
+the run, rescue tools are unavailable. Existing score submission handles it like
+other finished runs. No database migration is required.
+
+Active gameplay time drives the hunt. Animations, dialogs, the explicit Pause
+button, background and offline time do not consume it. An intro still awaiting
+confirmation does not start counting. Remaining time, hearts and started state
+are checkpointed. Legacy checkpoints receive `pressure: null` and do not acquire
+an unannounced timer midway through an existing stage. The timer stays sticky
+above the board so phone players can see it without scrolling to the loadout.
+
+Stages 30, 60, 70 and 100 get one 900ms atmospheric tremor per 12 seconds of active
+play. Losing a heart also accents the frame. Only the background and an inert
+frame move: board, tray, tiles and hit regions remain fixed, with no input lock or
+board clone. Reduced-motion settings skip the effect. Timers are never tied to
+these decorative animation promises.
+
+`test-critter-pressure.cjs` covers countdown boundaries, valid-pick reset,
+permanent heart loss/Undo, final defeat, saves and victory cleanup.
+`test-critter-pressure-browser.cjs` covers entry, real clock transitions,
+pausing/background/animation exclusion, defeat/reload, mobile HUD, motion
+preferences and an actual mouse click during a tremor. RPCs and Presence are mocked.

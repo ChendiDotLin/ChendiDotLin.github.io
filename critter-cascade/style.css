@@ -696,3 +696,14 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
 .tile.memory-hidden { background: #283c46; border-color: #b4cacf; }
 .tile.memory-hidden img, .tile.memory-hidden .fuse-count { visibility: hidden; }
 .tile.memory-hidden::after { content: '?'; inset: 0; width: auto; height: auto; display: grid; place-items: center; background: none; color: #d3e4e6; opacity: 1; font-size: 25px; font-weight: 700; }
+
+.pressure-status { position: sticky; top: 8px; z-index: 150; background: #26383b; height: 59px; margin: 8px 0; padding: 9px 12px; border: 1px solid #dbb28680; border-radius: 9px; box-shadow: 0 3px 14px #0004; }
+.pressure-readout { display: flex; align-items: center; gap: 10px; height: 24px; }
+.pressure-readout strong { color: #e9ab94; letter-spacing: 3px; white-space: nowrap; }
+.pressure-readout span { color: #e9d4b8; font-size: 11px; font-variant-numeric: tabular-nums; }
+.pressure-readout button { margin-left: auto; }
+.pressure-track { height: 4px; margin-top: 7px; overflow: hidden; background: #80999830; border-radius: 3px; }
+.pressure-track i { display: block; height: 100%; background: #c7ba86; transform-origin: left; }
+.pressure-status.urgent { border-color: #e89d7f; }
+.pressure-status.urgent .pressure-track i { background: #e89d7f; }
+.fx-atmosphere-frame { border: 2px solid var(--fx-color); border-radius: 18px; box-shadow: 0 0 18px var(--fx-color); }

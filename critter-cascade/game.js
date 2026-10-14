@@ -7,7 +7,7 @@
   const music = new RainMusic();
   music.onError = () => { $('music-error').hidden = false; localizePage(); };
   let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
-  let activeEffect = null;
+  let activeEffect = null, atmosphereKey = '', atmosphereTime = 0;
   let lastProc = null, lightningMarks = new Set();
   const isExpedition = () => game?.mode === 'expedition';
   const recovered = () => isExpedition() ? game.recovered : game.cleared;
@@ -35,7 +35,27 @@
   const formatTime = (ms, precise = false) => `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}${precise ? '.' + String(ms % 1000).padStart(3, '0') : ''}`;
   function updateClock() {
     const now = performance.now();
-    if (clockActive) { elapsed += now - tick; if (isExpedition()) game.advanceEnvironment(now - tick); }
+    if (clockActive) elapsed += now - tick;
+    if (clockActive && isExpedition()) {
+      const delta = now - tick;
+      game.advanceEnvironment(delta);
+      const hit = game.advancePressure(delta);
+      if (hit) {
+        const currentGame = game, currentRun = runId;
+        queueMicrotask(() => {
+          if (game !== currentGame || runId !== currentRun) return;
+          render(); syncClock();
+          if (hit.ended) { cancelEffects(); showResult(true); }
+          else if (!modal.open && !document.hidden) fx.atmosphere('warning').catch(() => {});
+        });
+      }
+      const key = `${runId}:${game.stage}`;
+      if (key !== atmosphereKey) { atmosphereKey = key; atmosphereTime = 0; }
+      if (game.bossActive && [30,60,70,100].includes(game.stage) && (atmosphereTime += delta) >= 12000) {
+        atmosphereTime %= 12000;
+        queueMicrotask(() => { if (!document.hidden && !modal.open && !animating && key === `${runId}:${game.stage}`) fx.atmosphere().catch(() => {}); });
+      }
+    }
     tick = now;
   }
   function syncClock() {
@@ -43,8 +63,11 @@
   }
   function closeDialog() {
     updateClock();
+    const startingPressure = dialogView === 'boss' && game?.pressure && !game.pressure.started;
+    if (startingPressure) { game.startPressure(); checkpoint(); }
     if (dialogView === 'environment' && game?.environment && !game.environment.started) { game.startEnvironment(); checkpoint(); }
     if (modal.open) modal.close(); dialogView = null; syncClock();
+    if (startingPressure) $('pressure-status').scrollIntoView({block: 'start'});
   }
   function cancelEffects() {
     clearTimeout(activeEffect?.timer); activeEffect = null;
@@ -243,6 +266,7 @@
     $('timer').textContent = formatTime(elapsed); render(); refreshRankings('expedition');
     if (game.pendingReward) showExpeditionReward();
     else if (game.status !== 'playing') showResult();
+    else if (game.pressure && !game.pressure.started) showBossIntro();
     else if (game.environment && !game.environment.started) showEnvironmentIntro();
     syncClock();
   }
@@ -358,7 +382,7 @@
     document.querySelector('.free-note').textContent = t(isExpedition() ? 'expFree' : 'freeNote');
     document.querySelector('[data-i18n=boardHint]').textContent = t(isExpedition() ? 'expBoardHint' : 'boardHint');
     music.setScene(isExpedition() ? game.stage : 1, !!game.bossActive, danger);
-    renderExpedition(); renderEnvironment();
+    renderExpedition(); renderEnvironment(); renderPressure();
     checkpoint(); renderResumeBanner();
     presence?.setMode(game.mode);
   }
@@ -409,7 +433,7 @@
     const rescue = !won && !finalized && (game.canUse('remove') || game.canUse('undo'));
     showDialog('result', `${fx.resultScene(won, t(won ? 'escapeSignal' : 'defeatSignal'), animateScene === true)}<span class="modal-eyebrow">${modeName(game.mode)}</span>
       <h2 id="modal-title">${t(isExpedition() ? 'expEnded' : won ? 'wonTitle' : 'lostTitle')}</h2>
-      <p>${t(rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
+      <p>${t(game.pressure?.hearts === 0 ? 'pressureDefeat' : rescue ? 'rescueCopy' : isExpedition() ? 'expEndedCopy' : won ? 'wonCopy' : 'lostCopy')}</p>
       <div class="result-stats"><span>${t('recovered')}<b>${recovered()}${isExpedition() ? '' : ' / ' + game.tiles.length}</b></span><span>${t('time')}<b>${formatTime(Math.round(elapsed), true)}</b></span><span>${t(isExpedition() ? 'expReached' : 'moves')}<b>${isExpedition() ? game.stage : game.moves}</b></span></div>${isExpedition() ? loadoutMarkup() + `<p class="build-summary">${t('expBestChain', { n: game.bestChain })}</p>` : ''}
       ${rescue && game.canUse('remove') ? `<button class="secondary-button" data-rescue="remove">${t('rescueRemove')}</button>` : ''}
       ${rescue && game.canUse('undo') ? `<button class="secondary-button" data-rescue="undo">${t('rescueUndo')}</button>` : ''}
@@ -815,8 +839,26 @@
   }
   $('environment-info').addEventListener('click', showEnvironmentIntro);
   modal.addEventListener('cancel', event => {
-    if (dialogView === 'environment') { event.preventDefault(); closeDialog(); render(); }
+    if (dialogView === 'environment' || (dialogView === 'boss' && game.pressure && !game.pressure.started)) { event.preventDefault(); closeDialog(); render(); }
   });
+  function renderPressure() {
+    const p = isExpedition() ? game.pressure : null;
+    $('pressure-status').hidden = !p;
+    if (!p) return;
+    $('pressure-hearts').textContent = '♥'.repeat(p.hearts) + '♡'.repeat(3 - p.hearts);
+    $('pressure-hearts').setAttribute('aria-label', t('pressureHearts', {n: p.hearts}));
+    $('pressure-time').textContent = t(!p.hearts ? 'pressureEnded' : !p.started ? 'pressureReady' : clockActive ? 'pressureTime' : 'pressurePaused', {n: (p.remaining / 1000).toFixed(1)});
+    $('pressure-fill').style.transform = `scaleX(${p.remaining / 8000})`;
+    $('pressure-status').classList.toggle('urgent', p.started && p.hearts > 0 && p.remaining <= 3000);
+    $('pressure-pause').disabled = game.status !== 'playing' || finalized || savePaused;
+  }
+  function showPressurePause() {
+    if (!game.pressure || game.status !== 'playing') return;
+    showDialog('pressurePause', `<h2 id="modal-title">${t('pressurePauseTitle')}</h2><p>${t('pressureRule')}</p><button id="pressure-resume" class="primary-button">${t('pressureResume')}</button>`);
+    $('pressure-resume').addEventListener('click', () => { closeDialog(); renderPressure(); });
+    renderPressure();
+  }
+  $('pressure-pause').addEventListener('click', showPressurePause);
   function bossTitle(stage) { return t('bossTitle', {n: stage, name: t('bossName_' + RainExpedition.BOSSES[stage].kind)}); }
   function bossProgress() {
     if (!game.trial) return '';
@@ -833,12 +875,12 @@
     return t('bossProgress_' + kind, values);
   }
   function showBossCatalog() {
-    showDialog('bossCatalog', `<h2 id="modal-title">${t('bossCatalogTitle')}</h2><p>${t('bossCatalogCopy')}</p><div class="boss-catalog">${Object.entries(RainExpedition.BOSSES).map(([stage, boss]) => `<section style="--boss-color:${boss.color}"><span aria-hidden="true">${boss.symbol}</span><h3>${bossTitle(stage)}</h3><p>${t('bossRule_' + boss.kind)}</p></section>`).join('')}</div><button id="boss-catalog-close" class="secondary-button">${t('expStay')}</button>`);
+    showDialog('bossCatalog', `<h2 id="modal-title">${t('bossCatalogTitle')}</h2><p>${t('bossCatalogCopy')}</p><div class="boss-catalog">${Object.entries(RainExpedition.BOSSES).map(([stage, boss]) => `<section style="--boss-color:${boss.color}"><span aria-hidden="true">${boss.symbol}</span><h3>${bossTitle(stage)}</h3><p>${t('bossRule_' + boss.kind)}</p>${Number(stage) === 70 ? `<p>${t('pressureRule')}</p>` : ''}</section>`).join('')}</div><button id="boss-catalog-close" class="secondary-button">${t('expStay')}</button>`);
     $('boss-catalog-close').addEventListener('click', closeDialog);
   }
   function showBossIntro() {
     const kind = game.bossKind, boss = RainExpedition.BOSSES[game.stage];
-    showDialog('boss', `<div class="boss-emblem" data-boss="${kind}" style="--boss-color:${boss.color}" aria-hidden="true"><i></i><i></i><span>${boss.symbol}</span></div><span class="modal-eyebrow">STAGE ${game.stage} / GUARDIAN</span><h2 id="modal-title">${bossTitle(game.stage)}</h2><p>${t('expBossIntro')}</p>${kind === 'seal' ? '' : `<p class="boss-special-rule">${t('bossRule_' + kind)}</p>`}<button class="primary-button" id="boss-start">${t('bossEnter')}</button>`);
+    showDialog('boss', `<div class="boss-emblem" data-boss="${kind}" style="--boss-color:${boss.color}" aria-hidden="true"><i></i><i></i><span>${boss.symbol}</span></div><span class="modal-eyebrow">STAGE ${game.stage} / GUARDIAN</span><h2 id="modal-title">${bossTitle(game.stage)}</h2><p>${t('expBossIntro')}</p>${kind === 'seal' ? '' : `<p class="boss-special-rule">${t('bossRule_' + kind)}</p>`}${game.pressure ? `<p class="boss-special-rule">${t('pressureRule')}</p>` : ''}<button class="primary-button" id="boss-start">${t('bossEnter')}</button>`);
     $('boss-start').addEventListener('click', () => {
       closeDialog(); playEffect(() => { music.sound('boss'); return fx.bossEntrance(kind); });
     });
@@ -886,7 +928,7 @@
     if ($('player-id')) playerDraft = $('player-id').value;
     updateClock(); language = language === 'zh' ? 'en' : 'zh'; savePreference('rain-match-language', language);
     localizePage(); render(); clearTimeout(comboTimeout); $('combo').classList.remove('show');
-    if (modal.open) ({ environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
+    if (modal.open) ({ pressurePause: showPressurePause, environment: showEnvironmentIntro, bossCatalog: showBossCatalog, boss: showBossIntro, ten: showTenRecord, resume: showResume, restartRun: confirmRestart, saveLocked: showSaveLocked, result: showResult, help: showHelp, credits: showCredits, catalog: showCatalog, relic: showRelic, reward: showExpeditionReward, stage: showExpeditionStage, extract: showExtract, replace: () => showReplacement(replacementItem) })[dialogView]?.();
     syncClock();
   }
   $('equipment-catalog').addEventListener('click', showCatalog);
@@ -947,7 +989,7 @@
     const tool = { 1: 'remove', 2: 'undo', 3: 'shuffle' }[event.key];
     if (tool) { event.preventDefault(); use(tool); }
   });
-  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); if (isExpedition() && game.environment) renderEnvironment(); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
+  setInterval(() => { updateClock(); syncClock(); $('timer').textContent = formatTime(elapsed); renderPressure(); if (isExpedition() && game.environment) renderEnvironment(); if (performance.now() - lastCheckpoint > 5000) checkpoint(); }, 250);
   document.addEventListener('visibilitychange', () => {
     updateClock();
     if (document.hidden) { activeEffect?.skip(); fx.reset(); }

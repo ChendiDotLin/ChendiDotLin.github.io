@@ -73,13 +73,13 @@
   }
   const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
     'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial', 'environment'];
-  const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed'];
+  const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed', 'pressure'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
-      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null;
       this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
       this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
       this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
@@ -87,6 +87,21 @@
       this.seekerCharge = 0; this.fuse = null; this.turbineCharge = 0; this.capacitorCharge = 0;
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
+    }
+    startPressure() {
+      if (!this.pressure || this.pressure.started) return false;
+      this.pressure.started = true; return true;
+    }
+    advancePressure(ms) {
+      const p = this.pressure;
+      if (!p?.started || this.finished || this.status !== 'playing' || this.pendingReward || !Number.isFinite(ms) || ms <= 0) return null;
+      const hearts = p.hearts;
+      while (ms >= p.remaining && p.hearts > 0) {
+        ms -= p.remaining; p.hearts--; p.remaining = p.hearts ? 8000 : 0;
+      }
+      if (p.hearts) p.remaining -= ms;
+      else { this.finished = true; this.status = 'lost'; this.previous = null; }
+      return p.hearts < hearts ? {lost: hearts - p.hearts, ended: !p.hearts} : null;
     }
     startEnvironment() {
       if (!this.environment || this.environment.started) return false;
@@ -471,6 +486,7 @@
           if (this.status !== 'won') this.offerReward();
         }
       }
+      if (this.pressure?.started && this.moves > before.moves) this.pressure.remaining = 8000;
       this.refreshEnvironment();
       return { ...result, events, recovered: this.cleared - before.cleared };
     }
@@ -578,7 +594,7 @@
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
-      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.fuse = null;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null; this.fuse = null;
       if (isBossStage(this.stage) && this.stage !== 10) {
         const kind = BOSSES[this.stage].kind, types = [...new Set(this.tiles.map(tile => tile.type))].sort((a,b) => a-b);
         this.trial = { kind, types: ['ward','crown'].includes(kind) ? types.slice(0,3) : ['roots','migrate'].includes(kind) ? types : [], broken: [] };
@@ -590,6 +606,7 @@
         this.lightningReady = false; this.spark = 0; this.blastCharge = 0; this.midRewardTaken = true;
         this.seekerCharge = 0; this.turbineCharge = 0; this.capacitorCharge = 0;
       }
+      if (this.stage === 70) this.pressure = {started: false, hearts: 3, remaining: 8000};
       const environmentKind = environmentAt(this.stage);
       this.environment = environmentKind ? {kind: environmentKind, started: false, preview: environmentKind === 'memory' ? 5000 : 0, cards: [], bonusClaimed: false} : null;
       this.refreshEnvironment();
@@ -618,6 +635,7 @@
   function normalizeSave(data) {
     if (!data || data.version !== VERSION) return data;
     const copy = JSON.parse(JSON.stringify(data));
+    if (copy.pressure === undefined) copy.pressure = null;
     for (const state of [copy, copy.previous].filter(Boolean)) {
       for (const key of ['seekerCharge', 'turbineCharge', 'capacitorCharge']) if (state[key] === undefined) state[key] = 0;
       if (state.fuse === undefined) state.fuse = null;
@@ -666,6 +684,11 @@
   function validSave(data) {
     if (!data || data.version !== VERSION || !integer(data.stage, 1, 1000000)) return false;
     const count = stageSpec(data.stage).count;
+    const pressure = data.pressure;
+    if (pressure != null && (data.stage !== 70 || data.trial?.kind !== 'echo' || typeof pressure.started !== 'boolean' ||
+      !integer(pressure.hearts, 0, 3) || !Number.isFinite(pressure.remaining) || pressure.remaining < 0 || pressure.remaining > 8000 ||
+      (pressure.hearts === 0 ? (!data.finished || pressure.remaining !== 0) : pressure.remaining <= 0) ||
+      (!pressure.started && (pressure.hearts !== 3 || pressure.remaining !== 8000)))) return false;
     for (const state of [data, data.previous].filter(Boolean)) {
       const env = state.environment;
       if (env != null && (!env || env.kind !== environmentAt(data.stage) || !['memory','mono'].includes(env.kind) ||

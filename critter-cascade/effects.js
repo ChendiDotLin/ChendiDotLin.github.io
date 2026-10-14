@@ -498,6 +498,24 @@
     }));
     return Promise.all(pending);
   }
+  function atmosphere(kind = 'quake') {
+    if (motion.matches) return Promise.resolve();
+    const rect = document.getElementById('board').getBoundingClientRect();
+    const point = center(rect), frame = node('fx-atmosphere-frame', point, kind === 'warning' ? '#e89d7f' : '#b0c7cd');
+    frame.style.width = `${rect.width + 16}px`; frame.style.height = `${rect.height + 16}px`;
+    const pending = [animate(frame, [
+      {transform: 'translate(-50%,-50%) translateX(0)', opacity: 0},
+      {transform: 'translate(-50%,-50%) translateX(-3px)', opacity: .7, offset: .25},
+      {transform: 'translate(-50%,-50%) translateX(3px)', opacity: .45, offset: .5},
+      {transform: 'translate(-50%,-50%) translateX(0)', opacity: 0}
+    ], {duration: 900}, true)];
+    const background = document.querySelector('.landscape');
+    if (background) pending.push(animate(background, [
+      {transform: 'translateX(0)'}, {transform: 'translateX(-2px)', offset: .25},
+      {transform: 'translateX(2px)', offset: .5}, {transform: 'translateX(0)'}
+    ], {duration: 900}));
+    return Promise.all(pending);
+  }
   function resultScene(won, label, animateScene) {
     return `<div class="result-scene ${won ? 'escape' : 'defeat'} ${animateScene ? 'scene-enter' : ''}" aria-hidden="true">
       <div class="result-orbit"></div><div class="result-orbit inner"></div><div class="result-beam"></div>
@@ -505,5 +523,5 @@
       ${Array.from({ length: 12 }, (_, i) => `<i class="result-spark" style="--n:${i};--x:${8 + (i * 37) % 84}%"></i>`).join('')}
       <span class="result-signal">${label}</span></div>`;
   }
-  root.RainEffects = { reset, snapshot, pick, power, relic, captureBoard, restart, resultScene, bossEntrance };
+  root.RainEffects = { reset, snapshot, pick, power, relic, captureBoard, restart, resultScene, bossEntrance, atmosphere };
 })(window);

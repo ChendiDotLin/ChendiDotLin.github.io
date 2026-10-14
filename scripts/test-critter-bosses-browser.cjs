@@ -22,7 +22,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
   await page.locator('#boss-start').click();await page.locator('.fx-seal-lock').waitFor();await waitFx();
   if(stage>=40)assert.ok(await page.locator('#boss-trial').isVisible());
   const checkpoint=await page.evaluate(()=>RainSave.parse(localStorage.getItem(RainSave.KEY)).game);
-  await page.reload();await page.locator('#resume-confirm').click();await page.waitForFunction(()=>!document.querySelector('dialog').open);assert.deepEqual(await page.evaluate(()=>testGame.toSave()),checkpoint);
+  await page.reload();await page.locator('#resume-confirm').click();await page.waitForFunction(()=>!document.querySelector('dialog').open);const resumed=await page.evaluate(()=>testGame.toSave());if(resumed.pressure?.started){assert.equal(resumed.pressure.hearts,checkpoint.pressure.hearts);assert.ok(resumed.pressure.remaining<=checkpoint.pressure.remaining&&resumed.pressure.remaining>checkpoint.pressure.remaining-1000);resumed.pressure.remaining=checkpoint.pressure.remaining;}assert.deepEqual(resumed,checkpoint);
   const ids=await page.evaluate(()=>{
    const g=testGame;g.tiles.forEach(t=>t.z=0);const type=g.trial?.types[0]??0,ids=g.tiles.filter(t=>t.type===type).slice(0,3).map(t=>t.id);
    ids.forEach((id,i)=>Object.assign(g.tiles[id],{x:50+i*100,y:0}));document.getElementById('board').replaceChildren();return ids;

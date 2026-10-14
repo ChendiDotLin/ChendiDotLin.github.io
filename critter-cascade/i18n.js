@@ -2,6 +2,17 @@
   'use strict';
   const messages = {
   "zh": {
+    "pressureRule": "追猎挑战：3 颗心，每 8 秒必须手动拿到一张有效牌（含飞羽取牌和暂存牌）。超时扣一颗心并重新计时，三颗心耗尽则本次远征结束。空点、道具、主动技能不会刷新倒计时，撤销不会恢复时间或心。动画、弹窗、后台和暂停期间不计时。",
+    "pressurePause": "暂停",
+    "pressurePauseTitle": "追猎已暂停",
+    "pressureResume": "继续挑战",
+    "pressureHearts": "剩余 {n} 颗心",
+    "pressureTime": "还剩 {n} 秒",
+    "pressurePaused": "已暂停 · {n} 秒",
+    "pressureReady": "准备好后开始 · 8 秒",
+    "pressureEnded": "心已耗尽",
+    "pressureDefeat": "追猎挑战的三颗心已经耗尽，本次远征结束。你可以提交成绩，或重新出发。",
+
     "environmentName_memory": "迷雾林地 · 记忆挑战",
     "environmentName_mono": "月影山谷 · 黑白挑战",
     "environmentInfo": "规则",
@@ -214,7 +225,7 @@
       "六个被动伙伴槽，加一个独立主动伙伴槽，共七位。每位独立升级，不会让其他伙伴降级。普通关最多一次中途补给和一次过关补给，可以跳过不想要的选择。",
       "白、绿、蓝、紫、红对应一至五级，每级有不同形态。第 3、6、11、21 关开放二、三、四、五级；等级上限对每位伙伴独立生效，不再限制高等级伙伴数量。",
       "猫科负责暴击追击，蛇龙负责元素连锁，飞羽负责找牌补对，甲壳负责防护回能。同族 2 / 4 种伙伴有加成，可跨族混搭；图鉴展示全部形态与规则。",
-      "第 10 到 100 关，每 10 关一位 Boss。每位都封印全队，首次手动三消夺回一级，之后累积解锁进度逐级归还；清空牌阵后全部恢复。各 Boss 的额外机制见 Boss 路线；Boss 关无中途补给。",
+      "第 10 到 100 关，每 10 关一位 Boss。每位都封印全队，首次手动三消夺回一级，之后累积解锁进度逐级归还；清空牌阵后全部恢复。第 70 关另有 8 秒拿牌、三颗心的追猎挑战，可随时暂停。各 Boss 的额外机制见 Boss 路线；Boss 关无中途补给。",
       "第 15、35、55…关是局部记忆挑战，第 25、45、65…关是黑白挑战。每个特殊关通关后额外获得一次伙伴三选一；规则可随时打开查看。",
       "前三类应急道具每次远征各一次，补给最多再补充两次。防护伙伴每关只挡住一次爆包；成长和联动不会重置这次保护。",
       "最快 10 关记录在击败第 10 关 Boss 时锁定，可登记后继续；最远榜先比已通关数，再比回收数量和用时。",
@@ -477,6 +488,17 @@
     "expFx_trialShift": "Boss 阶段切换"
   },
   "en": {
+    "pressureRule": "Hunt challenge: 3 hearts. Manually take a valid tile every 8 seconds, including Bird Reach and reserve tiles. A timeout costs one heart and restarts the timer; losing all three ends the expedition. Invalid taps, tools and active skills do not reset it. Undo restores neither time nor hearts. Effects, dialogs, background time and Pause stop the clock.",
+    "pressurePause": "Pause",
+    "pressurePauseTitle": "Hunt paused",
+    "pressureResume": "Resume hunt",
+    "pressureHearts": "{n} hearts remaining",
+    "pressureTime": "{n}s left",
+    "pressurePaused": "Paused · {n}s",
+    "pressureReady": "Starts when ready · 8s",
+    "pressureEnded": "No hearts left",
+    "pressureDefeat": "All three hunt hearts are gone. This expedition has ended. Submit your score or start a new run.",
+
     "environmentName_memory": "Misty Woods · Memory challenge",
     "environmentName_mono": "Moonlit Valley · Monochrome challenge",
     "environmentInfo": "Rules",
@@ -689,7 +711,7 @@
       "Six passive companions plus one independent active companion: seven total. Each levels independently; upgrades never downgrade others. Ordinary stages have one mid-stage and one clear supply; unwanted offers can be skipped.",
       "White, green, blue, purple and red correspond to levels 1–5 with distinct forms. Levels 2/3/4/5 unlock at stages 3/6/11/21. Each companion levels independently; there is no shared limit on evolved companions.",
       "Felines pursue critical hits; dragons chain elements; birds scout and finish pairs; shells guard and recharge. Family bonuses activate at 2/4 distinct species. Mixing families is welcome; open the catalog for all forms and rules.",
-      "A Boss every 10 stages from 10 through 100. Every Boss seals the team: the first manual triple returns one level, then unlock progress returns more. Victory restores all remaining levels. See the Boss route for special rules. No mid-stage Boss supply.",
+      "A Boss every 10 stages from 10 through 100. Every Boss seals the team: the first manual triple returns one level, then unlock progress returns more. Victory restores all remaining levels. Stage 70 also has an 8-second, three-heart hunt with a Pause button. See the Boss route for special rules. No mid-stage Boss supply.",
       "Stages 15, 35, 55… test tile memory; stages 25, 45, 65… use monochrome pictures. Each special stage awards one extra companion offer. Open Rules at any time for details.",
       "Each emergency tool starts with one use per run; supplies can restore tools twice total. Guard prevents one overflow per stage; upgrades and family bonuses do not reset that protection.",
       "The ten-stage time locks when stage 10 is cleared; register it and continue. Distance ranks completed stages, then recovered tiles, then time.",
