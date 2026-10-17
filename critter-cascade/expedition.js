@@ -127,10 +127,10 @@
       const env = this.environment;
       return !!(env?.kind === 'memory' && env.started && !env.preview && !this.radarActive && env.cards.some(card => card.id === id && !card.remaining));
     }
-    claimEnvironmentBonus() {
-      if (!this.environment || this.environment.bonusClaimed || this.status !== 'won' || this.pendingReward || this.finished) return false;
-      this.environment.bonusClaimed = true; this.offerReward(true); return true;
-    }
+    // Retained for older callers/checkpoints; special stages no longer add supplies.
+    claimEnvironmentBonus() { return false; }
+    // Existing midRewardTaken/bonusClaimed save fields remain readable for legacy runs.
+    get stageRewardDue() { return this.status === 'won' && this.stage % 2 === 0; }
     get bossEncounter() { return this.stage === 10 || !!this.trial; }
     get bossActive() { return this.bossEncounter && this.cleared < this.tiles.length; }
     get bossKind() { return this.trial?.kind || 'seal'; }
@@ -187,7 +187,6 @@
     get recharge() { return 8 - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0); }
     get featherRecharge() { return 9 - (this.relics.feather || 1) - Number(this.familyCount('birds') >= 4); }
     get radarActive() { return this.radarUntil > this.moves; }
-    get rewardTarget() { return this.stage === 1 ? 3 : Math.min(12, 4 + this.stage); }
     get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
     get levelCap() { return levelCapAt(this.stage); }
     snapshot() {
@@ -481,10 +480,6 @@
         this.advanceDevices(events);
         this.rollLightning(); this.resolveCombos(events, { type: result.type, jumping, scanned, manual: true });
         this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
-        if (!this.bossActive && !this.midRewardTaken && this.stageMatches >= this.rewardTarget) {
-          this.midRewardTaken = true;
-          if (this.status !== 'won') this.offerReward();
-        }
       }
       if (this.pressure?.started && this.moves > before.moves) this.pressure.remaining = 8000;
       this.refreshEnvironment();

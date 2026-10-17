@@ -333,7 +333,8 @@ Open `/critter-cascade/?mode=expedition`. Classic difficulties keep their own ru
   replacement; two active items cannot coexist.
 - Levels 2/3/4/5 unlock at stages 3/6/11/21. There is no shared evolution quota
   or automatic downgrade; all seven companions can independently reach level 5.
-- Each normal stage offers at most one mid-stage and one clear supply. The first
+- After the starter, supplies appear once after stages 2, 4, 6, and so on. There
+  are no mid-stage or special-stage bonus offers. The first
   stage uses a 36-tile mixed-set deal; later boards grow to 144, or 156 in fog.
   Initial deals have a legal witness. Automatic clears and player choices can
   change which continuation works; the original witness is not an autoplayer.
@@ -630,47 +631,15 @@ The HUD countdown updates without a full game render or checkpoint every tick.
 Monochrome changes tile art and identifying color strips; layer contrast,
 companion art and skill/selection indicators remain visible.
 
-After normal clear supply, each special stage awards a separate three-companion
-offer (respecting ordinary rarity/level/slot rules). Both offers can be skipped.
-The bonus claim flag and pending offer are saved together to prevent reload
-rerolls or duplicate claims. No SQL migration is needed.
+Special stages follow the same every-two-clears supply cadence, with no bonus
+offer. The legacy bonus flag remains valid in old checkpoints; an already pending
+legacy offer can still be chosen once. No SQL migration is needed.
 
 Tests: `scripts/test-critter-environments.cjs` covers stage schedules, 30 full
-manual witnesses, visibility windows, Owl/Shuffle/Undo, one-time rewards and save
+manual witnesses, visibility windows, Owl/Shuffle/Undo, reward cadence and save
 validation. `scripts/test-critter-environments-browser.cjs` covers bilingual entry,
-real timers and pauses, hidden labels, mobile contrast/layout, resume, both reward
-screens and cleanup on the next stage. Scores/Presence are mocked.
-
-
-## Stage 70 hunt and atmospheric motion
-
-New entries to stage 70 keep the echo/alternating-picture rule and full-team seal,
-and add a hunt with three hearts. After the intro is dismissed, a valid manual
-pick (including reserve and Bird Reach) grants a fresh 8-second window. A timeout
-costs one heart and restarts the window; exhausting all hearts ends the run.
-Invalid picks, skills and tools do not refill it. Pressure is run-level state,
-outside Undo snapshots, so Undo cannot restore time or hearts. Once timeout ends
-the run, rescue tools are unavailable. Existing score submission handles it like
-other finished runs. No database migration is required.
-
-Active gameplay time drives the hunt. Animations, dialogs, the explicit Pause
-button, background and offline time do not consume it. An intro still awaiting
-confirmation does not start counting. Remaining time, hearts and started state
-are checkpointed. Legacy checkpoints receive `pressure: null` and do not acquire
-an unannounced timer midway through an existing stage. The timer stays sticky
-above the board so phone players can see it without scrolling to the loadout.
-
-Stages 30, 60, 70 and 100 get one 900ms atmospheric tremor per 12 seconds of active
-play. Losing a heart also accents the frame. Only the background and an inert
-frame move: board, tray, tiles and hit regions remain fixed, with no input lock or
-board clone. Reduced-motion settings skip the effect. Timers are never tied to
-these decorative animation promises.
-
-`test-critter-pressure.cjs` covers countdown boundaries, valid-pick reset,
-permanent heart loss/Undo, final defeat, saves and victory cleanup.
-`test-critter-pressure-browser.cjs` covers entry, real clock transitions,
-pausing/background/animation exclusion, defeat/reload, mobile HUD, motion
-preferences and an actual mouse click during a tremor. RPCs and Presence are mocked.
+real timers and pauses, hidden labels, mobile contrast/layout, resume, and cleanup
+on the next stage. Scores/Presence are mocked.
 
 ### Beta leaderboard cutover
 
@@ -736,7 +705,7 @@ No focus, touch scrolling, or browser scroll-anchor behavior is globally disable
 
 `test-critter-supply-scroll-browser.cjs` reproduces the old 53px jump, then checks
 real touch taps through the last main pair, remaining bottom supply stacks,
-mid-stage reward, stage victory and ten-stage button at 320/390px in both languages.
+absence of mid-stage interruption, stage victory and ten-stage button at 320/390px in both languages.
 Board, tray and page scroll stay within 1px; deliberate scrolling still works.
 Leaderboard RPCs, Presence and Analytics are mocked.
 
@@ -807,3 +776,23 @@ hearts and powers; `test-critter-eclipse-browser.cjs` checks mobile layouts, act
 clock/pause/fog/result behavior, score routing and both replacement types;
 `test-critter-eclipse-sql.cjs` checks migration preservation, ranking, retry safety,
 permissions, reruns and admin deletion. Browser test networking is mocked.
+
+
+### Confirmed choices and slower Expedition growth
+
+All reward cards now select without committing. A separate Confirm choice button
+applies starters, upgrades and refills, or opens the replacement comparison.
+Replacement cards likewise select first; Confirm replacement is required to remove
+an owned companion. Language changes and Back preserve selection; reload discards
+unconfirmed selection while retaining the saved offer. Skip preserves the team.
+
+After the one starter, only clearing an even-numbered stage offers one supply:
+2, 4, 6… including Boss clears. No mid-stage or special-stage bonus supplies are
+created. The existing `stageRewardClaimed` checkpoint flag is saved together with
+the pending offer, so reload cannot reroll or reissue a claimed/skipped supply.
+Old owned companions and already pending legacy offers remain valid; later rewards
+follow the new cadence. Growth caps, rarity odds and ranking schemas are unchanged.
+
+`test-critter-reward-confirm-browser.cjs` checks accidental double selection,
+changing choice, confirmation, replacement, language/mobile layout, a six-stage
+supply sequence and reload before/after claims. No database migration is required.

@@ -6,8 +6,9 @@ for(let stage=1;stage<=115;stage++)assert.equal(R.environmentAt(stage),stage>=15
 for(const stage of [15,25,35,45,55,65,75,85,95,105])for(let n=1;n<=3;n++){
  const g=enter(stage,n);assert.ok(R.validSave(g.toSave()));assert.equal(g.environment.kind,R.environmentAt(stage));assert.equal(g.bossActive,false);g.startEnvironment();
  for(const id of g.solution){const r=g.pick(id);assert.ok(r.ok);g.advanceEnvironment(333);if(g.pendingReward)g.skipReward();assert.ok(R.validSave(g.toSave()),`stage ${stage}`);}
- assert.equal(g.status,'won');g.offerReward();assert.equal(g.claimEnvironmentBonus(),false);g.skipReward();assert.ok(g.claimEnvironmentBonus());assert.equal(g.pendingReward.length,3);assert.ok(g.pendingReward.every(id=>R.RELICS[id]));
- const saved=g.toSave(),restored=R.Expedition.fromSave(saved);assert.deepEqual(restored.toSave(),saved);assert.equal(restored.claimEnvironmentBonus(),false);restored.skipReward();assert.equal(restored.claimEnvironmentBonus(),false);assert.ok(restored.nextStage());assert.equal(restored.environment,null);
+ assert.equal(g.status,'won');assert.equal(g.stageRewardDue,false);assert.equal(g.claimEnvironmentBonus(),false);assert.equal(g.pendingReward,null);
+ const saved=g.toSave(),restored=R.Expedition.fromSave(saved);assert.deepEqual(restored.toSave(),saved);assert.equal(restored.claimEnvironmentBonus(),false);assert.ok(restored.nextStage());assert.equal(restored.environment,null);
+
 }
 {
  const g=enter(15);const ids=g.environment.cards.map(c=>c.id);assert.equal(ids.length,5);g.advanceEnvironment(10000);assert.equal(g.environment.preview,5000,'intro paused');g.startEnvironment();g.advanceEnvironment(4999);assert.ok(!g.memoryHidden(ids[0]));g.advanceEnvironment(1);assert.ok(ids.every(id=>g.memoryHidden(id)));
@@ -24,4 +25,4 @@ for(const stage of [15,25,35,45,55,65,75,85,95,105])for(let n=1;n<=3;n++){
  const old=enter(15).toSave();delete old.environment;assert.equal(R.Expedition.fromSave(old).environment,null,'legacy stages do not change midway');
  for(const mutate of [e=>e.preview=-1,e=>e.cards.push({...e.cards[0]}),e=>e.kind='mono',e=>e.bonusClaimed=true]){const g=enter(15),s=g.toSave();mutate(s.environment);assert.equal(R.validSave(s),false);}
 }
-console.log('PASS: alternating environments, 30 complete stage witnesses, extra companion offers exactly once, save/reload/Undo, 5s and 2s windows, refill/Scout/Shuffle visibility and legacy/corrupt saves.');
+console.log('PASS: alternating environments, 30 complete stage witnesses, no special-stage bonus offers, save/reload/Undo, 5s and 2s windows, refill/Scout/Shuffle visibility and legacy/corrupt saves.');

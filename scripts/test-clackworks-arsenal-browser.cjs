@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
   await page.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
   await page.route('**/expedition.js*',async route=>{const response=await route.fetch();await route.fulfill({response,body:await response.text()+`\nconst Original=RainExpedition.Expedition;RainExpedition.Expedition=class extends Original {constructor(){super();window.testGame=this;}static fromSave(data){const game=Original.fromSave(data);window.testGame=game;return game;}};`});});
   await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
-  await page.locator('[data-reward=ukulele]').click();
+  await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
   await page.locator('#lightning-status').waitFor(); assert.match(await page.locator('#lightning-status').textContent(),/0\/4/);
   await page.locator('#equipment-catalog').click(); assert.equal(await page.locator('[data-catalog]').count(),16);
   for (const id of await page.evaluate(() => Object.keys(RainExpedition.RELICS))) {

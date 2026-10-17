@@ -35,8 +35,8 @@ for (let stage = 1; stage <= 32; stage++) for (let n = 1; n <= 20; n++) {
       assert.ok(game.pick(id).ok, `stage ${stage} id ${id} status ${game.status} pending ${game.pendingReward}`); counts(game);
     }
     assert.equal(game.status, 'won'); expected += game.tiles.length; assert.equal(game.recovered, expected);
-    game.offerReward(); assert.equal(game.nextStage(), false);
-    game.pendingReward = ['recharge']; assert.ok(game.choose('recharge'));
+    assert.equal(game.stageRewardDue,stage % 2 === 0);
+    if (game.stageRewardDue) { game.offerReward(); assert.equal(game.nextStage(), false); game.pendingReward = ['recharge']; assert.ok(game.choose('recharge')); }
     const relics = JSON.stringify(game.ownedRelics()), charge = game.charge;
     assert.ok(game.nextStage()); assert.equal(game.cleared, 0); assert.equal(game.recovered, expected);
     assert.equal(JSON.stringify(game.ownedRelics()), relics); assert.equal(game.charge, game.stage === 10 ? 0 : charge); assert.ok(game.used.shuffle);
@@ -124,14 +124,14 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.pendingReward = ['recharge']; assert.ok(game.choose('recharge')); assert.equal(game.charge, 1); assert.equal(game.shieldSpent, true);
   assert.equal(game.recharge, 10); game.stage = 7; assert.equal(game.recharge, 8);
 }
-// A stage cannot issue repeated mid-stage rewards, even after Undo.
+// Matching no longer issues mid-stage rewards.
 {
   const game = fresh(); let rewards = 0;
   for (const id of game.solution) {
     game.pick(id);
     if (game.pendingReward) { rewards++; assert.equal(game.previous, null); game.choose('blackhole'); }
   }
-  assert.equal(rewards, 1); assert.ok(game.midRewardTaken);
+  assert.equal(rewards, 0); assert.equal(game.stageRewardDue,false);
 }
 // Banked lightning waits for a complete exposed board triple.
 {
@@ -170,4 +170,4 @@ console.log('PASS: 640 stage witnesses; stage carryover; triple conservation; Sh
   game.radarUntil = 6; game.radarMark = 0;
   assert.equal(game.pick(2).recovered, 9); assert.equal(game.radarMark, 3); counts(game);
 }
-console.log('PASS: growth gates, independent companion levels, limited protection/refills, one mid-stage supply, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');
+console.log('PASS: growth gates, independent companion levels, limited protection/refills, no mid-stage supplies, banked lightning, marked leap chain, evolved cube and bounded energy feedback.');

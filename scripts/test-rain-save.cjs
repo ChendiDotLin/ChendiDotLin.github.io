@@ -34,7 +34,7 @@ for (let n = 1; n <= 12; n++) {
     }
     assert.equal(game.status, 'won'); roundtrip(game);
     assert.equal(game.banked, bankedBefore(stage));
-    game.offerReward(); game = roundtrip(game); choose(game); roundtrip(game);
+    if (game.stageRewardDue) { game.offerReward(); game = roundtrip(game); choose(game); roundtrip(game); }
     assert.ok(game.nextStage()); roundtrip(game);
   }
 }

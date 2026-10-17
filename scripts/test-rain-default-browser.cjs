@@ -24,7 +24,7 @@ const assert = require('node:assert/strict');
    assert.equal(await page.locator('#ranking-period-tabs').isVisible(),false);assert.equal(await saved(),null);
    await page.reload();await welcome();
   }
-  await page.locator('[data-welcome-mode=expedition]').click();await page.locator('[data-reward=feather]').click();
+  await page.locator('[data-welcome-mode=expedition]').click();await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
   await page.locator('#board button:enabled').first().click();let before=await saved();assert.ok(before);
   await page.reload();await welcome();assert.ok(await page.locator('#welcome-resume').isVisible());assert.deepEqual((await saved()).game,before.game);assert.equal((await saved()).runId,before.runId);before=await saved();await page.waitForTimeout(600);assert.deepEqual(await saved(),before);
   // Learning a classic mode must never overwrite an existing Expedition.

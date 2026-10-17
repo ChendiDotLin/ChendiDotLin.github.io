@@ -28,9 +28,9 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  assert.ok(requests.some(r=>r.url.endsWith('/critter_eclipse_leaderboard')));assert.ok(requests.some(r=>r.url.endsWith('/critter_submit_eclipse')&&r.data.p_player_id==='test'&&!('p_mode' in r.data)));
  await page.locator('#close-modal').click();await page.locator('[data-mode=monsoon]').click();await page.locator('#board button:enabled').first().waitFor();assert.equal(await page.locator('#eclipse-status').isVisible(),false);assert.equal(await page.locator('#pressure-status').isVisible(),false);
  // Passive replacement must show actual current-level abilities before mutation.
- url.searchParams.set('mode','expedition');await page.goto(url.href);await page.locator('[data-reward=feather]').click();
+ url.searchParams.set('mode','expedition');await page.goto(url.href);await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
  await page.evaluate(()=>{const g=gameProbe();Object.assign(g,{relics:{feather:2,ukulele:3,shield:1,gasoline:2,clover:1,prism:1,radar:2},equipment:'radar',pendingReward:['behemoth','blackhole','recharge']});rewardProbe();});
- await page.locator('[data-reward=behemoth]').click();assert.equal(await page.locator('[data-replace]').count(),6);
+ await page.locator('[data-reward=behemoth]').click();await page.locator('#reward-confirm').click();assert.equal(await page.locator('[data-replace]').count(),6);
  for(const id of ['feather','ukulele','shield','gasoline','clover','prism']) {
   const expected=await page.evaluate(id=>ClackCompanions.profile(id,gameProbe().relics[id],gameProbe(),'zh'),id);
   const text=await page.locator(`[data-replace=${id}]`).innerText();assert.ok(text.includes(expected.effect));assert.ok(text.includes(expected.rules));
@@ -40,11 +40,11 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  await page.locator('#modal-language').click();
  for (const width of [320,390,1366]) {await page.setViewportSize({width,height:844});assert.ok(await page.locator('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));}
  assert.match(await page.locator('.replacement-incoming').innerText(),/Level 1/);
- await page.locator('#reward-back').click();await page.locator('[data-reward=blackhole]').click();assert.equal(await page.locator('[data-replace]').count(),1);assert.equal(await page.evaluate(()=>gameProbe().equipment),'radar');
- await page.locator('[data-replace=radar]').click();assert.equal(await page.evaluate(()=>gameProbe().equipment),'blackhole');assert.equal(await page.evaluate(()=>gameProbe().relics.blackhole),1);assert.equal(await page.evaluate(()=>gameProbe().relics.radar),undefined);
- await page.evaluate(()=>{gameProbe().pendingReward=['behemoth','recharge'];rewardProbe();});await page.locator('[data-reward=behemoth]').click();await page.locator('[data-replace=shield]').click();
+ await page.locator('#reward-back').click();await page.locator('[data-reward=blackhole]').click();await page.locator('#reward-confirm').click();assert.equal(await page.locator('[data-replace]').count(),1);assert.equal(await page.evaluate(()=>gameProbe().equipment),'radar');
+ await page.locator('[data-replace=radar]').click();await page.locator('#replacement-confirm').click();assert.equal(await page.evaluate(()=>gameProbe().equipment),'blackhole');assert.equal(await page.evaluate(()=>gameProbe().relics.blackhole),1);assert.equal(await page.evaluate(()=>gameProbe().relics.radar),undefined);
+ await page.evaluate(()=>{gameProbe().pendingReward=['behemoth','recharge'];rewardProbe();});await page.locator('[data-reward=behemoth]').click();await page.locator('#reward-confirm').click();await page.locator('[data-replace=shield]').click();await page.locator('#replacement-confirm').click();
  assert.equal(await page.evaluate(()=>gameProbe().relics.behemoth),1);assert.equal(await page.evaluate(()=>gameProbe().relics.shield),undefined);assert.equal(await page.evaluate(()=>gameProbe().relics.ukulele),3);
- await page.evaluate(()=>{gameProbe().pendingReward=['resin','recharge'];rewardProbe();});await page.locator('[data-reward=resin]').click();await page.locator('#reward-skip').click();assert.equal(await page.evaluate(()=>gameProbe().relics.resin),undefined);
+ await page.evaluate(()=>{gameProbe().pendingReward=['resin','recharge'];rewardProbe();});await page.locator('[data-reward=resin]').click();await page.locator('#reward-confirm').click();await page.locator('#reward-skip').click();assert.equal(await page.evaluate(()=>gameProbe().relics.resin),undefined);
  const save=await page.evaluate(()=>JSON.parse(localStorage.getItem(RainSave.KEY)));
  await page.locator('[data-mode=eclipse]').click();await page.locator('#eclipse-start').click();await page.waitForTimeout(400);
  const after=await page.evaluate(()=>JSON.parse(localStorage.getItem(RainSave.KEY)));assert.deepEqual(after.game,save.game);assert.equal(after.runId,save.runId);

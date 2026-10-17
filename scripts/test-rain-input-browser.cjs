@@ -57,7 +57,7 @@ const assert = require('node:assert/strict');
     await page.evaluate(() => finishNew()); await playable();
     // A real expedition skill commits once even if its visual effect fails.
     await fresh(); await page.locator('[data-mode=expedition]').click();
-    await page.locator('[data-reward=feather]').click();
+    await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
     await page.evaluate(() => { RainEffects.relic = () => { throw Error('injected relic failure'); }; });
     await page.locator('#expedition-feather').click();
     const id = Number(await page.locator('.feather-target').first().getAttribute('data-id'));

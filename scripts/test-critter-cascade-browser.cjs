@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
   const url=new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
   await page.goto(url.href);
   assert.equal(await page.title(),'Critter Cascade');
-  await page.locator('[data-reward=ukulele]').click();
+  await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
   const tiles=await page.evaluate(async()=>{
    for(const item of RainMatch.ITEMS) { const image=new Image();image.src=`assets/tiles/${item.icon}.webp`;await image.decode();if(!image.naturalWidth)throw Error(item.icon); }
    return RainMatch.ITEMS;

@@ -4,7 +4,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  const page=await browser.newPage({viewport:{width:390,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
  await page.routeWebSocket(/\/realtime\/v1\//,s=>s.close());await page.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
  await page.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:await response.text()+'\nconst Base=RainExpedition.Expedition;RainExpedition.Expedition=class extends Base {constructor(){super();window.testGame=this;}static fromSave(s){const g=Base.fromSave(s);window.testGame=g;return g;}};'});});
- await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();
+ await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
  for(const stage of [15,25]){
   await page.setViewportSize({width:390,height:950});
   await page.evaluate(stage=>{const g=testGame,b=new RainMatch.Game('rain',Math.random,RainExpedition.stageSpec(stage-1));for(const key of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[key]=b[key];Object.assign(g,{stage:stage-1,banked:RainExpedition.bankedBefore(stage-1),bankedMoves:0,competitive:false,finished:false,trial:null,environment:null,sealed:{},bossEnergy:0,bossStarted:false,stageMatches:0,manualMatches:0,midRewardTaken:true,pendingReward:null,relics:{feather:4,radar:4},equipment:'radar',charge:1,energy:0,featherCharge:1,featherEnergy:0,fuse:null,spark:0,lightningReady:false,seekerCharge:0,turbineCharge:0,capacitorCharge:0,blastCharge:0,used:{remove:false,undo:false,shuffle:false}});g.tiles.forEach(t=>t.zone='matched');g.cleared=g.tiles.length;g.status='won';document.getElementById('board').replaceChildren();},stage);
@@ -34,13 +34,12 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
    await page.locator('#board').scrollIntoViewIfNeeded();await page.screenshot({path:'/tmp/critter-monochrome-phone.png'});
   }
   for(const width of [320,390,1366]){await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
-  // Clear fixture, then claim the ordinary and bonus offers through real UI.
+  // Odd special stages have no regular or bonus supply.
   await page.evaluate(()=>{const g=testGame;g.tiles.forEach(t=>t.zone='matched');g.cleared=g.tiles.length;g.status='won';g.rack=[];g.reserve=[];g.previous=null;g.environment.cards=[];g.pendingReward=null;document.getElementById('board').replaceChildren();});await page.locator('#language').click();await page.locator('#language').click();await page.locator('#expedition-continue').click();
-  await page.locator('#stage-next').click();await page.locator('#reward-skip').click();assert.match(await page.locator('#stage-next').innerText(),/额外伙伴/);
-  await page.locator('#stage-next').click();assert.equal(await page.locator('[data-reward]').count(),3);assert.equal(await page.evaluate(()=>testGame.environment.bonusClaimed),true);
-  await page.reload();await page.locator('#resume-confirm').click();await page.locator('#reward-skip').click();assert.ok(!/额外伙伴/.test(await page.locator('#stage-next').innerText()));assert.ok(await page.evaluate(()=>RainSave.parse(localStorage.getItem(RainSave.KEY))));
+  assert.equal(await page.locator('[data-reward]').count(),0);assert.match(await page.locator('#stage-next').innerText(),/下一关/);
+  await page.reload();await page.locator('#resume-confirm').click();assert.equal(await page.locator('[data-reward]').count(),0);
   await page.locator('#stage-next').click();await page.waitForFunction(()=>!document.querySelector('.fx-layer > *')&&document.querySelector('#board button:enabled'));assert.equal(await page.evaluate(()=>testGame.environment),null);assert.equal(await page.locator('.memory-hidden').count(),0);assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('environment-mono')),false);
-  console.log(`PASS: stage ${stage} bilingual intro, timer/visuals, responsive layout, two separate supplies, bonus reload and next-stage cleanup`);
+  console.log(`PASS: stage ${stage} bilingual intro, timer/visuals, responsive layout, no odd-stage supplies, clear reload and next-stage cleanup`);
  }
  assert.deepEqual(errors,[]);
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

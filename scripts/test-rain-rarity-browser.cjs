@@ -32,7 +32,7 @@ const assert = require('node:assert/strict');
     await page.screenshot({ path: '/tmp/rain-contrast-desktop.png', fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator('[data-mode=expedition]').click();
-    await page.locator('[data-reward=blackhole]').click();
+    await page.locator('[data-reward=blackhole]').click();await page.locator('#reward-confirm').click();
     await page.evaluate(() => {
       const g=testGame, b=new RainMatch.Game('rain',Math.random,RainExpedition.stageSpec(21));
       for(const key of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[key]=b[key];
@@ -58,7 +58,7 @@ const assert = require('node:assert/strict');
     await page.reload(); await page.locator('[data-mode=expedition]').click(); await page.locator('#resume-confirm').click();
     await page.locator(`[data-reward="${red}"]`).waitFor();
     assert.deepEqual(await page.locator('[data-reward]').evaluateAll(buttons => buttons.map(button => button.dataset.reward)), offered);
-    await page.locator(`[data-reward="${red}"]`).click();
+    await page.locator(`[data-reward="${red}"]`).click();await page.locator('#reward-confirm').click();
     assert.equal(await page.evaluate(id => testGame.relics[id], red), 5);
     assert.ok(await page.locator('#board button:enabled').count());
     // One loadout displays all five level-dependent rarity frames.

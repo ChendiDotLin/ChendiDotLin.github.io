@@ -20,21 +20,23 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
    return r.fulfill({json:{entries:[],total:0}});
  });
  const page=await context.newPage(); await page.goto(URL+'?mode=expedition');
- await page.locator('[data-reward=feather]').click();
+ await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
  const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem(RainSave.KEY)));
  assert.equal((await saved()).game.relics.feather,1);
  assert.match(await page.locator('#expedition-save-status').textContent(),/已自动保存/);
  const solution=await page.evaluate(()=>testGame.solution); let cursor=0;
- while(!(await saved()).game.pendingReward) await page.locator(`#board [data-id="${solution[cursor++]}"]`).click();
+ while((await saved()).game.stageMatches<3) await page.locator(`#board [data-id="${solution[cursor++]}"]`).click();
  const before=await saved(); assert.equal(before.game.stageMatches,3);
  await page.reload();await page.locator('#resume-confirm').click();
  assert.deepEqual((await saved()).game,before.game);assert.equal((await saved()).runId,before.runId);
- await page.locator('[data-reward=blackhole]').click();
- // Full first stage and reward checkpoint, then reload pending stage-clear supply.
+ assert.equal((await saved()).game.pendingReward,null);
+ // Stage one advances directly. Stage two has one persistent supply.
  for(;cursor<solution.length;cursor++)await page.locator(`#board [data-id="${solution[cursor]}"]`).click();
+ await page.locator('#stage-next').click();await page.waitForFunction(()=>testGame.stage===2&&!document.querySelector('.fx-layer > *'));
+ const second=await page.evaluate(()=>testGame.solution);for(const id of second)await page.locator(`#board [data-id="${id}"]`).click();
  await page.locator('#stage-next').click();const stageReward=await saved();assert.equal(stageReward.stageRewardClaimed,true);
  await page.reload();await page.locator('#resume-confirm').click();assert.deepEqual((await saved()).game.pendingReward,stageReward.game.pendingReward);
- await page.locator('[data-reward]').first().click(); await page.locator('#stage-next').click();assert.equal((await saved()).game.stage,2);
+ await page.locator('#reward-skip').click();await page.locator('#stage-next').click();await page.waitForFunction(()=>testGame.stage===3&&!document.querySelector('.fx-layer > *'));
  const stable=await saved(); await page.locator('#help').click();await page.waitForTimeout(1100);await page.reload();
  await page.waitForTimeout(1100);await page.locator('#resume-confirm').click();const resumed=await saved();
  assert.equal(resumed.runId,stable.runId); assert.deepEqual(resumed.game,stable.game);assert.ok(resumed.elapsedMs-stable.elapsedMs<1000);
@@ -42,7 +44,7 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
  const other=await context.newPage();await other.goto(URL+'?mode=expedition');await other.locator('#resume-confirm').click();
  await other.locator('#save-lock-retry').waitFor();assert.match(await other.locator('#modal-title').textContent(),/另一页面/);
  await page.locator('[data-mode=rain]').click();await page.locator('#resume-banner').waitFor();
- await other.locator('#save-lock-retry').click();await other.waitForFunction(()=>window.testGame?.stage===2);assert.equal(await other.evaluate(()=>testGame.stage),2);
+ await other.locator('#save-lock-retry').click();await other.waitForFunction(()=>window.testGame?.stage===3);assert.equal(await other.evaluate(()=>testGame.stage),3);
  await other.locator('[data-mode=rain]').click();await page.locator('#resume-expedition').click();await page.locator('#resume-confirm').click();
  const original=(await saved()).runId; await page.locator('#restart').click();await page.locator('#restart-cancel').click();assert.equal((await saved()).runId,original);
  // Mobile bilingual layout and pause/continue banner.
@@ -58,8 +60,8 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
  assert.equal(submissions.length,1);failSubmit=false;await page.locator('#score-form button').click();await page.locator('#save-feedback').waitFor();
  assert.deepEqual(submissions[1],submissions[0]);assert.ok((await saved()).receipt);
  await page.reload();await page.locator('#resume-confirm').click();await page.locator('#save-feedback').waitFor();assert.equal(submissions.length,2);
- await page.locator('[data-new-run]').click();await page.locator('[data-reward=feather]').click();assert.notEqual((await saved()).runId,original);
- await page.locator('#restart').click();await page.locator('#restart-confirm').click();await page.locator('[data-reward=ukulele]').click();
+ await page.locator('[data-new-run]').click();await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();assert.notEqual((await saved()).runId,original);
+ await page.locator('#restart').click();await page.locator('#restart-confirm').click();await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
  assert.equal((await saved()).game.relics.ukulele,1);
  // Corrupt current checkpoint falls back to a valid backup without crashing.
  await page.locator('[data-mode=rain]').click();await page.evaluate(()=>localStorage.setItem(RainSave.KEY,'{broken'));
@@ -68,7 +70,7 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
  // A browser that refuses persistence reports failure while still allowing play.
  const unavailable=await browser.newContext({reducedMotion:'reduce'});await unavailable.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
  await unavailable.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new DOMException('blocked','SecurityError')}}));
- const blocked=await unavailable.newPage();blocked.on('pageerror',e=>errors.push(e.message));await blocked.goto(URL+'?mode=expedition');await blocked.locator('[data-reward=feather]').click();
+ const blocked=await unavailable.newPage();blocked.on('pageerror',e=>errors.push(e.message));await blocked.goto(URL+'?mode=expedition');await blocked.locator('[data-reward=feather]').click();await blocked.locator('#reward-confirm').click();
  assert.match(await blocked.locator('#expedition-save-status').textContent(),/未能自动保存/);assert.ok(await blocked.locator('#board button:enabled').count());await unavailable.close();
  assert.deepEqual(errors,[]);console.log('PASS: real play, reward and stage checkpoints, refresh/resume, active time, multi-tab locks, classic-mode return, restart cancel/replace, bilingual 320–1366px layouts, frozen failed submission retry, receipt recovery, backup recovery and storage denial. All score writes mocked.');
  } finally {await browser.close();}

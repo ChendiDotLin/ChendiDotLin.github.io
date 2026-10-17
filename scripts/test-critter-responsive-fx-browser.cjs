@@ -6,7 +6,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.routeWebSocket(/\/realtime\/v1\//,s=>s.close());await page.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
   await page.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:await response.text()+'\nconst Base=RainExpedition.Expedition;RainExpedition.Expedition=class extends Base {constructor(){super();window.testGame=this;}};'});});
-  await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();
+  await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
   await page.evaluate(touch=>{const g=testGame;g.relics={behemoth:1};g.blastCharge=3;g.midRewardTaken=true;g.tiles.forEach((t,id)=>Object.assign(t,{type:Math.floor(id/3),x:id%6*80,y:Math.floor(id/6)*75,z:0,pile:'main'}));if(touch){g.tiles[35].zone='reserve';g.reserve=[35];}document.getElementById('board').replaceChildren();},touch);
   await page.locator('#language').click();
   const press=async selector=>{const el=page.locator(selector);await el.scrollIntoViewIfNeeded();const r=await el.boundingBox();const start=Date.now();if(touch)await page.touchscreen.tap(r.x+r.width/2,r.y+r.height/2);else await page.mouse.click(r.x+r.width/2,r.y+r.height/2);return Date.now()-start;};

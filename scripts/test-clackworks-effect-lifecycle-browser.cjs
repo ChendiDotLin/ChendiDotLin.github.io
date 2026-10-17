@@ -18,7 +18,7 @@ const assert = require('node:assert/strict');
     const fresh = async () => {
       await page.goto(url);
       if (await page.locator('#resume-new').count()) await page.locator('#resume-new').click();
-      await page.locator('[data-reward=ukulele]').click();
+      await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
       await page.waitForFunction(() => document.querySelector('#board button:enabled'));
     };
     for (const fault of ['startup-render', 'completion-render', 'cleanup']) {
@@ -48,13 +48,15 @@ const assert = require('node:assert/strict');
       assert.equal(await page.evaluate(() => testGame.used.shuffle), true);
       assert.ok(await page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY))), fault + ': saved run remains valid');
     }
-    // Real lightning crosses the supply threshold. Failure while building the
+    // Simulate a legacy mid-stage offer after real lightning. Failure building the
     // reward dialog must not leave every card/tool disabled with no way forward.
     await fresh();
     await page.evaluate(() => {
       const g = testGame;
       g.tiles = Array.from({ length: 36 }, (_, id) => ({ id, type: Math.floor(id / 3), x: id % 6 * 80, y: Math.floor(id / 6) * 75, z: 0, pile: 'main', zone: id < 6 ? 'matched' : 'board' }));
       g.cleared = 6; g.manualMatches = 2; g.stageMatches = 2; g.spark = 3;
+      const pick = g.pick.bind(g);
+      g.pick = (...args) => {const result=pick(...args);if(result.matched&&g.stageMatches===3)g.offerReward();return result;};
       document.getElementById('board').replaceChildren();
       const translate = RainI18n.translate;
       let failed = false;
@@ -69,7 +71,7 @@ const assert = require('node:assert/strict');
     assert.equal(await page.evaluate(() => testGame.stageMatches), 3);
     assert.equal(await page.evaluate(() => testGame.cleared), 12);
     assert.equal(await page.locator('.fx-layer > *').count(), 0);
-    await page.locator('[data-reward]').first().click();
+    await page.locator('[data-reward]').first().click();await page.locator('#reward-confirm').click();
     await page.locator('#board button:enabled').first().click();
     assert.equal(await page.evaluate(() => testGame.moves), 4);
     assert.ok(await page.evaluate(() => RainSave.parse(localStorage.getItem(RainSave.KEY))));

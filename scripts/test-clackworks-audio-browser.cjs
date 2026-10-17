@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
    await route.fulfill({ response, body: await response.text() + '\nconst BaseMusic = RainMusic; window.RainMusic = class extends BaseMusic { constructor(...args) { super(...args); if (!window.testMix) window.testMix = this; } };' });
   });
   const origin = new URL(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/').origin;
-  await page.goto(origin + '/critter-cascade/'); await page.locator('[data-reward=feather]').click();
+  await page.goto(origin + '/critter-cascade/'); await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
   assert.equal(await page.evaluate(() => testMix.context), null);
   assert.equal(audioRequests.length, 0, 'no recording or retired piano bank loads before Play');
   assert.equal(await page.locator('[data-i18n="musicHint"]').count(), 0);

@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
  await page.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
  await page.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:await response.text()+`\nconst Base=RainExpedition.Expedition; RainExpedition.Expedition=class extends Base {constructor(){super();window.testGame=this;} static fromSave(data){const g=Base.fromSave(data);window.testGame=g;return g;}};`});});
  await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');
- await page.locator('[data-reward=ukulele]').click();
+ await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
  await page.locator('#equipment-catalog').click();
  assert.equal(await page.locator('.family-catalog').count(),4);assert.equal(await page.locator('[data-catalog]').count(),16);
  await page.screenshot({path:'/tmp/clackworks-animal-catalog.png',fullPage:true});

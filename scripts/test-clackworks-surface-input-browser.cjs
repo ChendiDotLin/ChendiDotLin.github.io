@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
    await route.fulfill({ response, body: await response.text() + '\nconst Base = RainExpedition.Expedition; RainExpedition.Expedition = class extends Base { constructor() { super(); window.testGame = this; } };' });
   });
   await page.goto(process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/');
-  await page.locator('[data-reward=ukulele]').click();
+  await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
   const clickTile = async id => {
    const tile = page.locator(`#board [data-id="${id}"]`);
    await tile.scrollIntoViewIfNeeded();
@@ -50,8 +50,7 @@ const assert = require('node:assert/strict');
     await clickTile(id);
    }
    await page.locator('#stage-next').click();
-   await page.locator('[data-reward]').first().click();
-   await page.locator('#stage-next').click();
+   if (await page.locator('#reward-skip').isVisible()) {await page.locator('#reward-skip').click();await page.locator('#stage-next').click();}
    await page.locator('.fx-surface').waitFor();
    assert.ok(await noLiveTransform(), 'stage landing only transforms its visual copy');
    if (!round) {

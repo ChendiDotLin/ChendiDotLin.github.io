@@ -6,7 +6,7 @@
   const fx = RainEffects;
   const music = new RainMusic();
   music.onError = () => { $('music-error').hidden = false; localizePage(); };
-  let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null;
+  let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null, selectedReward = null, selectedReplacement = null;
   let activeEffect = null, atmosphereKey = '', atmosphereTime = 0;
   let lastProc = null, lightningMarks = new Set();
   const isExpedition = () => game?.mode === 'expedition';
@@ -289,7 +289,7 @@
     tenTime = record.tenTime; tenRecord = record.tenRecord; tenSubmitting = false;
     stageRewardClaimed = record.stageRewardClaimed; playerDraft = record.playerDraft;
     savedWin = false; submitting = false; formError = ''; lastStatus = null;
-    animating = false; targeting = null; replacementItem = null; savePaused = false;
+    animating = false; targeting = null; replacementItem = null; selectedReward = null; selectedReplacement = null; savePaused = false;
     clearTimeout(comboTimeout); $('combo').classList.remove('show'); $('board').replaceChildren();
     document.querySelectorAll('[data-mode]').forEach(button => {
       const selected = button.dataset.mode === 'expedition'; button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
@@ -324,7 +324,7 @@
     const outgoing = runId && game ? fx.captureBoard() : null;
     animating = !!runId;
     closeDialog(); game = mode === 'expedition' ? new RainExpedition.Expedition() : mode === 'eclipse' ? new CritterEclipse.Eclipse() : new RainMatch.Game(mode);
-    targeting = null; stageRewardClaimed = false; replacementItem = null; timerStarted = false; elapsed = 0; tick = performance.now();
+    targeting = null; stageRewardClaimed = false; replacementItem = null; selectedReward = null; selectedReplacement = null; timerStarted = false; elapsed = 0; tick = performance.now();
     savedWin = false; finalized = false; receipt = null; formError = ''; lastStatus = null; submitting = false; submissionPayload = null;
     tenTime = null; tenRecord = null; tenSubmitting = false;
     runId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, digit => (Number(digit) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(digit) / 4).toString(16));
@@ -741,7 +741,7 @@
     $('expedition-continue').disabled = animating || savePaused;
     $('expedition-extract').disabled = animating || finalized || savePaused || !!game.pendingReward || game.finished;
     let hint = targeting ? t(targeting === 'feather' ? 'expFeatherHint' : 'expCubeHint') : game.pendingReward ? t('expRewardPending')
-      : t(game.midRewardTaken ? 'expSupplyDone' : 'expProgress', { n: game.stageMatches, max: game.rewardTarget });
+      : t('expNextSupply', { n: game.stage + (game.stage % 2) + (stageRewardClaimed && game.stage % 2 === 0 ? 2 : 0) });
     if (!targeting && !game.pendingReward) {
       if (game.radarActive) hint += ' · ' + t('expRadarOn', { n: game.radarUntil - game.moves });
       else if (game.equipment === 'blackhole' && game.charge && !game.cubeTargets().length) hint += ' · ' + t('expNeedPair');
@@ -789,14 +789,31 @@
     showDialog('reward', `<span class="modal-eyebrow">EXPEDITION / SUPPLY</span><h2 id="modal-title">${t(first ? 'expStartTitle' : 'expRewardTitle')}</h2><p>${t(first ? 'expStartCopy' : 'expRewardCopy')}</p>${first ? '' : `<p class="input-hint">${t('expGrowthGate', { n: game.levelCap, left: 2 - game.restocksUsed })}<br>${game.levelCap < 5 ? t('expMythicGate') : t('expRewardOdds', { n: Math.round(game.legendaryChance * 100) })}</p>`}<div class="reward-choices">${game.pendingReward.map(id => `<button class="reward-choice" data-reward="${id}" data-rarity="${RainExpedition.RELICS[id] ? RainExpedition.rarityAt((game.relics[id] || 0) + 1) : 'supply'}">${rewardMarkup(id)}</button>`).join('')}</div>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
+    if (!game.pendingReward.includes(selectedReward)) selectedReward = null;
+    $('modal-content').querySelector('.reward-choices').insertAdjacentHTML('afterend', `<div class="reward-confirmation"><button class="primary-button" id="reward-confirm" disabled>${t('rewardChooseFirst')}</button></div>`);
+    const refreshSelection = () => {
+      $('modal-content').querySelectorAll('[data-reward]').forEach(button => {
+        const selected = button.dataset.reward === selectedReward;
+        button.classList.toggle('reward-selected', selected); button.setAttribute('aria-pressed', String(selected));
+      });
+      $('reward-confirm').disabled = !selectedReward;
+      const name = RainExpedition.RELICS[selectedReward] ? relicName(selectedReward, (game.relics[selectedReward] || 0) + 1) : selectedReward === 'recharge' ? t('expRecharge') : selectedReward?.startsWith('restore_') ? t(selectedReward.slice(8)) : '';
+      $('reward-confirm').textContent = t(selectedReward ? 'rewardConfirm' : 'rewardChooseFirst', {name});
+    };
     $('modal-content').querySelectorAll('[data-reward]').forEach(button => button.addEventListener('click', () => {
-      const id = button.dataset.reward;
+      selectedReward = button.dataset.reward; refreshSelection();
+    }));
+    $('reward-confirm').addEventListener('click', () => {
+      if (dialogView !== 'reward' || animating || savePaused || !game.pendingReward?.includes(selectedReward)) return;
+      const id = selectedReward;
       if (RainExpedition.RELICS[id]?.kind === 'active' && game.equipment && game.equipment !== id) { showReplacement(id); return; }
       if (!game.choose(id)) { showReplacement(id); return; }
       afterReward();
-    }));
+    });
+    refreshSelection();
   }
   function showReplacement(id) {
+    if (replacementItem !== id) selectedReplacement = null;
     replacementItem = id;
     const active = RainExpedition.RELICS[id]?.kind === 'active';
     const candidates = game.loadout().filter(relic => RainExpedition.RELICS[relic.id].kind === (active ? 'active' : 'passive'));
@@ -806,31 +823,44 @@
       const profile = ClackCompanions.profile(key, level, incoming ? null : game, language);
       return `${relicIcon(key, level)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level))} · ${t('expLevel', {n: level})}</small><b>${relicName(key, level)} <em class="equipment-role">${t('role_' + key)}</em></b><span>${profile.effect}</span><span class="reward-rule">${profile.rules}</span></div>`;
     };
-    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('replaceCompare')}</p><h3 class="replacement-label">${t('replaceIncoming')}</h3><div class="reward-choice replacement-incoming" data-rarity="common">${ability(id, 1, true)}</div><p class="input-hint">${t('replaceTeamNote')}</p><h3 class="replacement-label">${t('replaceOutgoing')}</h3><div class="reward-choices">${candidates.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.rarityAt(relic.level)}">${ability(relic.id, relic.level)}<strong class="replace-action">${t('replaceChoose')}</strong></button>`).join('')}</div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
+    showDialog('replace', `<h2 id="modal-title">${t('expReplaceTitle')}</h2><p>${t('replaceCompare')}</p><h3 class="replacement-label">${t('replaceIncoming')}</h3><div class="reward-choice replacement-incoming" data-rarity="common">${ability(id, 1, true)}</div><p class="input-hint">${t('replaceTeamNote')}</p><h3 class="replacement-label">${t('replaceOutgoing')}</h3><div class="reward-choices">${candidates.map(relic => `<button class="reward-choice" data-replace="${relic.id}" data-rarity="${RainExpedition.rarityAt(relic.level)}">${ability(relic.id, relic.level)}<strong class="replace-action">${t('replaceChoose')}</strong></button>`).join('')}</div><div class="reward-confirmation"><button class="primary-button" id="replacement-confirm" disabled>${t('rewardChooseFirst')}</button></div><button class="secondary-button" id="reward-back">${t('expBack')}</button>`);
     $('modal-content').insertAdjacentHTML('beforeend', rewardSkipMarkup());
     bindRewardSkip();
     $('reward-back').addEventListener('click', showExpeditionReward);
+    if (!candidates.some(relic => relic.id === selectedReplacement)) selectedReplacement = null;
+    const refreshSelection = () => {
+      $('modal-content').querySelectorAll('[data-replace]').forEach(button => {
+        const selected = button.dataset.replace === selectedReplacement;
+        button.classList.toggle('reward-selected', selected); button.setAttribute('aria-pressed', String(selected));
+      });
+      $('replacement-confirm').disabled = !selectedReplacement;
+      $('replacement-confirm').textContent = t(selectedReplacement ? 'replacementConfirm' : 'rewardChooseFirst', {name: selectedReplacement ? relicName(selectedReplacement) : ''});
+    };
     $('modal-content').querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => {
-      if (game.choose(id, button.dataset.replace)) afterReward();
+      selectedReplacement = button.dataset.replace; refreshSelection();
     }));
+    $('replacement-confirm').addEventListener('click', () => {
+      if (dialogView !== 'replace' || animating || savePaused || !selectedReplacement) return;
+      if (game.choose(id, selectedReplacement)) afterReward();
+    });
+    refreshSelection();
   }
   function afterReward() {
-    replacementItem = null; closeDialog(); render(); syncClock();
+    replacementItem = null; selectedReward = null; selectedReplacement = null; closeDialog(); render(); syncClock();
     if (game.status === 'won') showExpeditionStage();
   }
   function showExpeditionStage(animate = false) {
     if (animate === true) music.sound('win');
     if (!isExpedition() || savePaused || game.status !== 'won') return;
     if (game.pendingReward) { showExpeditionReward(); return; }
-    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.environment ? `<p class="environment-clear">${t('environmentClear')}</p>` : ''}${game.bossEncounter ? `<p class="boss-victory">${game.stage === 100 ? t('bossFinalVictory') : t('bossVictory', {name: t('bossName_' + game.bossKind)})}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(!stageRewardClaimed ? 'expStageReward' : game.environment && !game.environment.bonusClaimed ? 'environmentBonus' : 'expNext')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
+    showDialog('stage', `${fx.resultScene(true, t('expStageClear'), animate === true)}<span class="modal-eyebrow">${t('expStage', { n: game.stage })}</span><h2 id="modal-title">${t('expStageClear')}</h2><p>${t('expStageClearCopy')}</p><p>${t('expTotal', { n: game.recovered })}</p>${loadoutMarkup()}${game.environment ? `<p class="environment-clear">${t('environmentClear')}</p>` : ''}${game.bossEncounter ? `<p class="boss-victory">${game.stage === 100 ? t('bossFinalVictory') : t('bossVictory', {name: t('bossName_' + game.bossKind)})}</p>` : ''}${tenRecord ? `<button class="secondary-button" id="stage-ten">${t('expTenButton', { time: formatTime(tenTime, true) })}</button>` : ''}<button class="primary-button" id="stage-next">${t(game.stageRewardDue && !stageRewardClaimed ? 'expStageReward' : 'expNext')}</button><button class="text-button" id="stage-extract">${t('expExtract')}</button>`);
     $('stage-ten')?.addEventListener('click', showTenRecord);
     $('stage-extract').addEventListener('click', showExtract);
     $('stage-next').addEventListener('click', () => {
-      if (!stageRewardClaimed) {
-        stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
+      if (animating || savePaused || finalized) return;
+      if (game.stageRewardDue && !stageRewardClaimed) {
+        selectedReward = null; selectedReplacement = null; stageRewardClaimed = true; game.offerReward(); render(); showExpeditionReward(); return;
       }
-      if (game.claimEnvironmentBonus()) { render(); showExpeditionReward(); return; }
-      if (animating || savePaused) return;
       cancelEffects(); const outgoing = fx.captureBoard();
       if (!game.nextStage()) { outgoing?.remove(); return; }
       stageRewardClaimed = false; targeting = null; animating = true; lastStatus = null;

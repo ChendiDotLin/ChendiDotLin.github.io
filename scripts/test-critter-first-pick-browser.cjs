@@ -13,7 +13,7 @@ for(const mode of ['drizzle','rain','monsoon']) {
  await page.locator('#board button:enabled').first().click();assert.equal((await clock()).started,true);await page.waitForFunction(()=>clockProbe().elapsed>=300);assert.ok((await clock()).elapsed>=300);const prev=(await clock()).elapsed;
  await page.locator('#undo').click();await page.waitForTimeout(350);assert.equal((await clock()).moves,0);assert.ok((await clock()).elapsed>prev,'Undo must not stop the clock');
 }
-url.searchParams.set('mode','expedition');await page.goto(url.href);await page.locator('[data-reward=feather]').click();await page.waitForTimeout(1200);assert.deepEqual(await clock(),{elapsed:0,started:false,moves:0});
+url.searchParams.set('mode','expedition');await page.goto(url.href);await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();await page.waitForTimeout(1200);assert.deepEqual(await clock(),{elapsed:0,started:false,moves:0});
 await page.locator('#shuffle').click();await page.waitForTimeout(400);assert.equal((await clock()).started,false,'tools do not start tile timer');
 await page.reload();await page.locator('#resume-confirm').click();await page.locator('#resume-confirm').waitFor({state:'hidden'});await page.waitForTimeout(1200);assert.deepEqual(await clock(),{elapsed:0,started:false,moves:0});
 await page.locator('#board button:enabled').first().click();await page.waitForTimeout(400);await page.locator('#undo').click();const elapsed=(await clock()).elapsed;

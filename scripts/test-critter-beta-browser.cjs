@@ -10,7 +10,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
   const entries=beta?[{playerId:'BetaPlayer',mode,cleared:36,elapsedMs:1000,createdAt:1,stage:10,completedStages:10,tenMs:1000,loadout:[{id:'feather',level:5}]}]:[];
   await r.fulfill({json:{entries,total:entries.length}});
  });
- await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/?mode=expedition');await page.locator('[data-reward=ukulele]').click();
+ await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/?mode=expedition');await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
  const content=page.locator('#inline-ranking-content'),beta=page.locator('[data-ranking-period=beta]'),formal=page.locator('[data-ranking-period=formal]');
  await page.waitForFunction(()=>document.querySelector('#inline-ranking-content').getAttribute('aria-busy')==='false');assert.equal(await formal.getAttribute('aria-pressed'),'true');
  await beta.click();await page.locator('#ranking-rows tr').filter({hasText:'BetaPlayer'}).waitFor();

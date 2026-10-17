@@ -22,8 +22,8 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(URL);
     assert.equal(await page.locator('#reward-skip').count(), 0);
-    await page.locator('[data-reward=feather]').click();
-    // Set up a legal full-slot loadout, then play to the real mid-stage supply.
+    await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
+    // Set up a legal full-slot loadout, then resume a legacy pending mid-stage supply.
     await page.evaluate(() => {
       testGame.relics = { feather: 1, shield: 1, cell: 1, clover: 1, turbine: 1, recycler: 1, blackhole: 1 };
       testGame.equipment = 'blackhole'; testGame.charge = 0;
@@ -31,11 +31,9 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
     });
     const solution = await page.evaluate(() => testGame.solution);
     let cursor = 0;
-    while (!await page.evaluate(() => !!testGame.pendingReward)) {
-      await page.locator(`#board [data-id="${solution[cursor++]}"]`).click();
-    }
+    await page.evaluate(()=>testGame.offerReward());await page.locator('#language').click();await page.locator('#language').click();await page.locator('#expedition-continue').click();
     const gear = await page.evaluate(() => testGame.relics);
-    await page.locator('[data-reward=gasoline]').click();
+    await page.locator('[data-reward=gasoline]').click();await page.locator('#reward-confirm').click();
     await page.locator('[data-replace]').first().waitFor();
     assert.match(await page.locator('#reward-skip').textContent(), /跳过/);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -56,16 +54,11 @@ const URL = process.env.RAIN_GAME_URL || 'http://127.0.0.1:8765/critter-cascade/
       }
     }
     await page.locator('#stage-next').click();
-    assert.match(await page.locator('#reward-skip').textContent(), /Skip/);
-    await page.locator('#reward-skip').click();
-    await page.reload(); await page.locator('#resume-confirm').click();
-    assert.equal(await page.locator('#reward-skip').count(), 0);
-    await page.locator('#stage-next').click();
     await page.waitForFunction(() => testGame.stage === 2 && document.querySelector('#board button:not(:disabled)'));
     assert.deepEqual(await page.evaluate(() => testGame.relics), gear);
     await page.locator('#board button:not(:disabled)').first().click();
     assert.equal(await page.evaluate(() => testGame.moves), 1);
     assert.deepEqual(errors, []);
-    console.log('PASS: full-slot replacement skip, bilingual phone UI, unchanged loadout, reload after both skips, next-stage clicks. All network writes mocked.');
+    console.log('PASS: full-slot replacement skip, bilingual phone UI, unchanged loadout, legacy pending reward reload, next-stage clicks. All network writes mocked.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });

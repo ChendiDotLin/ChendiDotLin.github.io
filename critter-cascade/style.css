@@ -782,3 +782,8 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
 .eclipse-status > span { flex: 1; min-width: 160px; min-height: 32px; line-height: 16px; color: #c3c8db; }
 .eclipse-choice { border-color: #ab98da66; }
 .welcome-modes .expedition-choice { grid-column: 1 / -1; }
+
+.reward-choice.reward-selected { outline: 3px solid #a8e6cd; outline-offset: 2px; background: #76bb9c25; }
+.reward-confirmation { position: sticky; bottom: 0; z-index: 3; padding: 12px 0 8px; margin-top: 12px; background: #202c3d; }
+.reward-confirmation .primary-button { width: 100%; margin: 0; min-height: 46px; }
+.reward-confirmation .primary-button:disabled { opacity: .5; cursor: default; }

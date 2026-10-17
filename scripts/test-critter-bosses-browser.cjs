@@ -4,7 +4,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  const page=await browser.newPage({viewport:{width:1366,height:1050}}),errors=[];page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
  await page.routeWebSocket(/\/realtime\/v1\//,s=>s.close());await page.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
  await page.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:await response.text()+`\nconst Base=RainExpedition.Expedition;RainExpedition.Expedition=class extends Base {constructor(){super();window.testGame=this;}static fromSave(s){const g=Base.fromSave(s);window.testGame=g;return g;}};`});});
- await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();
+ await page.goto(process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/');await page.locator('[data-reward=ukulele]').click();await page.locator('#reward-confirm').click();
  await page.locator('#boss-catalog').click();assert.equal(await page.locator('.boss-catalog section').count(),10);assert.match(await page.locator('.boss-catalog').innerText(),/镜湖灵狐.*盘根树獭.*森冠兽王/s);await page.locator('#modal-language').click();assert.match(await page.locator('.boss-catalog').innerText(),/Mirrorlake Fox/);await page.locator('#modal-language').click();await page.screenshot({path:'/tmp/critter-boss-route.png',fullPage:true});await page.locator('#boss-catalog-close').click();
  const waitFx=()=>page.waitForFunction(()=>!document.querySelector('.fx-layer > *')&&document.querySelector('#board button:enabled'));
  for(const stage of [10,20,30,40,50,60,70,80,90,100]){
