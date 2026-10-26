@@ -71,6 +71,14 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 .inventory-copy > [data-i18n] { flex-shrink: 0; }
 .inventory-label strong { flex-shrink: 0; font-size: 10px; color: #d5cbee; font-weight: 500; }
 .inventory-label strong span { color: #8b9bad; }
+.inventory-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.board-restart { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #a7b7c04d; border-radius: 9px; background: #253b43; color: #dce6de; font-size: 12px; }
+.board-restart > [aria-hidden] { font-size: 21px; }
+.board-restart:hover { background: #35504f; border-color: #b3c9b5; }
+.eclipse-intro-preference { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 16px; color: #dce6de; font-size: 13px; cursor: pointer; }
+.eclipse-intro-preference input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: #a6cfb2; }
+.eclipse-intro-preference input:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
+dialog:has(#eclipse-start) { overscroll-behavior: contain; }
 .rack { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 8px; border: 2px solid #161f2c; border-top-color: #677988; border-radius: 9px; background: #718291; box-shadow: 0 5px 0 #111b29, inset 0 1px 0 #c8d1d54d; }
 .slot { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 4px; background: #303e51; box-shadow: inset 0 2px 3px #1119257a, 0 1px 0 #c5d3db36; }
 .slot::before { content: ""; width: 4px; height: 4px; background: #6d7c9166; border-radius: 50%; }

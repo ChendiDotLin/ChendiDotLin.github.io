@@ -15,6 +15,7 @@
   try { storage = window.localStorage; } catch (_) { storage = null; }
   const readPreference = key => { try { return storage?.getItem(key); } catch (_) { return null; } };
   const savePreference = (key, value) => { try { storage?.setItem(key, value); } catch (_) { /* Preferences are optional. */ } };
+  let eclipseIntroHidden = readPreference('critter-eclipse-hide-intro') === 'yes', eclipseDialogScroll = null;
   const saveStore = new RainSave.Store(storage, navigator.locks);
   let saveState = saveStore.read(), saveNote = saveState.error, savePaused = false, lastCheckpoint = 0, navigationToken = 0, acquiringSave = false;
   const leaderboard = new RainLeaderboard.Leaderboard(window.RAIN_CONFIG);
@@ -64,10 +65,14 @@
   }
   function closeDialog() {
     updateClock();
+    const eclipseScroll = dialogView === 'eclipse' ? eclipseDialogScroll : null;
     const startingPressure = dialogView === 'boss' && game?.pressure && !game.pressure.started;
     if (startingPressure) { game.startPressure(); checkpoint(); }
     if (dialogView === 'environment' && game?.environment && !game.environment.started) { game.startEnvironment(); checkpoint(); }
     if (modal.open) modal.close(); dialogView = null; syncClock();
+    // Native dialog closing can focus an old header button and scroll away
+    // from the board, especially after a touch restart. Keep the reading spot.
+    if (eclipseScroll) { eclipseDialogScroll = null; window.scrollTo({ ...eclipseScroll, behavior: 'instant' }); }
     if (startingPressure) $('pressure-status').scrollIntoView({block: 'start'});
   }
   function dismissDialog() {
@@ -316,6 +321,7 @@
 
   function start(mode = game?.mode || 'expedition') {
     if (mode === 'expedition' && !saveStore.owned) { requestExpedition(); return; }
+    const restartView = !welcomeOpen && runId && mode === game?.mode ? { left: scrollX, boardTop: $('board').getBoundingClientRect().top } : null;
     enterPlay();
     if (isExpedition()) { updateClock(); checkpoint(); }
     if (mode !== 'expedition') saveStore.release();
@@ -338,13 +344,16 @@
     if (animating) {
       playEffect(() => { music.sound('restart'); return fx.restart(outgoing); }, () => {
         if (isExpedition()) showExpeditionReward();
-        else if (game.mode === 'eclipse') showEclipseIntro();
+        else if (game.mode === 'eclipse' && !eclipseIntroHidden) showEclipseIntro();
       });
     } else {
       render(true); syncClock();
       if (isExpedition()) showExpeditionReward();
-      else if (game.mode === 'eclipse') showEclipseIntro();
+      else if (game.mode === 'eclipse' && !eclipseIntroHidden) showEclipseIntro();
     }
+    // Anchor the board rather than the document offset: a fresh Expedition
+    // team can make the panel above the mobile board shorter.
+    if (restartView) window.scrollTo({ left: restartView.left, top: scrollY + $('board').getBoundingClientRect().top - restartView.boardTop, behavior: 'instant' });
   }
   function render(enter = false) {
     game.refreshEnvironment?.();
@@ -934,6 +943,7 @@
   $('environment-info').addEventListener('click', showEnvironmentIntro);
   modal.addEventListener('cancel', event => {
     if (!runId && ['resume', 'saveLocked'].includes(dialogView)) { event.preventDefault(); dismissDialog(); return; }
+    if (dialogView === 'eclipse') { event.preventDefault(); closeDialog(); return; }
     if (dialogView === 'environment' || (dialogView === 'boss' && game.pressure && !game.pressure.started)) { event.preventDefault(); closeDialog(); render(); }
   });
   function renderPressure() {
@@ -1013,7 +1023,13 @@
   });
 
   function showEclipseIntro() {
-    showDialog('eclipse', `<span class="modal-eyebrow">ECLIPSE / CHALLENGE</span><h2 id="modal-title">${t('eclipseTitle')}</h2><ol>${t('eclipseRules').map(rule => `<li>${rule}</li>`).join('')}</ol><button id="eclipse-start" class="primary-button">${t(timerStarted ? 'pressureResume' : 'welcomePlay')}</button>`);
+    eclipseDialogScroll ||= { left: scrollX, top: scrollY };
+    showDialog('eclipse', `<span class="modal-eyebrow">ECLIPSE / CHALLENGE</span><h2 id="modal-title">${t('eclipseTitle')}</h2><ol>${t('eclipseRules').map(rule => `<li>${rule}</li>`).join('')}</ol><label class="eclipse-intro-preference"><input type="checkbox" id="eclipse-skip-intro" aria-describedby="eclipse-skip-hint" ${eclipseIntroHidden ? 'checked' : ''}><span>${t('eclipseSkipIntro')}</span></label><p id="eclipse-skip-hint" class="input-hint">${t('eclipseSkipHint')}</p><button id="eclipse-start" class="primary-button">${t(timerStarted ? 'pressureResume' : 'welcomePlay')}</button>`);
+    window.scrollTo({ ...eclipseDialogScroll, behavior: 'instant' });
+    $('eclipse-skip-intro').addEventListener('change', event => {
+      eclipseIntroHidden = event.target.checked;
+      savePreference('critter-eclipse-hide-intro', eclipseIntroHidden ? 'yes' : 'no');
+    });
     $('eclipse-start').addEventListener('click', closeDialog);
   }
   $('eclipse-info').addEventListener('click', showEclipseIntro);

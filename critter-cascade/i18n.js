@@ -2,6 +2,9 @@
   'use strict';
   const messages = {
   "zh": {
+    "restartShort": "重开",
+    "eclipseSkipIntro": "下次不再提醒",
+    "eclipseSkipHint": "仍可随时点击「规则」查看，也可取消勾选恢复提醒。",
     "rewardChooseFirst": "请先选择一项",
     "rewardConfirm": "确认选择 · {name}",
     "replacementConfirm": "确认替换 · {name}",
@@ -535,6 +538,9 @@
     "expFx_trialShift": "Boss 阶段切换"
   },
   "en": {
+    "restartShort": "Restart",
+    "eclipseSkipIntro": "Don't show this again",
+    "eclipseSkipHint": "You can always open Rules to read this or turn reminders back on.",
     "rewardChooseFirst": "Select an option first",
     "rewardConfirm": "Confirm: {name}",
     "replacementConfirm": "Replace: {name}",

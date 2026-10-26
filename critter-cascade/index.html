@@ -8,23 +8,23 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-confirm-supply-v1">
-  <script defer src="analytics.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="layout.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="core.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="eclipse.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="expedition.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="expedition-save.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="companions.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="i18n.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="config.js?v=critter-confirm-supply-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-restart-controls-v1">
+  <script defer src="analytics.js?v=critter-restart-controls-v1"></script>
+  <script defer src="layout.js?v=critter-restart-controls-v1"></script>
+  <script defer src="core.js?v=critter-restart-controls-v1"></script>
+  <script defer src="eclipse.js?v=critter-restart-controls-v1"></script>
+  <script defer src="expedition.js?v=critter-restart-controls-v1"></script>
+  <script defer src="expedition-save.js?v=critter-restart-controls-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-restart-controls-v1"></script>
+  <script defer src="companions.js?v=critter-restart-controls-v1"></script>
+  <script defer src="i18n.js?v=critter-restart-controls-v1"></script>
+  <script defer src="config.js?v=critter-restart-controls-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="leaderboard.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="effects.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="music.js?v=critter-confirm-supply-v1"></script>
-  <script defer src="game.js?v=critter-confirm-supply-v1"></script>
+  <script defer src="presence.js?v=critter-restart-controls-v1"></script>
+  <script defer src="leaderboard.js?v=critter-restart-controls-v1"></script>
+  <script defer src="effects.js?v=critter-restart-controls-v1"></script>
+  <script defer src="music.js?v=critter-restart-controls-v1"></script>
+  <script defer src="game.js?v=critter-restart-controls-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -54,7 +54,7 @@
     <header class="site-header">
       <button class="icon-button" id="sound" aria-label="打开音乐播放器" aria-expanded="false" aria-controls="music-panel" title="打开音乐播放器">♪</button>
       <a class="brand" href="./" aria-label="Critter Cascade 首页"><span id="brand-name">Critter Cascade</span><small data-i18n="brandSubtitle">层叠三消 · 萌兽连锁</small></a>
-      <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button><button class="icon-button" id="restart" aria-label="重新开局" title="重新开局">↻</button></div>
+      <div class="header-actions"><button class="icon-button" id="help" aria-label="查看玩法" title="查看玩法">?</button></div>
     </header>
     <div class="presence-status" id="presence-status" data-state="connecting" role="status" aria-live="polite"><span class="presence-dot" aria-hidden="true"></span><span id="presence-text">正在连接在线人数…</span></div>
     <section id="music-panel" class="music-panel" hidden aria-labelledby="music-title">
@@ -107,7 +107,7 @@
         <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
         <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
         <div class="inventory-area">
-          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><strong id="capacity">0 <span>/ 7</span></strong></div>
+          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><div class="inventory-actions"><strong id="capacity">0 <span>/ 7</span></strong><button class="board-restart" id="restart" aria-label="重新开局" title="重新开局"><span aria-hidden="true">↻</span><span data-i18n="restartShort">重开</span></button></div></div>
           <div class="rack" id="rack" aria-label="七格背包"></div>
           <p id="status" class="status" role="status">先找第三张，再捡第一张。</p>
         </div>
