@@ -5,7 +5,13 @@ subtitle: Small drawings and stray ideas
 full-width: true
 ---
 
-<p class="gallery-intro">Sketches, experiments, and images made without much of a plan.</p>
+<div class="gallery-intro gallery-intro-with-action">
+  <p>Sketches, experiments, and images made without much of a plan.</p>
+  <a class="etsy-shop-link" href="https://www.etsy.com/shop/InkedHarmonyDesign" aria-label="Visit Inked Harmony Design on Etsy">
+    <i class="fab fa-etsy" aria-hidden="true"></i>
+    <span>Visit my Etsy shop</span>
+  </a>
+</div>
 
 <div class="visual-gallery doodle-gallery" aria-label="Doodle gallery">
   <figure><img src="/Doodles/IMG_8272.jpg" alt="Doodle 1" loading="lazy"></figure>

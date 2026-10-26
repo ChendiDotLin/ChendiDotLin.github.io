@@ -583,6 +583,51 @@ blockquote p:last-child {
   max-width: 1180px;
 }
 
+.gallery-intro-with-action {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.gallery-intro-with-action p {
+  margin: 0;
+}
+
+.etsy-shop-link {
+  align-items: center;
+  background: rgba(241, 100, 30, 0.06);
+  border: 1px solid rgba(241, 100, 30, 0.2);
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 650;
+  gap: 8px;
+  padding: 8px 13px;
+  text-decoration: none;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.etsy-shop-link .fa-etsy {
+  color: #f1641e;
+}
+
+.etsy-shop-link:hover,
+.etsy-shop-link:focus-visible {
+  background: rgba(241, 100, 30, 0.11);
+  border-color: rgba(241, 100, 30, 0.35);
+  color: var(--ink);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.etsy-shop-link:focus-visible {
+  outline: 2px solid #f1641e;
+  outline-offset: 3px;
+}
+
 .cv-download {
   font-size: 14px;
   font-weight: 600;
@@ -716,6 +761,12 @@ footer .theme-by {
 @media (max-width: 767px) {
   body {
     font-size: 16px;
+  }
+
+  .gallery-intro-with-action {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .navbar-custom .navbar-nav .nav-link {
