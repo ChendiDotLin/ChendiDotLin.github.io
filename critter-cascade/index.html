@@ -8,7 +8,7 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-restart-controls-v1">
+  <link rel="stylesheet" href="style.css?v=critter-restart-below-tray-v2">
   <script defer src="analytics.js?v=critter-restart-controls-v1"></script>
   <script defer src="layout.js?v=critter-restart-controls-v1"></script>
   <script defer src="core.js?v=critter-restart-controls-v1"></script>
@@ -107,9 +107,9 @@
         <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
         <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
         <div class="inventory-area">
-          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><div class="inventory-actions"><strong id="capacity">0 <span>/ 7</span></strong><button class="board-restart" id="restart" aria-label="重新开局" title="重新开局"><span aria-hidden="true">↻</span><span data-i18n="restartShort">重开</span></button></div></div>
+          <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><strong id="capacity">0 <span>/ 7</span></strong></div>
           <div class="rack" id="rack" aria-label="七格背包"></div>
-          <p id="status" class="status" role="status">先找第三张，再捡第一张。</p>
+          <div class="inventory-actions"><p id="status" class="status" role="status">先找第三张，再捡第一张。</p><button class="board-restart" id="restart" aria-label="重新开局" title="重新开局"><span aria-hidden="true">↻</span><span data-i18n="restartShort">重开</span></button></div>
         </div>
         <div class="tools">
           <button class="tool" id="remove" title="将背包前面最多三张移入临时补给区"><span class="tool-icon">⇥</span><b data-i18n="remove">移出三张</b><span class="charge">免费 ×1</span></button>

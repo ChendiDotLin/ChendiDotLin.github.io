@@ -71,8 +71,9 @@ h1 { margin: 0; font-size: 11px; font-weight: 500; color: #adb8cb; letter-spacin
 .inventory-copy > [data-i18n] { flex-shrink: 0; }
 .inventory-label strong { flex-shrink: 0; font-size: 10px; color: #d5cbee; font-weight: 500; }
 .inventory-label strong span { color: #8b9bad; }
-.inventory-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.board-restart { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #a7b7c04d; border-radius: 9px; background: #253b43; color: #dce6de; font-size: 12px; }
+.inventory-actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin: 18px 0 16px; }
+.inventory-actions .status { flex: 1; min-width: 0; margin: 0; }
+.board-restart { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #a7b7c04d; border-radius: 9px; background: #253b43; color: #dce6de; font-size: 12px; }
 .board-restart > [aria-hidden] { font-size: 21px; }
 .board-restart:hover { background: #35504f; border-color: #b3c9b5; }
 .eclipse-intro-preference { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 16px; color: #dce6de; font-size: 13px; cursor: pointer; }
