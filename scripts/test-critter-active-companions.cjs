@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const Rules=require('../critter-cascade/expedition.js'),Save=require('../critter-cascade/expedition-save.js'),Copy=require('../critter-cascade/companions.js'),LB=require('../critter-cascade/leaderboard.js');
 const {Expedition,RELICS,FAMILIES,validSave,bankedBefore,stageSpec}=Rules;
 const seed=n=>()=>{n=(Math.imul(n,1664525)+1013904223)|0;return(n>>>0)/4294967296;};
-const fresh=id=>{const g=new Expedition(seed(13));g.pendingReward=[id];assert.ok(g.choose(id));return g;};
+const fresh=id=>{const g=new Expedition(seed(13));g.companionRules=2;g.pendingReward=[id];assert.ok(g.choose(id));return g;};
 function check(g){assert.ok(validSave(g.toSave()),`invalid: ${JSON.stringify({rules:g.companionRules,equipment:g.equipment,relics:g.relics,sealed:g.sealed,charge:g.charge,radarCharge:g.radarCharge,stage:g.stage})}`);assert.deepEqual(Expedition.fromSave(g.toSave()).toSave(),g.toSave());}
 function flat(g,rack=[]){g.tiles.forEach((t,i)=>{t.type=Math.floor(i/6);t.z=0;t.x=(i%6)*80;t.y=Math.floor(i/6)*80;t.zone=rack.includes(i)?'rack':'board';t.pile='main';});g.rack=[...rack];g.moves=rack.length;g.cleared=0;g.previous=null;g.status='playing';}
 for(const [family,ids] of Object.entries(FAMILIES)){

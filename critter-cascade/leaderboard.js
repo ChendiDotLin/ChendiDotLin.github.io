@@ -11,7 +11,7 @@
     return Array.isArray(loadout) && loadout.length >= 1 && loadout.length <= 7 &&
       loadout.every(item => item && relicIds.has(item.id) && Number.isInteger(item.level) && item.level >= 1 && item.level <= 5) &&
       new Set(loadout.map(item => item.id)).size === loadout.length &&
-      (companionRules === 2 ? fits(modern) : companionRules === 1 ? fits(legacy) : fits(legacy) || fits(modern));
+      (companionRules >= 2 ? fits(modern) : companionRules === 1 ? fits(legacy) : fits(legacy) || fits(modern));
   }
   function validEntry(entry) {
     return entry && typeof entry.playerId === 'string' && validId(entry.playerId) &&
@@ -59,12 +59,12 @@
       playerId = normalizeId(playerId);
       if (!validId(playerId)) return { ok: false, error: 'invalidId' };
       if (!validEntry({ playerId, mode, cleared, elapsedMs, createdAt: Date.now() })) return { ok: false, error: 'submitFailed' };
-      if (mode === 'expedition' && (!Number.isInteger(stage) || stage < 1 || stage > 1000000 || !validLoadout(loadout, companionRules) || ![1,2].includes(companionRules))) return { ok: false, error: 'submitFailed' };
+      if (mode === 'expedition' && (!Number.isInteger(stage) || stage < 1 || stage > 1000000 || !validLoadout(loadout, companionRules) || ![1,2,3].includes(companionRules))) return { ok: false, error: 'submitFailed' };
       if (rules === 3 && (!Number.isInteger(completedStages) || completedStages < stage - 1 || completedStages > stage ||
         (completedStages >= 10 ? !Number.isSafeInteger(tenMs) || tenMs < 0 || tenMs > elapsedMs : tenMs !== null))) return { ok: false, error: 'submitFailed' };
       try {
         const payload = { p_run_id: runId, p_player_id: playerId, p_cleared: cleared, p_elapsed_ms: elapsedMs };
-        const result = await this.request(mode === 'eclipse' ? 'critter_submit_eclipse' : mode === 'expedition' ? rules === 3 ? companionRules === 2 ? 'critter_submit_expedition_v4' : 'rain_submit_expedition_v3' : 'rain_submit_expedition' : 'rain_submit_score', {
+        const result = await this.request(mode === 'eclipse' ? 'critter_submit_eclipse' : mode === 'expedition' ? rules === 3 ? companionRules >= 2 ? 'critter_submit_expedition_v4' : 'rain_submit_expedition_v3' : 'rain_submit_expedition' : 'rain_submit_score', {
           ...payload, ...(mode === 'expedition' ? { p_stage: stage, p_loadout: loadout, ...(rules === 3 ? { p_completed_stages: completedStages, p_ten_ms: tenMs } : {}) } : mode === 'eclipse' ? {} : { p_mode: mode })
         });
         if (rules === 3 && tenMs !== null && (!Number.isSafeInteger(result?.speedRank) || result.speedRank < 1)) throw Error('networkError');

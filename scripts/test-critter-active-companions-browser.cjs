@@ -5,6 +5,8 @@ for(const width of [390,1366]){
  const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'}),errors=[];
  await context.routeWebSocket(/\/realtime\/v1\//,s=>s.close());await context.route('https://www.googletagmanager.com/**',r=>r.fulfill({body:''}));await context.route('**/rest/v1/rpc/*',r=>r.fulfill({json:{entries:[],total:0}}));
  await context.route('**/game.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:(await response.text()).replace('  function render(enter = false) {','  window.activeTest={get:()=>game,ready:()=>!animating&&!savePaused&&!modal.open,render:()=>render(),reward:()=>showExpeditionReward(),timer:()=>timerStarted};\n  function render(enter = false) {')});});
+ // This regression exercises the previous active rules retained by existing saves.
+ await context.route('**/expedition.js*',async r=>{const response=await r.fetch();await r.fulfill({response,body:(await response.text()).replace('this.companionRules = 3;', 'this.companionRules = 2;')});});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto((process.env.RAIN_GAME_URL||'http://127.0.0.1:8765/critter-cascade/')+'?mode=expedition');
  await page.locator('[data-reward=feather]').click();assert.match(await page.locator('[data-reward=feather]').innerText(),/主动伙伴/);await page.locator('#reward-confirm').click();
  await page.waitForFunction(()=>activeTest.ready());assert.equal(await page.locator('#expedition-feather').isVisible(),false);assert.equal(await page.locator('[data-kind=active] [data-relic=feather]').count(),1);

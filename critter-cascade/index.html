@@ -8,23 +8,23 @@
   <title>Critter Cascade</title>
   <link rel="canonical" href="https://chendilin.com/critter-cascade/">
   <link rel="icon" href="assets/tiles/acorn.webp">
-  <link rel="stylesheet" href="style.css?v=critter-active-families-v1">
-  <script defer src="analytics.js?v=critter-active-families-v1"></script>
-  <script defer src="layout.js?v=critter-active-families-v1"></script>
-  <script defer src="core.js?v=critter-active-families-v1"></script>
-  <script defer src="eclipse.js?v=critter-active-families-v1"></script>
-  <script defer src="expedition.js?v=critter-active-families-v1"></script>
-  <script defer src="expedition-save.js?v=critter-active-families-v1"></script>
-  <script defer src="assets/companions/atlas.js?v=critter-active-families-v1"></script>
-  <script defer src="companions.js?v=critter-active-families-v1"></script>
-  <script defer src="i18n.js?v=critter-active-families-v1"></script>
-  <script defer src="config.js?v=critter-active-families-v1"></script>
+  <link rel="stylesheet" href="style.css?v=critter-flip-stash-v1">
+  <script defer src="analytics.js?v=critter-flip-stash-v1"></script>
+  <script defer src="layout.js?v=critter-flip-stash-v1"></script>
+  <script defer src="core.js?v=critter-flip-stash-v1"></script>
+  <script defer src="eclipse.js?v=critter-flip-stash-v1"></script>
+  <script defer src="expedition.js?v=critter-flip-stash-v1"></script>
+  <script defer src="expedition-save.js?v=critter-flip-stash-v1"></script>
+  <script defer src="assets/companions/atlas.js?v=critter-flip-stash-v1"></script>
+  <script defer src="companions.js?v=critter-flip-stash-v1"></script>
+  <script defer src="i18n.js?v=critter-flip-stash-v1"></script>
+  <script defer src="config.js?v=critter-flip-stash-v1"></script>
   <script defer src="vendor/supabase-2.117.2.js"></script>
-  <script defer src="presence.js?v=critter-active-families-v1"></script>
-  <script defer src="leaderboard.js?v=critter-active-families-v1"></script>
-  <script defer src="effects.js?v=critter-active-families-v1"></script>
-  <script defer src="music.js?v=critter-active-families-v1"></script>
-  <script defer src="game.js?v=critter-active-families-v1"></script>
+  <script defer src="presence.js?v=critter-flip-stash-v1"></script>
+  <script defer src="leaderboard.js?v=critter-flip-stash-v1"></script>
+  <script defer src="effects.js?v=critter-flip-stash-v1"></script>
+  <script defer src="music.js?v=critter-flip-stash-v1"></script>
+  <script defer src="game.js?v=critter-flip-stash-v1"></script>
 </head>
 <body>
   <noscript><p class="noscript">请在浏览器中启用 JavaScript，即可开始这场冒险。</p></noscript>
@@ -102,9 +102,14 @@
           <div id="pressure-status" class="pressure-status" hidden><div class="pressure-readout"><strong id="pressure-hearts"></strong><span id="pressure-time"></span><button id="pressure-pause" class="text-button" data-i18n="pressurePause">暂停</button></div><div class="pressure-track"><i id="pressure-fill"></i></div></div>
         <div class="board-area">
           <div class="board" id="board" aria-label="层叠主牌区和左右补给牌堆"></div>
+          <div id="flip-region" class="flip-region" aria-hidden="true" hidden></div>
           <div class="supply-labels"><span id="left-pile-count">左补给 · 9</span><span id="right-pile-count">右补给 · 9</span></div>
         </div>
         <div class="board-caption"><span data-i18n="boardHint">点击亮牌 · 三张消除</span><span id="remaining">剩余 108 张</span></div>
+        <section id="flip-preview" class="flip-preview" aria-labelledby="flip-preview-title" hidden>
+          <p id="flip-preview-title" role="status"></p><div id="flip-preview-tiles" class="flip-preview-tiles"></div>
+          <div class="flip-actions"><button id="flip-cancel" class="secondary-button"></button><button id="flip-confirm" class="primary-button" disabled></button></div>
+        </section>
         <div class="reserve-area" id="reserve-area" hidden><span><span data-i18n="reserve">临时补给区</span><small data-i18n="reserveHint">点击放回背包</small></span><div id="reserve"></div></div>
         <div class="inventory-area">
           <div class="inventory-label"><div class="inventory-copy"><span data-i18n="inventory">七格背包</span><span id="combo" aria-live="polite"></span></div><strong id="capacity">0 <span>/ 7</span></strong></div>

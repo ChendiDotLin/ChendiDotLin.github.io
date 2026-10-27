@@ -133,6 +133,9 @@
       } else if (kind === 'lose' || kind === 'boss') {
         [57,53,50].forEach((n, i) => ping(n, .28, .15, i * .10));
         this.noise(time, .16, .13, 400, e);
+      } else if (kind === 'flip') {
+        this.noise(time, .22, .09 * strength, 1800, e);
+        ping(74, .12, .08); ping(81, .2, .06, .12);
       } else if (kind === 'shield') {
         [62,74].forEach(note => ping(note, .45, .13)); this.noise(time, .09, .1, 2300, e);
       } else { ping(notes[index % notes.length], .22, .14); ping(86, .10, .03, .05); }
@@ -152,7 +155,7 @@
       const stride = Math.max(1, Math.ceil(audible.length / 10));
       audible.filter((_, i) => i % stride === 0).forEach((event, i) => {
         const delay = reducedMotion ? Math.min(i * .045, .3) : event.index * step + (event.kind === 'behemoth' ? .26 : event.kind === 'ukulele' ? .2 : .08);
-        this.sound(({ prism: 'match', seeker: 'blackhole', resin: 'fuse', turbine: 'radar', recycler: 'press' })[event.kind] || event.kind, delay, audible.length > 8 ? .65 : .85, i);
+        this.sound(({ prism: 'match', seeker: 'blackhole', resin: 'fuse', turbine: 'radar', recycler: 'press' })[event.kind] || (event.action === 'flip' ? 'flip' : event.kind), delay, audible.length > 8 ? .65 : .85, i);
       });
     }
     cancelEffects() {

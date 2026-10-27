@@ -4,12 +4,12 @@
   const names = {"prism": [["奶猫", "橘猫", "斑纹虎", "玉角白虎", "云鬃神虎"], ["Kitten", "Tabby", "Tiger", "Jade Tiger", "Celestial Tiger"]], "behemoth": [["幼狮", "鬃狮", "焰鬃狮", "赤日狮", "曜阳神狮"], ["Lion Cub", "Young Lion", "Flame Lion", "Sun Lion", "Solar Guardian"]], "clover": [["小猞猁", "尖耳猞猁", "银斑猞猁", "林卫猞猁", "翡翠灵猞"], ["Bobkitten", "Lynx", "Silver Lynx", "Forest Lynx", "Emerald Guardian"]], "echo": [["雪团猫", "霜绒猫", "雪豹", "双尾雪豹", "幻影灵豹"], ["Snow Kitten", "Frost Cat", "Snow Leopard", "Twin-tail Leopard", "Spirit Leopard"]], "ukulele": [["水蛇", "蓝鳍蛇", "须角蛟", "碧霆龙", "苍雷神龙"], ["Water Snake", "Fin Snake", "Azure Wyrm", "Thunder Drake", "Storm Dragon"]], "gasoline": [["红蝾螈", "火冠蜥", "赤翼龙", "烈焰龙", "焚霞神龙"], ["Salamander", "Ember Lizard", "Red Drake", "Flame Dragon", "Crimson Dragon"]], "capacitor": [["紫蛇", "鳍颊蛇", "刃尾蛟", "晶鳍龙", "星渊神龙"], ["Violet Viper", "Fin Viper", "Blade Wyrm", "Crystal Drake", "Cosmic Dragon"]], "resin": [["小壁虎", "冠壁虎", "玉鳞蜥", "孢光龙", "森叶神龙"], ["Gecko", "Crested Gecko", "Jade Lizard", "Spore Drake", "Forest Dragon"]], "feather": [["小麻雀", "金冠雀", "橙羽雀", "琥珀鹰", "金羽大鹏"], ["Sparrow", "Goldcrest", "Amber Bird", "Amber Eagle", "Golden Roc"]], "seeker": [["小燕子", "蓝燕", "青雨燕", "蓝隼", "苍穹神隼"], ["Swallow", "Blue Swallow", "Swift", "Blue Falcon", "Sky Falcon"]], "radar": [["小灰鸮", "眼镜鸮", "雪鸮", "月眉鸮", "月轮神鸮"], ["Owlet", "Spectacled Owl", "Snowy Owl", "Moon Owl", "Lunar Guardian"]], "blackhole": [["小翠鸟", "碧翠鸟", "长尾翠鸟", "旋翼鸟", "青风神凰"], ["Kingfisher", "Jade Fisher", "Longtail", "Wind Bird", "Wind Phoenix"]], "shield": [["小绿龟", "薄荷龟", "玉甲龟", "角甲玄龟", "玄武"], ["Turtle", "Mint Turtle", "Jade Tortoise", "Horned Tortoise", "Xuanwu"]], "cell": [["小蜗牛", "粉壳蜗牛", "琥珀蜗牛", "晶旋蜗牛", "星旋灵螺"], ["Snail", "Pink Snail", "Amber Snail", "Crystal Snail", "Cosmic Snail"]], "turbine": [["寄居蟹", "蓝壳蟹", "海螺蟹", "潮钳蟹", "沧海灵蟹"], ["Hermit Crab", "Blue-shell Crab", "Conch Crab", "Wave Crab", "Tidal Guardian"]], "recycler": [["小穿山甲", "卷尾穿山甲", "铜甲兽", "岩甲兽", "镇山灵兽"], ["Pangolin", "Curltail", "Bronze Pangolin", "Stone Pangolin", "Mountain Guardian"]]};
   [names.echo, names.blackhole] = [names.blackhole, names.echo];
   const families = {
-    zh: {cats: '猫科 · 暴击追击', dragons: '蛇龙 · 元素连锁', birds: '飞羽 · 找牌补对', shells: '甲壳 · 救命与技能'},
-    en: {cats: 'Felines · Critical pursuit', dragons: 'Dragons · Element chains', birds: 'Birds · Scout & pair', shells: 'Shells · Guard & recharge'}
+    zh: {cats: '猫科 · 暴击追击', dragons: '蛇龙 · 元素连锁', birds: '飞羽 · 翻牌寻路', shells: '甲壳 · 背包与恢复'},
+    en: {cats: 'Felines · Critical pursuit', dragons: 'Dragons · Element chains', birds: 'Birds · Reveal & scout', shells: 'Shells · Tray & recharge'}
   };
   const bonuses = {
-    zh: {cats: '2 种：暴击概率 +5 个百分点。4 种：暴击追加消除两组。', dragons: '2 种：闪电每 3 次三消触发。4 种：连锁穿透多穿一层。', birds: '2 种：每次手动三消，主动技能恢复进度 +1.25（原为 +1）。4 种：穿层取牌少等一次三消；侦察多持续两次取牌。', shells: '2 种：主动技能多存一次。4 种：寄居蟹每两组伙伴消除就加速技能恢复（原为三组）。'},
-    en: {cats: '2 species: +5 percentage points to critical chance. 4: critical hits clear two extra groups.', dragons: '2 species: lightning every 3 manual matches. 4: chain piercing reaches one cover deeper.', birds: '2 species: manual triples add 1.25 active recharge progress instead of 1. 4: Reach needs one fewer triple; Scout lasts two more picks.', shells: '2 species: store one extra active use. 4: Hermit Crab recharges skills every 2 companion-cleared groups instead of 3.'}
+    zh: {cats: '2 种：暴击概率 +5 个百分点。4 种：暴击追加消除两组。', dragons: '2 种：闪电每 3 次三消触发。4 种：连锁穿透多穿一层。', birds: '2 种：每次手动三消，主动技能恢复进度 +1.25（原为 +1）。4 种：飞羽主动技能少等一次三消；侦察多持续两次取牌。', shells: '2 种：主动技能多存一次。4 种：寄居蟹每两组伙伴消除就加速技能恢复（原为三组）。'},
+    en: {cats: '2 species: +5 percentage points to critical chance. 4: critical hits clear two extra groups.', dragons: '2 species: lightning every 3 manual matches. 4: chain piercing reaches one cover deeper.', birds: '2 species: manual triples add 1.25 active recharge progress instead of 1. 4: the Bird active needs one fewer triple; Scout lasts two more picks.', shells: '2 species: store one extra active use. 4: Hermit Crab recharges skills every 2 companion-cleared groups instead of 3.'}
   };
   const name = (id, level = 1, language = 'zh') => names[id]?.[language === 'en' ? 1 : 0]?.[Math.max(0, Math.min(4, level - 1))] || id;
   // One visible purpose per companion. Rules and UI copy share this source of truth.
@@ -56,8 +56,8 @@
       recycler: ['剩余张数包括棋盘、背包和暂存牌。必须先完成三消或主动技能连锁；Boss 的结界和护甲限制仍然有效。', 'Counts the board, tray and reserve together. Requires a triple or active-skill chain first. Boss wards and armor limits still apply.']
     };
     if (game?.companionRules !== 1) {
-      const cell = game?.relics?.cell || 0, ion = game?.stage >= 6 && game.stage % 3 === 0 ? 2 : 0;
-      const recharge = Math.max(2, (id === 'feather' ? 9-l-Number(count('birds')>=4) : 8) - cell + ion);
+      const cell = game?.relics?.cell || 0, ion = game?.stage >= 6 && game.stage % 3 === 0 && !(game.stage <= 100 && game.stage % 10 === 0) ? 2 : 0;
+      const recharge = Math.max(2, (id === 'feather' ? 9-l-Number(count('birds')>=4) : id === 'shield' && (game?.companionRules ?? 3) >= 3 ? 9-l : 8) - cell + ion);
       const common = zh ? `使用后需恢复 ${recharge} 点才能再次使用。手动三消通常恢复 1 点；小蜗牛可增加储存次数并加快恢复。` : `Each use needs ${recharge} recharge points. Manual triples normally restore 1 point; Snail adds stored uses and faster recharge.`;
       effects.shield = ['点击技能，开启一次守护：下次取牌导致背包装满时，自动撤回该次取牌。', 'Activate one guard: automatically undo the next pick that would fill your tray.'];
       effects.capacitor = [`点击技能，穿透消除一组相同牌；每张最多被 ${l+Number(count('dragons')>=4)} 张牌挡住，优先清除被挡住的牌。`, `Activate to clear one matching board group beneath up to ${l+Number(count('dragons')>=4)} covers per tile, preferring covered tiles.`];
@@ -67,8 +67,15 @@
       rules.capacitor = [ `只消棋盘牌，三张必须同图案；找不到目标时不消耗次数。可触发其他伙伴的连锁，仍受 Boss 结界和护甲限制。${common}`, `Board tiles only; all three must match. No target means no charge spent. Can trigger companion chains and respects boss wards and armor. ${common}` ];
       rules.shield = [ `需在背包装满前主动开启；未触发时持续至本关结束，不可叠加。${l>=2?'触发救命后恢复 2 点。':''}${l>=3?`另消除最多 ${l-1} 组牌，优先清背包。`:''}${common}`, `Must be armed before the losing pick. Lasts until triggered or the stage ends; cannot stack.${l>=2?' A rescue restores 2 recharge points.':''}${l>=3?` Also clears up to ${l-1} groups, preferring the tray.`:''} ${common}` ];
       rules.radar = [ `持续 ${3+l+Number(count('birds')>=4)*2} 次取牌。三消命中标记图案时，额外消除 ${l>=3?2:1} 组并恢复主动技能 2 点；${l>=3?'之后再标记一种图案。':'随后结束本次侦察。'}额外消除不穿透遮挡。`, `Lasts ${3+l+Number(count('birds')>=4)*2} picks. Match the marked picture to clear ${l>=3?2:1} extra groups and restore 2 active recharge points; ${l>=3?'then mark another picture.':'then end this scan.'} Extra clears cannot pierce covers.` ];
-      const cellRecharge = Math.max(2, (game?.equipment === 'feather' ? 9 - (game.relics.feather || 1) - Number(count('birds')>=4) : 8) - l + ion);
+      const cellRecharge = Math.max(2, (game?.equipment === 'feather' ? 9 - (game.relics.feather || 1) - Number(count('birds')>=4) : game?.equipment === 'shield' && (game?.companionRules ?? 3) >= 3 ? 9 - (game.relics.shield || 1) : 8) - l + ion);
       rules.cell = [`当前主动技能每次需要 ${cellRecharge} 点恢复进度。手动三消通常加 1 点，伙伴额外消一组加 0.25 点。${l>=3?'次数存满后，可再预存 2 点。':''}`, `The current active needs ${cellRecharge} recharge points per use. Manual triples normally add 1; companion clears add 0.25 per group.${l>=3?' Bank 2 extra points when charges are full.':''}`];
+      if ((game?.companionRules ?? 3) >= 3) {
+        const size = zh ? ['小', '较小', '中等', '大', '超大'][l-1] : ['small', 'expanded', 'medium', 'large', 'extra-large'][l-1];
+        effects.feather = [`振翅翻面：选择${size}范围的叠牌，把底层翻到上面；也可以翻转整叠左／右补给。`, `Wing Flip: reverse a ${size} area of stacked tiles to bring buried tiles to the top, or reverse a whole supply pile.`];
+        rules.feather = [`先选亮牌定位范围，预览将露出的牌，再确认释放。不消牌、不占背包；没有新牌可翻出时不消耗次数。升级扩大主牌区范围并加快恢复。${common}`, `Select an exposed tile, preview the tiles that will become available, then confirm. Does not clear tiles or fill the tray. No new tiles to reveal means no charge spent. Levels expand the board area and speed up recharge. ${common}`];
+        effects.shield = ['龟壳收纳：点击技能，把背包最左侧最多三张牌移入暂存区，腾出操作空间。', 'Shell Stash: Activate to move up to three leftmost tray tiles into reserve, freeing tray space.'];
+        rules.shield = [`暂存区共三格；空位不够时只移出能放下的数量。点击暂存牌可放回背包。背包为空或暂存区满时不能使用，也不扣次数；不消耗免费移出道具。升级加快恢复。${common}`, `Reserve holds three tiles; moves only as many as fit. Tap reserved tiles to return them to the tray. An empty tray or full reserve spends no charge. Does not use the free Remove tool. Levels speed up recharge. ${common}`];
+      }
       rules.turbine = ['不直接消牌。只恢复当前主动伙伴的技能；四个流派的主动伙伴都适用。', 'Does not clear tiles. Recharges the equipped active companion, from any of the four families.'];
     }
     return { effect: effects[id]?.[zh?0:1] || '', rules: rules[id]?.[zh?0:1] || '' };

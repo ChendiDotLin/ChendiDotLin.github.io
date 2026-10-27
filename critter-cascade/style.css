@@ -797,3 +797,14 @@ body[data-boss="armor"] .boss-status { border-color: #9badff; color: #c3cbff; ba
 .reward-confirmation { position: sticky; bottom: 0; z-index: 3; padding: 12px 0 8px; margin-top: 12px; background: #202c3d; }
 .reward-confirmation .primary-button { width: 100%; margin: 0; min-height: 46px; }
 .reward-confirmation .primary-button:disabled { opacity: .5; cursor: default; }
+
+/* Preview is outside the board hit surface; effects never intercept taps. */
+.flip-region { position: absolute; z-index: 200; border: 2px dashed #f5d889; border-radius: 12px; background: #f5d88914; pointer-events: none; }
+.tile.flip-selected { box-shadow: 0 0 0 3px #ffe4a1, 0 0 18px #edcf8680; }
+.flip-preview { margin: 12px 0; padding: 12px 14px; border: 1px solid #dfc68c70; border-radius: 12px; background: #263c43; }
+.flip-preview p { margin: 0; min-height: 42px; color: #f2dcaa; font-size: 12px; line-height: 1.65; }
+.flip-preview-tiles { display: flex; gap: 6px; min-height: 44px; padding: 6px 0; overflow-x: auto; }
+.flip-preview-tiles span { flex: 0 0 38px; height: 38px; background: #eff3df; border: 1px solid #dfc68c; border-radius: 8px; }
+.flip-preview-tiles img { width: 100%; height: 100%; object-fit: contain; }
+.flip-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.flip-actions button { min-height: 44px; margin: 0; padding: 8px 16px; }

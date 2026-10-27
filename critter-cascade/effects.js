@@ -290,10 +290,25 @@
     for (const [index, event] of events.entries()) {
       const delay = index * step;
       // Show the actual recovered cards, including radar and shield follow-ups.
-      if (event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth'].includes(event.kind)) {
+      if (!event.action && event.ids.length === 3 && !['blackhole', 'gasoline', 'behemoth'].includes(event.kind)) {
         event.ids.forEach((id, i) => { if (before.has(id)) pending.push(ghost(before.get(id).rect, center(rack), before.get(id).type, true, delay + (['ukulele', 'capacitor'].includes(event.kind) ? 180 + i * 150 : event.kind === 'seeker' ? 450 + i * 100 : ['prism', 'echo', 'recycler'].includes(event.kind) ? 200 + i * 100 : 0))); });
       }
-      if (event.kind === 'shield') {
+      if (event.action === 'flip') {
+        // Animate copies of newly revealed tiles, keeping live hit regions still.
+        for (const id of event.revealed.slice(0, 12)) {
+          const tile = document.querySelector(`#board [data-id="${id}"]`);
+          if (!tile) continue;
+          const point = center(tile.getBoundingClientRect());
+          const wind = node('fx-ring', point, '#edd590');
+          pending.push(animate(wind, [{transform: 'translate(-50%,-50%) scale(.35) rotate(-30deg)', opacity: 0}, {opacity: .8, offset: .25}, {transform: 'translate(-50%,-65%) scale(1.5) rotate(30deg)', opacity: 0}], {duration: 850}, true));
+          pending.push(surface(tile, copy => animate(copy, [{transform: 'perspective(400px) rotateY(-85deg) translateY(8px)', opacity: .4}, {transform: 'perspective(400px) rotateY(0) translateY(-5px)', opacity: 1, offset: .7}, {transform: 'none', opacity: 1}], {duration: 700})));
+        }
+      } else if (event.action === 'stash') {
+        for (const id of event.ids) {
+          const tile = document.querySelector(`#reserve [data-id="${id}"]`), from = before.get(id);
+          if (tile && from) pending.push(ghost(from.rect, center(tile.getBoundingClientRect()), from.type, false));
+        }
+      } else if (event.kind === 'shield') {
         const shield = node('fx-shield', { x: rack.left - 5, y: rack.top - 5 });
         shield.style.width = `${rack.width + 10}px`; shield.style.height = `${rack.height + 10}px`;
         pending.push(animate(shield, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1.02)', offset: .25 }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 1150, delay, fill: 'backwards' }, true));

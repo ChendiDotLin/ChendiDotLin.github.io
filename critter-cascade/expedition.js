@@ -79,7 +79,8 @@
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
-      this.companionRules = 2; this.shieldArmed = false; this.radarCharge = 0;
+      // Saved runs retain their rules: 1 = original roster, 2 = Reach/guard, 3 = Flip/Stash.
+      this.companionRules = 3; this.shieldArmed = false; this.radarCharge = 0;
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
       this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null;
@@ -92,7 +93,8 @@
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
     get definitions() { return relicsFor(this.companionRules); }
-    get modernCompanions() { return this.companionRules === 2; }
+    get modernCompanions() { return this.companionRules >= 2; }
+    get tacticalCompanions() { return this.companionRules >= 3; }
     get radarRecharge() { return Math.max(2, 5 - (this.relics.radar || 1)); }
     get capacitorDepth() { return (this.relics.capacitor || 1) + Number(this.familyCount('dragons') >= 4); }
     startPressure() {
@@ -191,7 +193,7 @@
     get recovered() { return this.banked + this.cleared; }
     get totalMoves() { return this.bankedMoves + this.moves; }
     get capacity() { return 1 + (this.relics.cell || 0) + Number(this.familyCount('shells') >= 2); }
-    get recharge() { const base = this.modernCompanions && this.equipment === 'feather' ? this.featherRecharge : 8; return Math.max(2, base - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0)); }
+    get recharge() { const base = this.modernCompanions && this.equipment === 'feather' ? this.featherRecharge : this.tacticalCompanions && this.equipment === 'shield' ? 9 - this.relics.shield : 8; return Math.max(2, base - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0)); }
     get featherRecharge() { return 9 - (this.relics.feather || 1) - Number(this.familyCount('birds') >= 4); }
     get radarActive() { return this.radarUntil > this.moves; }
     get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
@@ -202,7 +204,31 @@
     blockers(tile) {
       return this.tiles.filter(other => other.zone === 'board' && other.z > tile.z && core.overlap(tile, other));
     }
+    // Exchange whole board positions, not pictures: tile identity, counts, fuse
+    // marks and the board's overlap geometry remain intact.
+    get flipRadius() { return 36 + 18 * ((this.relics.feather || 1) - 1); }
+    flipPlan(id, available = new Set(this.available().map(tile => tile.id))) {
+      const anchor = this.tiles[id];
+      if (!this.tacticalCompanions || !this.relics.feather || !anchor || !available.has(id)) return null;
+      const pile = ['left', 'right'].includes(anchor.pile);
+      const tiles = this.tiles.filter(tile => tile.zone === 'board' && tile.pile === anchor.pile &&
+        (pile || Math.hypot(tile.x - anchor.x, tile.y - anchor.y) <= this.flipRadius))
+        .sort((a, b) => a.z - b.z || a.id - b.id);
+      const positions = tiles.map((tile, i) => {
+        const destination = tiles[tiles.length - 1 - i];
+        return {id: tile.id, x: destination.x, y: destination.y, z: destination.z, pile: destination.pile};
+      });
+      const revealed = tiles.filter((tile, i) => !available.has(tile.id) && available.has(tiles[tiles.length - 1 - i].id)).map(tile => tile.id);
+      if (!revealed.length) return null;
+      return {positions, revealed, ids: tiles.map(tile => tile.id)};
+    }
+    flipTargets() {
+      if (!this.tacticalCompanions || this.equipment !== 'feather' || !this.charge) return [];
+      const available = this.available(), ids = new Set(available.map(tile => tile.id));
+      return available.filter(tile => this.flipPlan(tile.id, ids));
+    }
     featherTargets() {
+      if (this.tacticalCompanions) return this.flipTargets();
       const depth = Math.max(1, (this.relics.feather || 1) - 1);
       return this.relics.feather && (this.modernCompanions ? this.equipment === 'feather' && this.charge : this.featherCharge) ? this.tiles.filter(t => t.zone === 'board' && this.blockers(t).length >= 1 && this.blockers(t).length <= depth) : [];
     }
@@ -460,7 +486,7 @@
     pick(id, leap = false) {
       if (this.finished || this.pendingReward || this.status !== 'playing') return { ok: false };
       const tile = this.tiles[id]; if (!tile) return { ok: false };
-      const jumping = leap && this.featherTargets().some(t => t.id === id);
+      const jumping = !this.tacticalCompanions && leap && this.featherTargets().some(t => t.id === id);
       if (leap && !jumping) return { ok: false };
       this.beginBurst();
       const before = this.snapshot(), scanned = this.radarActive;
@@ -470,7 +496,7 @@
       this.previous = before;
       const events = [];
       if (jumping) { if (this.modernCompanions) this.charge--; else this.featherCharge--; events.push({ kind: 'feather', ids: [id] }); }
-      if (this.status === 'lost' && this.relics.shield && (this.modernCompanions ? this.shieldArmed : !this.shieldSpent)) {
+      if (!this.tacticalCompanions && this.status === 'lost' && this.relics.shield && (this.modernCompanions ? this.shieldArmed : !this.shieldSpent)) {
         Object.assign(this, before); this.shieldArmed = false; this.shieldSpent = true; this.previous = null;
         events.length = 0; events.push({ kind: 'shield', ids: [id] });
         if (this.relics.shield >= 2) this.addEnergy(2);
@@ -503,7 +529,7 @@
       if (!this.modernCompanions) return this.equipment === 'radar' && !this.radarActive;
       if (this.equipment === 'feather') return this.featherTargets().length > 0;
       if (this.equipment === 'capacitor') return this.trialBurstLimit > 0 && !!this.findProcTarget('capacitor', this.capacitorDepth);
-      return this.equipment === 'shield' && !this.shieldArmed;
+      return this.equipment === 'shield' && (this.tacticalCompanions ? this.rack.length > 0 && this.reserve.length < 3 : !this.shieldArmed);
     }
     markRadar() {
       const types = [...new Set(this.tiles.filter(t => t.zone === 'board').map(t => t.type))];
@@ -512,6 +538,13 @@
     }
     activate(id) {
       if (!this.canActivate()) return { ok: false };
+      if (this.tacticalCompanions && this.equipment === 'feather') {
+        const plan = this.flipPlan(id); if (!plan) return {ok: false};
+        this.charge--; this.previous = null;
+        for (const position of plan.positions) Object.assign(this.tiles[position.id], position);
+        this.refreshEnvironment();
+        return {ok: true, events: [{kind: 'feather', action: 'flip', ids: plan.ids, revealed: plan.revealed}], recovered: 0};
+      }
       if (this.modernCompanions && this.equipment === 'feather') return this.pick(id, true);
       this.beginBurst();
       const events = [], before = this.cleared;
@@ -534,8 +567,12 @@
         this.charge--; this.previous = null;
         this.pulse(events, 'capacitor', 1, this.capacitorDepth); this.resolveCombos(events);
       } else if (this.modernCompanions && this.equipment === 'shield') {
-        this.charge--; this.previous = null; this.shieldArmed = true;
-        events.push({kind: 'shield', ids: []});
+        this.charge--; this.previous = null;
+        if (this.tacticalCompanions) {
+          const ids = this.rack.splice(0, 3 - this.reserve.length);
+          ids.forEach(id => { this.tiles[id].zone = 'reserve'; }); this.reserve.push(...ids);
+          events.push({kind: 'shield', action: 'stash', ids});
+        } else { this.shieldArmed = true; events.push({kind: 'shield', ids: []}); }
       } else {
         this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1) + (this.familyCount('birds') >= 4 ? 2 : 0);
         this.markRadar(); events.push({ kind: 'radar', ids: [] });
@@ -712,7 +749,7 @@
     return counts.every(n => n % 3 === 0) && data.tiles.filter(t => t.zone === 'matched').length === data.cleared;
   }
   function validSave(data) {
-    if (!data || data.version !== VERSION || ![1,2].includes(data.companionRules) || !integer(data.stage, 1, 1000000)) return false;
+    if (!data || data.version !== VERSION || ![1,2,3].includes(data.companionRules) || !integer(data.stage, 1, 1000000)) return false;
     const count = stageSpec(data.stage).count, definitions = relicsFor(data.companionRules);
     const pressure = data.pressure;
     if (pressure != null && (data.stage !== 70 || data.trial?.kind !== 'echo' || typeof pressure.started !== 'boolean' ||
@@ -721,7 +758,8 @@
       (!pressure.started && (pressure.hearts !== 3 || pressure.remaining !== 8000)))) return false;
     for (const state of [data, data.previous].filter(Boolean)) {
       if (typeof state.shieldArmed !== 'boolean' || !integer(state.radarCharge, 0, 4)) return false;
-      if (data.companionRules === 2 && ((state.shieldArmed && (state.equipment !== 'shield' || !state.relics?.shield)) ||
+      if (data.companionRules >= 3 && state.shieldArmed) return false;
+      if (data.companionRules >= 2 && ((state.shieldArmed && (state.equipment !== 'shield' || !state.relics?.shield)) ||
         state.featherCharge || state.featherEnergy || state.capacitorCharge || (!state.relics?.radar && (state.radarCharge || state.radarUntil || state.radarMark !== null)))) return false;
       const env = state.environment;
       if (env != null && (!env || env.kind !== environmentAt(data.stage) || !['memory','mono'].includes(env.kind) ||

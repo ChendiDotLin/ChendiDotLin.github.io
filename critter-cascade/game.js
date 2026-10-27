@@ -6,6 +6,7 @@
   const fx = RainEffects;
   const music = new RainMusic();
   music.onError = () => { $('music-error').hidden = false; localizePage(); };
+  let flipSelection = null;
   let animating = false, targeting = null, stageRewardClaimed = false, replacementItem = null, selectedRelic = null, selectedReward = null, selectedReplacement = null;
   let activeEffect = null, atmosphereKey = '', atmosphereTime = 0;
   let lastProc = null, lightningMarks = new Set();
@@ -231,7 +232,7 @@
   }
   function updateSaveLabel() {
     if (!$('expedition-save-status')) return;
-    $('expedition-save-status').textContent = t(savePaused ? 'saveConflict' : saveNote ? 'saveUnavailable' : 'saveLocal') + (isExpedition() && !game.modernCompanions ? ' · ' + t('legacyCompanions') : '');
+    $('expedition-save-status').textContent = t(savePaused ? 'saveConflict' : saveNote ? 'saveUnavailable' : 'saveLocal') + (isExpedition() && !game.tacticalCompanions ? ' · ' + t('legacyCompanions') : '');
     $('expedition-save-status').classList.toggle('save-warning', !!saveNote || savePaused);
   }
   function checkpoint() {
@@ -362,6 +363,9 @@
     $('mode-title').textContent = isExpedition() ? t('expStage', { n: game.stage }) + ' · ' + modeName(game.mode) : modeName(game.mode);
     const available = new Set(game.available().map(tile => tile.id));
     const targets = new Set(isExpedition() && targeting ? (targeting === 'feather' ? game.featherTargets() : game.cubeTargets()).map(tile => tile.id) : []);
+    if (targeting !== 'feather' || !game.tacticalCompanions) flipSelection = null;
+    const flip = game.tacticalCompanions && targeting === 'feather' ? game.flipPlan(flipSelection) : null;
+    const flipIds = new Set(flip?.ids || []);
     const preview = new Set(isExpedition() ? game.previewIds() : []);
     const existing = new Map([...$('board').children].map(el => [Number(el.dataset.id), el]));
     for (const tile of game.tiles) {
@@ -374,10 +378,16 @@
         if (enter && available.has(tile.id)) el.classList.add('fresh');
         $('board').append(el);
       }
+      // Flip exchanges positions while preserving tile IDs; update reused buttons too.
+      el.dataset.pile = tile.pile;
+      el.style.left = `${tile.x / 6}%`; el.style.top = `${tile.y / 5.9}%`;
       const blocked = !available.has(tile.id);
       el.disabled = (targeting ? !targets.has(tile.id) : blocked) || game.status !== 'playing' || finalized || animating || savePaused || !!game.pendingReward;
       el.classList.toggle('blocked', blocked && !targets.has(tile.id));
       el.classList.toggle('relic-target', targets.has(tile.id)); el.classList.toggle('feather-target', targeting === 'feather' && targets.has(tile.id));
+      el.classList.toggle('flip-selected', flipIds.has(tile.id) && available.has(tile.id));
+      if (game.tacticalCompanions && targeting === 'feather' && targets.has(tile.id)) el.setAttribute('aria-pressed', String(flipSelection === tile.id && !!flip));
+      else el.removeAttribute('aria-pressed');
       el.style.zIndex = targets.has(tile.id) ? 100 + tile.z : tile.z + 1;
       const pair = game.rack.filter(id => game.tiles[id].type === tile.type).length === 2;
       el.classList.toggle('radar-pair', isExpedition() && game.radarActive && (tile.type === game.radarMark || (!blocked && pair)));
@@ -386,6 +396,7 @@
       decorateTarget(el, tile);
       el.title = blind ? t('blindTile') : itemName(tile.type); el.setAttribute('aria-label', blind ? t('blindTile') : itemName(tile.type) + (blocked ? t('covered') : ''));
     }
+    renderFlipPreview(flip);
     $('rack').replaceChildren();
     for (let i = 0; i < 7; i++) {
       const slot = document.createElement('div'); slot.className = 'slot';
@@ -435,6 +446,10 @@
     if (modal.open || finalized || animating || savePaused) return;
     const before = fx.snapshot();
     updateClock();
+    if (isExpedition() && game.tacticalCompanions && targeting === 'feather') {
+      if (game.canActivate() && game.flipPlan(id)) { flipSelection = id; render(); }
+      return;
+    }
     if (isExpedition() && targeting === 'blackhole') { activateExpedition(id); return; }
     const result = game.pick(id, targeting === 'feather');
     if (result.ok && !timerStarted) { timerStarted = true; tick = performance.now(); }
@@ -610,7 +625,7 @@
     $('leaderboard-panel').focus({ preventScroll: true });
   }
   function companionDefinitions() { return game.definitions || RainExpedition.RELICS; }
-  function relicRole(id) { return t((game.modernCompanions && ['capacitor', 'shield', 'radar'].includes(id) ? 'roleModern_' : 'role_') + id); }
+  function relicRole(id) { return t((game.tacticalCompanions && ['feather', 'shield'].includes(id) ? 'roleTactical_' : game.modernCompanions && ['capacitor', 'shield', 'radar'].includes(id) ? 'roleModern_' : 'role_') + id); }
   function relicName(id, level = game.relics[id] || game.ownedRelics?.()[id] || 1) { return ClackCompanions.name(id, level, language); }
   function relicDescription(id, level = game.relics[id] || game.ownedRelics()[id] || 1) {
     return ClackCompanions.description(id, level, game, language);
@@ -660,18 +675,20 @@
     if (!lastProc || lastProc.run !== runId || lastProc.stage !== game.stage) {
       log.textContent = t('expProcEmpty'); return;
     }
-    const title = document.createElement('strong'); title.className = 'proc-log-title'; title.textContent = t('expProcLog') + ' · ' + t('expProcCount', { n: lastProc.total }); log.append(title);
+    const title = document.createElement('strong'); title.className = 'proc-log-title'; title.textContent = t('expProcLog') + (lastProc.total ? ' · ' + t('expProcCount', { n: lastProc.total }) : ''); log.append(title);
     const totals = new Map();
     for (const event of lastProc.events) if (companionDefinitions()[event.kind]) {
-      const value = totals.get(event.kind) || 0; totals.set(event.kind, value + (event.kind === 'turbine' ? event.amount : event.ids.length === 3 ? 3 : 0));
+      const value = totals.get(event.kind) || 0; totals.set(event.kind, value + (event.kind === 'turbine' ? event.amount : !event.action && event.ids.length === 3 ? 3 : 0));
     }
     for (const [id, n] of totals) {
       const chip = document.createElement('span'); chip.className = 'proc-entry'; chip.dataset.proc = id;
       const copied = id === 'echo' ? [...new Set(lastProc.events.filter(event => event.kind === id && event.source).map(event => relicRole(event.source)))].join(' / ') : '';
       const item = relicName(id) + ' · ' + relicRole(id) + (copied ? ` (${copied})` : '');
-      chip.textContent = n ? t(id === 'turbine' ? 'expProcEnergy' : 'expProcRecovered', { item, n }) : item; log.append(chip);
+      const tacticalEvent = lastProc.events.find(event => event.kind === id && event.action);
+      chip.textContent = tacticalEvent ? t(tacticalEvent.action === 'flip' ? 'expProcFlip' : 'expProcStash', {n: tacticalEvent.action === 'flip' ? tacticalEvent.revealed.length : tacticalEvent.ids.length}) : n ? t(id === 'turbine' ? 'expProcEnergy' : 'expProcRecovered', { item, n }) : item; log.append(chip);
     }
-    feedback.textContent = [...totals].map(([id, n]) => relicRole(id) + (n ? id === 'turbine' ? ` +${n}⚡` : ` +${n}` : '')).join(' → ') || t('expFeedbackEmpty');
+    const tacticalEvent = lastProc.events.find(event => event.action);
+    feedback.textContent = tacticalEvent ? t(tacticalEvent.action === 'flip' ? 'expProcFlip' : 'expProcStash', {n: tacticalEvent.action === 'flip' ? tacticalEvent.revealed.length : tacticalEvent.ids.length}) : [...totals].map(([id, n]) => relicRole(id) + (n ? id === 'turbine' ? ` +${n}⚡` : ` +${n}` : '')).join(' → ') || t('expFeedbackEmpty');
     feedback.title = [...totals].map(([id, n]) => relicName(id) + ' · ' + relicRole(id) + ` +${n}`).join(' → ');
   }
   function showCatalog() {
@@ -755,13 +772,13 @@
     $('expedition-continue').textContent = t(game.pendingReward ? 'expResumeReward' : 'expResumeStage');
     $('expedition-continue').disabled = animating || savePaused;
     $('expedition-extract').disabled = animating || finalized || savePaused || !!game.pendingReward || game.finished;
-    let hint = targeting ? t(targeting === 'feather' ? 'expFeatherHint' : 'expCubeHint') : game.pendingReward ? t('expRewardPending')
+    let hint = targeting ? t(targeting === 'feather' ? game.tacticalCompanions ? 'expFlipHint' : 'expFeatherHint' : 'expCubeHint') : game.pendingReward ? t('expRewardPending')
       : t('expNextSupply', { n: game.stage + (game.stage % 2) + (stageRewardClaimed && game.stage % 2 === 0 ? 2 : 0) });
     if (!targeting && !game.pendingReward) {
       if (game.radarActive) hint += ' · ' + t('expRadarOn', { n: game.radarUntil - game.moves });
       else if (game.equipment === 'blackhole' && game.charge && !game.cubeTargets().length) hint += ' · ' + t('expNeedPair');
       else if (game.equipment && game.charge < game.capacity) hint += ' · ' + t('expCharging', { n: Math.ceil((game.recharge - game.energy) / (game.familyCount('birds') >= 2 ? 1.25 : 1)) });
-      if (game.relics.shield) hint += ' · ' + t(game.modernCompanions ? game.shieldArmed ? 'expShieldArmed' : 'expShieldArmHint' : game.shieldSpent ? 'expShieldSpent' : 'expShieldReady');
+      if (game.relics.shield) hint += ' · ' + t(game.tacticalCompanions ? game.reserve.length === 3 ? 'expStashFull' : !game.rack.length ? 'expStashEmpty' : 'expStashHint' : game.modernCompanions ? game.shieldArmed ? 'expShieldArmed' : 'expShieldArmHint' : game.shieldSpent ? 'expShieldSpent' : 'expShieldReady');
 
       if (game.radarActive && game.radarMark !== null) hint += ' · ' + t('expMarked', { item: itemName(game.radarMark) });
     }
@@ -783,7 +800,7 @@
     }));
   }
   function rewardMarkup(id) {
-    if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t('expRechargeCopy')}</span>`;
+    if (id === 'recharge') return `<b>${t('expRecharge')}</b><span>${t(game.modernCompanions ? 'expRechargeModern' : 'expRechargeCopy')}</span>`;
     if (id.startsWith('restore_')) return `<b>${t('expRestore', { item: t(id.slice(8)) })}</b><span>${t('expRestoreCopy')}</span>`;
     const level = game.relics[id] || 0, active = companionDefinitions()[id].kind === 'active';
     return `${relicIcon(id, level + 1)}<div><small>${t('expRarity_' + RainExpedition.rarityAt(level + 1))} · ${t(active ? 'expActive' : 'expPassive')} · ${t(level ? 'expUpgrade' : active && game.equipment ? 'expReplaceActive' : 'expObtain', { n: level + 1 })}</small><b>${relicName(id, level + 1)} <em class="equipment-role">${relicRole(id)}</em></b><span>${relicEffect(id, level + 1)}</span><span class="reward-rule">${relicRules(id, level + 1)}</span></div>`;
@@ -919,9 +936,29 @@
     if (!isExpedition() || finalized || animating || savePaused) return;
     const before = fx.snapshot(); updateClock(); const result = game.activate(id);
     if (!result.ok) return;
-    if (result.recovered > 0 && !timerStarted) { timerStarted = true; tick = performance.now(); }
+    if ((result.recovered > 0 || game.tacticalCompanions) && !timerStarted) { timerStarted = true; tick = performance.now(); }
     syncClock();
     targeting = null; lastStatus = null; render(); finishExpeditionAction(before, result.events, result.recovered);
+  }
+  function renderFlipPreview(plan) {
+    const visible = isExpedition() && game.tacticalCompanions && targeting === 'feather';
+    $('flip-preview').hidden = !visible;
+    $('flip-region').hidden = !visible || !plan;
+    if (!visible) return;
+    $('flip-preview-title').textContent = t(plan ? 'expFlipPreview' : 'expFlipHint', {n: plan?.revealed.length || 0});
+    $('flip-confirm').textContent = t('expFlipConfirm');
+    $('flip-cancel').textContent = t('expCancel');
+    $('flip-confirm').disabled = !plan || !game.canActivate() || animating || savePaused || finalized;
+    $('flip-preview-tiles').replaceChildren(...(plan?.revealed || []).map(id => {
+      const tile = game.tiles[id], chip = document.createElement('span');
+      const img = document.createElement('img'); img.src = `assets/tiles/${ITEMS[tile.type].icon}.webp`; img.alt = itemName(tile.type);
+      chip.title = itemName(tile.type); chip.append(img); return chip;
+    }));
+    if (plan) {
+      const xs = plan.positions.map(p => p.x), ys = plan.positions.map(p => p.y);
+      const x = Math.min(...xs), y = Math.min(...ys);
+      Object.assign($('flip-region').style, {left: `${x/6}%`, top: `${y/5.9}%`, width: `${(Math.max(...xs)-x+72)/6}%`, height: `${(Math.max(...ys)-y+72)/5.9}%`});
+    }
   }
   function renderEnvironment() {
     const env = game.environment;
@@ -1029,6 +1066,11 @@
     if (['radar', 'capacitor', 'shield'].includes(game.equipment)) activateExpedition();
     else { targeting = targeting === game.equipment ? null : game.equipment; render(); }
   });
+
+  $('flip-confirm').addEventListener('click', () => {
+    if (targeting === 'feather' && game.tacticalCompanions && flipSelection !== null) activateExpedition(flipSelection);
+  });
+  $('flip-cancel').addEventListener('click', () => { targeting = null; render(); });
 
   function showEclipseIntro() {
     eclipseDialogScroll ||= { left: scrollX, top: scrollY };
