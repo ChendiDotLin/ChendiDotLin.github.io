@@ -5,7 +5,7 @@ const { Game } = require('../critter-cascade/core.js');
 const Save = require('../critter-cascade/expedition-save.js');
 const seed = n => () => { n = Math.imul(n, 1664525) + 1013904223 | 0; return (n >>> 0) / 4294967296; };
 function boss(gear, n = 7) {
-  const g = new Expedition(seed(n)); g.choose('feather');
+  const g = new Expedition(seed(n)); g.companionRules = 1; g.choose('feather');
   const board = new Game('rain', seed(n), stageSpec(9));
   for (const k of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) g[k] = board[k];
   g.stage = 9; g.banked = bankedBefore(9); g.relics = { ...gear };

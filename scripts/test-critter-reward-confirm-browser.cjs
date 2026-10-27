@@ -32,16 +32,16 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  }
  assert.equal(offers,3);assert.deepEqual(await gear(),{feather:1});
  // A replacement is not applied by selecting either the incoming or outgoing card.
- await page.evaluate(()=>{const g=rewardTest.game();g.relics={feather:2,shield:2,ukulele:2,gasoline:2,clover:1,prism:1,radar:2};g.equipment='radar';g.pendingReward=['behemoth','blackhole'];rewardTest.offer();});
+ await page.evaluate(()=>{const g=rewardTest.game();g.relics={feather:2,seeker:2,ukulele:2,gasoline:2,clover:1,prism:1,radar:2};g.equipment='feather';g.pendingReward=['behemoth','blackhole'];rewardTest.offer();});
  const original=await gear();await page.locator('[data-reward=behemoth]').click();assert.deepEqual(await gear(),original);await page.locator('#reward-confirm').click();
- assert.ok(await page.locator('#replacement-confirm').isDisabled());await page.locator('[data-replace=ukulele]').click();await page.locator('[data-replace=shield]').click();assert.deepEqual(await gear(),original);
- await page.locator('#modal-language').click();assert.equal(await page.locator('[data-replace=shield]').getAttribute('aria-pressed'),'true');
+ assert.ok(await page.locator('#replacement-confirm').isDisabled());await page.locator('[data-replace=ukulele]').click();await page.locator('[data-replace=seeker]').click();assert.deepEqual(await gear(),original);
+ await page.locator('#modal-language').click();assert.equal(await page.locator('[data-replace=seeker]').getAttribute('aria-pressed'),'true');
  for(const width of [320,390,1366]){await page.setViewportSize({width,height:844});assert.ok(await page.locator('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));}
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/critter-confirm-replacement.png'});
- await page.locator('#reward-back').click();assert.deepEqual(await gear(),original);await page.locator('[data-reward=blackhole]').click();await page.locator('#reward-confirm').click();await page.locator('[data-replace=radar]').click();assert.deepEqual(await gear(),original);
- await page.locator('#replacement-confirm').click();assert.equal(await page.evaluate(()=>rewardTest.game().equipment),'blackhole');assert.equal((await gear()).blackhole,1);assert.equal((await gear()).radar,undefined);
+ await page.locator('#reward-back').click();assert.deepEqual(await gear(),original);await page.locator('[data-reward=blackhole]').click();await page.locator('#reward-confirm').click();await page.locator('[data-replace=feather]').click();assert.deepEqual(await gear(),original);
+ await page.locator('#replacement-confirm').click();assert.equal(await page.evaluate(()=>rewardTest.game().equipment),'blackhole');assert.equal((await gear()).blackhole,1);assert.equal((await gear()).feather,undefined);
  // Legacy pending rewards still load and require explicit confirmation.
- await page.evaluate(()=>{const g=rewardTest.game();g.pendingReward=['feather'];rewardTest.render();});await page.reload();await page.locator('#resume-confirm').click();await page.waitForFunction(()=>rewardTest.game().mode==='expedition');
- assert.ok(await page.locator('#reward-confirm').isDisabled());await page.locator('[data-reward=feather]').click();assert.equal((await gear()).feather,2);await page.locator('#reward-confirm').click();assert.equal((await gear()).feather,3);
+ await page.evaluate(()=>{const g=rewardTest.game();g.pendingReward=['ukulele'];rewardTest.render();});await page.reload();await page.locator('#resume-confirm').click();await page.waitForFunction(()=>rewardTest.game().mode==='expedition');
+ assert.ok(await page.locator('#reward-confirm').isDisabled());await page.locator('[data-reward=ukulele]').click();assert.equal((await gear()).ukulele,2);await page.locator('#reward-confirm').click();assert.equal((await gear()).ukulele,3);
  assert.deepEqual(errors,[]);console.log('PASS: select/change/double tap never commits; explicit starter/upgrade/active replacement confirmation; bilingual mobile layout; supplies only after stages 2/4/6; pending and skipped offers survive reload without duplication; legacy pending rewards honored.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

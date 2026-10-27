@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const { Expedition, stageSpec } = require('../critter-cascade/expedition.js');
 const { Game, exposed } = require('../critter-cascade/core.js');
 const seed = n => () => { n = Math.imul(n, 1664525) + 1013904223 | 0; return (n >>> 0) / 4294967296; };
-const fresh = () => { const game = new Expedition(seed(13)); game.choose('feather'); return game; };
+// Preserve coverage for historical runs; new rules are covered in test-critter-active-companions.cjs.
+const fresh = () => { const game = new Expedition(seed(13)); game.companionRules = 1; game.choose('feather'); return game; };
 function counts(game) {
   const result = {};
   for (const tile of game.tiles.filter(t => t.zone !== 'matched')) result[tile.type] = (result[tile.type] || 0) + 1;

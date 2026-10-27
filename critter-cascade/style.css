@@ -86,6 +86,7 @@ dialog:has(#eclipse-start) { overscroll-behavior: contain; }
 .slot .tile { inset: 0; width: 100%; height: 100%; border-radius: 4px; box-shadow: 0 2px 0 #1b2532; pointer-events: none; animation: tile-in .2s ease; }
 .status { min-height: 15px; text-align: center; color: #a0b0c0; font-size: 10px; margin: 14px 0 13px; line-height: 1.5; }
 .status.danger { color: #f2afa0; }
+.rack.guarded { outline: 2px solid #a7d6bd; outline-offset: 4px; }
 .rack.danger { background: #95746f; border-top-color: #d7a397; }
 .reserve-area { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; margin: 0 8px 12px; color: #c2b9dd; font-size: 10px; }
 .reserve-area small { display: block; margin-top: 5px; color: var(--muted); font-size: 8px; }

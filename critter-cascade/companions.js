@@ -55,6 +55,22 @@
       echo: ['例如跟着闪电清未遮挡牌，跟着火焰烧相同图案。每次操作最多发动一次，不复制自己或清空残局，也不额外复制恢复技能。', 'For example, follows lightning onto exposed tiles or fire onto the same picture. Once per action; never copies itself, the finisher or recharge skills.'],
       recycler: ['剩余张数包括棋盘、背包和暂存牌。必须先完成三消或主动技能连锁；Boss 的结界和护甲限制仍然有效。', 'Counts the board, tray and reserve together. Requires a triple or active-skill chain first. Boss wards and armor limits still apply.']
     };
+    if (game?.companionRules !== 1) {
+      const cell = game?.relics?.cell || 0, ion = game?.stage >= 6 && game.stage % 3 === 0 ? 2 : 0;
+      const recharge = Math.max(2, (id === 'feather' ? 9-l-Number(count('birds')>=4) : 8) - cell + ion);
+      const common = zh ? `使用后需恢复 ${recharge} 点才能再次使用。手动三消通常恢复 1 点；小蜗牛可增加储存次数并加快恢复。` : `Each use needs ${recharge} recharge points. Manual triples normally restore 1 point; Snail adds stored uses and faster recharge.`;
+      effects.shield = ['点击技能，开启一次守护：下次取牌导致背包装满时，自动撤回该次取牌。', 'Activate one guard: automatically undo the next pick that would fill your tray.'];
+      effects.capacitor = [`点击技能，穿透消除一组相同牌；每张最多被 ${l+Number(count('dragons')>=4)} 张牌挡住，优先清除被挡住的牌。`, `Activate to clear one matching board group beneath up to ${l+Number(count('dragons')>=4)} covers per tile, preferring covered tiles.`];
+      effects.radar = [`每手动三消 ${Math.max(2,5-l)} 次，自动偷看两边牌堆下两张牌，并标记一种图案。`, `Every ${Math.max(2,5-l)} manual triples, automatically peek at two hidden tiles in each supply pile and mark a picture.`];
+      effects.turbine = [`伙伴每额外消除 ${count('shells')>=4?2:3} 组，主动技能恢复 ${l} 点。`, `Every ${count('shells')>=4?2:3} companion-cleared groups, restore ${l} active recharge points.`];
+      rules.feather = [ `取出的牌进入背包，仍需凑齐三张。${common}${l>=3?'用它完成三消时，额外恢复 2 点。':''}`, `The picked tile enters the tray and still needs a triple. ${common}${l>=3?' Completing a triple with Reach adds 2 recharge points.':''}` ];
+      rules.capacitor = [ `只消棋盘牌，三张必须同图案；找不到目标时不消耗次数。可触发其他伙伴的连锁，仍受 Boss 结界和护甲限制。${common}`, `Board tiles only; all three must match. No target means no charge spent. Can trigger companion chains and respects boss wards and armor. ${common}` ];
+      rules.shield = [ `需在背包装满前主动开启；未触发时持续至本关结束，不可叠加。${l>=2?'触发救命后恢复 2 点。':''}${l>=3?`另消除最多 ${l-1} 组牌，优先清背包。`:''}${common}`, `Must be armed before the losing pick. Lasts until triggered or the stage ends; cannot stack.${l>=2?' A rescue restores 2 recharge points.':''}${l>=3?` Also clears up to ${l-1} groups, preferring the tray.`:''} ${common}` ];
+      rules.radar = [ `持续 ${3+l+Number(count('birds')>=4)*2} 次取牌。三消命中标记图案时，额外消除 ${l>=3?2:1} 组并恢复主动技能 2 点；${l>=3?'之后再标记一种图案。':'随后结束本次侦察。'}额外消除不穿透遮挡。`, `Lasts ${3+l+Number(count('birds')>=4)*2} picks. Match the marked picture to clear ${l>=3?2:1} extra groups and restore 2 active recharge points; ${l>=3?'then mark another picture.':'then end this scan.'} Extra clears cannot pierce covers.` ];
+      const cellRecharge = Math.max(2, (game?.equipment === 'feather' ? 9 - (game.relics.feather || 1) - Number(count('birds')>=4) : 8) - l + ion);
+      rules.cell = [`当前主动技能每次需要 ${cellRecharge} 点恢复进度。手动三消通常加 1 点，伙伴额外消一组加 0.25 点。${l>=3?'次数存满后，可再预存 2 点。':''}`, `The current active needs ${cellRecharge} recharge points per use. Manual triples normally add 1; companion clears add 0.25 per group.${l>=3?' Bank 2 extra points when charges are full.':''}`];
+      rules.turbine = ['不直接消牌。只恢复当前主动伙伴的技能；四个流派的主动伙伴都适用。', 'Does not clear tiles. Recharges the equipped active companion, from any of the four families.'];
+    }
     return { effect: effects[id]?.[zh?0:1] || '', rules: rules[id]?.[zh?0:1] || '' };
   }
   function description(id, level, game, language) {

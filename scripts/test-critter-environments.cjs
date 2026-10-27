@@ -15,7 +15,7 @@ for(const stage of [15,25,35,45,55,65,75,85,95,105])for(let n=1;n<=3;n++){
  assert.deepEqual(R.Expedition.fromSave(g.toSave()).environment,g.environment);
  const before=g.toSave();assert.ok(g.pick(ids[0]).ok);assert.equal(g.memoryHidden(ids[0]),false);const fresh=g.environment.cards.find(c=>!ids.includes(c.id));assert.ok(fresh&&fresh.remaining===2000);assert.ok(g.use('undo'));assert.deepEqual(g.environment,before.environment);
  g.pendingReward=['feather'];const paused=JSON.stringify(g.environment);g.advanceEnvironment(3000);assert.equal(JSON.stringify(g.environment),paused);g.skipReward();
- g.relics.radar=1;g.equipment='radar';g.charge=1;assert.ok(g.activate().ok);assert.ok(ids.every(id=>!g.memoryHidden(id)));const scout=JSON.stringify(g.environment);g.advanceEnvironment(10000);assert.equal(JSON.stringify(g.environment),scout);
+ g.relics.radar=1;g.radarCharge=g.radarRecharge-1;g.tiles.forEach((t,id)=>Object.assign(t,{z:0,type:Math.floor(id/3)%12}));for(const id of [0,1,2])g.pick(id);assert.ok(g.radarActive);assert.ok(ids.every(id=>!g.memoryHidden(id)));const scout=JSON.stringify(g.environment);g.advanceEnvironment(10000);assert.equal(JSON.stringify(g.environment),scout);
  g.radarUntil=0;assert.ok(g.use('shuffle'));assert.equal(g.environment.preview,2000);g.advanceEnvironment(2000);assert.ok(g.environment.cards.every(c=>g.memoryHidden(c.id)));
  // Remove an unknown tile into the tray, then manually complete a triple: visibility is earned again.
  g.tiles.forEach((t,id)=>Object.assign(t,{z:0,type:Math.floor(id/3)%12,zone:'board'}));g.rack=[];g.reserve=[];g.cleared=0;g.previous=null;g.environment.preview=0;g.environment.cards=[];g.refreshEnvironment();

@@ -31,8 +31,8 @@
     if (ten !== null && (!ten || !record.game.competitive || record.tenTime === null || !uuid(ten.runId) || ten.runId === record.runId ||
       ten.elapsedMs !== record.tenTime || ten.cleared !== rules.bankedBefore(11) || !Array.isArray(ten.loadout) ||
       ten.loadout.length < 1 || ten.loadout.length > 7 || new Set(ten.loadout.map(item => item?.id)).size !== ten.loadout.length ||
-      ten.loadout.filter(item => ['blackhole','radar'].includes(item?.id)).length > 1 ||
-      ten.loadout.filter(item => !['blackhole','radar'].includes(item?.id)).length > 6 || ten.loadout.some(item => !item || !Object.hasOwn(rules.RELICS, item.id) || ![1,2,3].includes(item.level)) ||
+      ten.loadout.filter(item => rules.relicsFor(record.game.companionRules)[item?.id]?.kind === 'active').length > 1 ||
+      ten.loadout.filter(item => rules.relicsFor(record.game.companionRules)[item?.id]?.kind !== 'active').length > 6 || ten.loadout.some(item => !item || !Object.hasOwn(rules.RELICS, item.id) || ![1,2,3].includes(item.level)) ||
       !(ten.playerId === null || /^[\p{L}\p{N}_-]{1,20}$/u.test(ten.playerId)) ||
       !(ten.receipt === null || ten.receipt?.ok === true && ten.receipt.playerId === ten.playerId && Number.isSafeInteger(ten.receipt.rank) && ten.receipt.rank >= 1 && typeof ten.receipt.improved === 'boolean' && Number.isSafeInteger(ten.receipt.speedRank) && ten.receipt.speedRank >= 1))) return false;
     const payload = record.submissionPayload;
@@ -40,6 +40,7 @@
       !/^[\p{L}\p{N}_-]{1,20}$/u.test(payload.playerId) || payload.cleared !== record.game.banked + record.game.cleared ||
       payload.elapsedMs !== Math.round(record.elapsedMs) || payload.stage !== record.game.stage ||
       JSON.stringify(payload.loadout) !== JSON.stringify(Object.entries({ ...record.game.relics, ...record.game.sealed }).map(([id, level]) => ({ id, level }))))) return false;
+    if (payload && (payload.companionRules ?? 1) !== record.game.companionRules) return false;
     if (payload && (payload.rules === 3 ? payload.completedStages !== completed || payload.tenMs !== record.tenTime : record.game.competitive)) return false;
     if (record.receipt !== null && (!record.receipt || typeof record.receipt !== 'object' || !payload || record.receipt.ok !== true || record.receipt.playerId !== payload.playerId ||
       !Number.isSafeInteger(record.receipt.rank) || record.receipt.rank < 1 || typeof record.receipt.improved !== 'boolean')) return false;

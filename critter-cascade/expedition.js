@@ -18,20 +18,20 @@
   };
   const isBossStage = stage => Object.hasOwn(BOSSES, stage);
   const RELICS = {
-    feather: { kind: 'passive', icon: 'module-grabber', symbol: '↟', rarity: 'uncommon', weight: 60 },
-    shield: { kind: 'passive', icon: 'module-cushion', symbol: '◈', rarity: 'void', weight: 35 },
+    feather: { kind: 'active', icon: 'module-grabber', symbol: '↟', rarity: 'uncommon', weight: 60 },
+    shield: { kind: 'active', icon: 'module-cushion', symbol: '◈', rarity: 'void', weight: 35 },
     ukulele: { kind: 'passive', icon: 'module-coil', symbol: 'ϟ', rarity: 'uncommon', weight: 60 },
     cell: { kind: 'passive', icon: 'module-flywheel', symbol: '▥', rarity: 'uncommon', weight: 60 },
     gasoline: { kind: 'passive', icon: 'module-torch', symbol: '♨', rarity: 'common', weight: 100 },
     behemoth: { kind: 'passive', icon: 'module-boiler', symbol: '✹', rarity: 'legendary', weight: 60 },
     clover: { kind: 'passive', icon: 'module-calibrator', symbol: '⚙', rarity: 'legendary', weight: 40 },
     blackhole: { kind: 'active', icon: 'module-vacuum', symbol: '◎', rarity: 'equipment', weight: 45 },
-    radar: { kind: 'active', icon: 'module-scanner', symbol: '⌖', rarity: 'equipment', weight: 45 },
+    radar: { kind: 'passive', icon: 'module-scanner', symbol: '⌖', rarity: 'equipment', weight: 45 },
     prism: { kind: 'passive', icon: 'module-prism', symbol: '◆', rarity: 'common', weight: 100 },
     seeker: { kind: 'passive', icon: 'module-seeker', symbol: '➤', rarity: 'uncommon', weight: 60 },
     resin: { kind: 'passive', icon: 'module-resin', symbol: '◷', rarity: 'common', weight: 100 },
     turbine: { kind: 'passive', icon: 'module-turbine', symbol: '✣', rarity: 'uncommon', weight: 60 },
-    capacitor: { kind: 'passive', icon: 'module-capacitor', symbol: '↯', rarity: 'uncommon', weight: 60 },
+    capacitor: { kind: 'active', icon: 'module-capacitor', symbol: '↯', rarity: 'uncommon', weight: 60 },
     echo: { kind: 'passive', icon: 'module-echo', symbol: '◉', rarity: 'legendary', weight: 45 },
     recycler: { kind: 'passive', icon: 'module-recycler', symbol: '⤓', rarity: 'uncommon', weight: 60 }
   };
@@ -42,6 +42,8 @@
     shells: ['shield', 'cell', 'turbine', 'recycler']
   };
   for (const [family, ids] of Object.entries(FAMILIES)) ids.forEach((id, row) => Object.assign(RELICS[id], { family, row }));
+  const LEGACY_RELICS = Object.fromEntries(Object.entries(RELICS).map(([id, relic]) => [id, { ...relic, kind: ['blackhole', 'radar'].includes(id) ? 'active' : 'passive' }]));
+  const relicsFor = rules => rules === 1 ? LEGACY_RELICS : RELICS;
   const rarityAt = level => ['common', 'uncommon', 'rare', 'void', 'legendary'][Math.max(0, Math.min(4, level - 1))];
   const levelCapAt = stage => stage < 3 ? 1 : stage < 6 ? 2 : stage < 11 ? 3 : stage < 21 ? 4 : 5;
   const chargeLimit = level => Math.max(2, 5 - level);
@@ -71,12 +73,13 @@
     game.random = () => { let n = game.rngState; n ^= n << 13; n ^= n >>> 17; n ^= n << 5;
       game.rngState = n >>> 0; return game.rngState / 4294967296; };
   }
-  const PICK_FIELDS = ['charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
+  const PICK_FIELDS = ['shieldArmed', 'radarCharge', 'charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
     'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial', 'environment'];
-  const RUN_FIELDS = ['stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed', 'pressure'];
+  const RUN_FIELDS = ['companionRules', 'stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed', 'pressure'];
   class Expedition extends core.Game {
     constructor(random = Math.random) {
       const spec = stageSpec(1); super(spec.mode, random, spec);
+      this.companionRules = 2; this.shieldArmed = false; this.radarCharge = 0;
       this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
       this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
       this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null;
@@ -88,6 +91,10 @@
       this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
       this.pendingReward = ['feather', 'ukulele', 'blackhole'];
     }
+    get definitions() { return relicsFor(this.companionRules); }
+    get modernCompanions() { return this.companionRules === 2; }
+    get radarRecharge() { return Math.max(2, 5 - (this.relics.radar || 1)); }
+    get capacitorDepth() { return (this.relics.capacitor || 1) + Number(this.familyCount('dragons') >= 4); }
     startPressure() {
       if (!this.pressure || this.pressure.started) return false;
       this.pressure.started = true; return true;
@@ -178,13 +185,13 @@
         (trial.kind === 'crown' && (before !== this.trialBurstLimit || (trial.broken.length === 3 && this.stageMatches === 9))))
         events.push({kind: 'trialShift', ids: []});
     }
-    get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (RELICS[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
+    get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (this.definitions[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
     get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
     ownedRelics() { return { ...this.relics, ...this.sealed }; }
     get recovered() { return this.banked + this.cleared; }
     get totalMoves() { return this.bankedMoves + this.moves; }
     get capacity() { return 1 + (this.relics.cell || 0) + Number(this.familyCount('shells') >= 2); }
-    get recharge() { return 8 - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0); }
+    get recharge() { const base = this.modernCompanions && this.equipment === 'feather' ? this.featherRecharge : 8; return Math.max(2, base - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0)); }
     get featherRecharge() { return 9 - (this.relics.feather || 1) - Number(this.familyCount('birds') >= 4); }
     get radarActive() { return this.radarUntil > this.moves; }
     get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
@@ -197,7 +204,7 @@
     }
     featherTargets() {
       const depth = Math.max(1, (this.relics.feather || 1) - 1);
-      return this.relics.feather && this.featherCharge ? this.tiles.filter(t => t.zone === 'board' && this.blockers(t).length >= 1 && this.blockers(t).length <= depth) : [];
+      return this.relics.feather && (this.modernCompanions ? this.equipment === 'feather' && this.charge : this.featherCharge) ? this.tiles.filter(t => t.zone === 'board' && this.blockers(t).length >= 1 && this.blockers(t).length <= depth) : [];
     }
     cubeTargets() {
       const pairs = this.rack.map(id => this.tiles[id].type).filter((type, _, all) => all.filter(n => n === type).length === 2);
@@ -255,6 +262,7 @@
         return tile ? [...this.rack.filter(id => this.tiles[id].type === tile.type), tile.id] : null;
       }
       if (kind === 'resin') return this.findFuseTarget();
+      if (this.modernCompanions && kind === 'capacitor') kind = 'behemoth';
       if (!['ukulele', 'gasoline', 'behemoth'].includes(kind)) return this.findTriple(depth);
       // Each offensive item has a recognisable target. Never break a triple's
       // type balance or borrow tray tiles for a board-clearing effect.
@@ -333,10 +341,10 @@
       const unopened = ids.filter(id => !this.relics[id]);
       const pool = unopened.length ? unopened : ids;
       const id = pool[Math.floor(this.random() * pool.length)], target = this.sealed[id], oldLevel = this.relics[id] || 0;
-      this.relics[id] = full || RELICS[id].kind === 'active' ? target : oldLevel + 1;
+      this.relics[id] = full || this.definitions[id].kind === 'active' ? target : oldLevel + 1;
       if (this.relics[id] === target) delete this.sealed[id];
-      if (RELICS[id].kind === 'active') { this.equipment = id; this.charge = 1; this.energy = 0; }
-      if (id === 'feather' && !oldLevel) { this.featherCharge = 1; this.featherEnergy = 0; }
+      if (this.definitions[id].kind === 'active') { this.equipment = id; this.charge = 1; this.energy = 0; }
+      if (!this.modernCompanions && id === 'feather' && !oldLevel) { this.featherCharge = 1; this.featherEnergy = 0; }
       events.push({ kind: 'reclaim', relic: id, level: this.relics[id], target, ids: [] });
       if (!Object.keys(this.sealed).length) this.bossEnergy = 0;
     }
@@ -361,7 +369,7 @@
           const activeBefore = this.charge * this.recharge + this.energy;
           const grabBefore = this.featherCharge ? this.featherRecharge : this.featherEnergy;
           this.turbineCharge = 0; this.addEnergy(this.relics.turbine);
-          if (this.relics.feather && !this.featherCharge) {
+          if (!this.modernCompanions && this.relics.feather && !this.featherCharge) {
             this.featherEnergy += this.relics.turbine;
             if (this.featherEnergy >= this.featherRecharge) { this.featherEnergy = 0; this.featherCharge = 1; }
           }
@@ -369,7 +377,7 @@
             (this.featherCharge ? this.featherRecharge : this.featherEnergy) - grabBefore;
           if (amount > 0) events.push({ kind: 'turbine', ids: [], amount });
         }
-        if (this.relics.capacitor) {
+        if (!this.modernCompanions && this.relics.capacitor) {
           const limit = chargeLimit(this.relics.capacitor);
           this.capacitorCharge = Math.min(limit, this.capacitorCharge + 1);
           if (this.capacitorCharge >= limit && !this.capacitorFired) {
@@ -461,9 +469,9 @@
       if (!result.ok) { Object.assign(this, before); this.check(); return result; }
       this.previous = before;
       const events = [];
-      if (jumping) { this.featherCharge--; events.push({ kind: 'feather', ids: [id] }); }
-      if (this.status === 'lost' && this.relics.shield && !this.shieldSpent) {
-        Object.assign(this, before); this.shieldSpent = true; this.previous = null;
+      if (jumping) { if (this.modernCompanions) this.charge--; else this.featherCharge--; events.push({ kind: 'feather', ids: [id] }); }
+      if (this.status === 'lost' && this.relics.shield && (this.modernCompanions ? this.shieldArmed : !this.shieldSpent)) {
+        Object.assign(this, before); this.shieldArmed = false; this.shieldSpent = true; this.previous = null;
         events.length = 0; events.push({ kind: 'shield', ids: [id] });
         if (this.relics.shield >= 2) this.addEnergy(2);
         if (this.relics.shield >= 3) this.pulse(events, 'shield', this.relics.shield - 1);
@@ -474,11 +482,15 @@
       if (result.matched) {
         if (this.environment?.kind === 'memory') this.environment.preview = Math.max(2000, this.environment.preview);
         this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(this.familyCount('birds') >= 2 ? 1.25 : 1);
-        if (this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
+        if (!this.modernCompanions && this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
           this.featherCharge = 1; this.featherEnergy = 0;
         }
         this.advanceDevices(events);
         this.rollLightning(); this.resolveCombos(events, { type: result.type, jumping, scanned, manual: true });
+        if (this.modernCompanions && this.relics.radar && this.status === 'playing' && ++this.radarCharge >= this.radarRecharge) {
+          this.radarCharge = 0; this.radarUntil = this.moves + 3 + this.relics.radar + (this.familyCount('birds') >= 4 ? 2 : 0);
+          this.markRadar(); events.push({kind: 'radar', ids: []});
+        }
         this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
       }
       if (this.pressure?.started && this.moves > before.moves) this.pressure.remaining = 8000;
@@ -487,7 +499,11 @@
     }
     canActivate() {
       if (this.finished || this.pendingReward || this.status !== 'playing' || !this.charge) return false;
-      return this.equipment === 'blackhole' ? this.trialBurstLimit > 0 && this.cubeTargets().length > 0 : this.equipment === 'radar' && !this.radarActive;
+      if (this.equipment === 'blackhole') return this.trialBurstLimit > 0 && this.cubeTargets().length > 0;
+      if (!this.modernCompanions) return this.equipment === 'radar' && !this.radarActive;
+      if (this.equipment === 'feather') return this.featherTargets().length > 0;
+      if (this.equipment === 'capacitor') return this.trialBurstLimit > 0 && !!this.findProcTarget('capacitor', this.capacitorDepth);
+      return this.equipment === 'shield' && !this.shieldArmed;
     }
     markRadar() {
       const types = [...new Set(this.tiles.filter(t => t.zone === 'board').map(t => t.type))];
@@ -496,6 +512,7 @@
     }
     activate(id) {
       if (!this.canActivate()) return { ok: false };
+      if (this.modernCompanions && this.equipment === 'feather') return this.pick(id, true);
       this.beginBurst();
       const events = [], before = this.cleared;
       if (this.equipment === 'blackhole') {
@@ -513,6 +530,12 @@
           }
         }
         this.resolveCombos(events);
+      } else if (this.modernCompanions && this.equipment === 'capacitor') {
+        this.charge--; this.previous = null;
+        this.pulse(events, 'capacitor', 1, this.capacitorDepth); this.resolveCombos(events);
+      } else if (this.modernCompanions && this.equipment === 'shield') {
+        this.charge--; this.previous = null; this.shieldArmed = true;
+        events.push({kind: 'shield', ids: []});
       } else {
         this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1) + (this.familyCount('birds') >= 4 ? 2 : 0);
         this.markRadar(); events.push({ kind: 'radar', ids: [] });
@@ -530,7 +553,11 @@
       // Newly obtained companions are white; only level-four upgrades enter the red slot.
       const legendary = pool.filter(id => RELICS[id] && (this.relics[id] || 0) === 4);
       if (legendary.length && this.random() < this.legendaryChance) choices.push(weightedChoice(legendary, this.random));
-      if (!this.equipment) choices.push('blackhole', 'radar');
+      if (!this.equipment) {
+        const actives = pool.filter(id => this.definitions[id]?.kind === 'active' && !choices.includes(id));
+        if (this.modernCompanions && actives.length) choices.push(weightedChoice(actives, this.random));
+        else if (!this.modernCompanions) choices.push('blackhole', 'radar');
+      }
       const ordinary = pool.filter(id => !RELICS[id] || (this.relics[id] || 0) < 4);
       while (choices.length < 3 && ordinary.some(id => !choices.includes(id))) {
         const available = ordinary.filter(id => !choices.includes(id));
@@ -555,10 +582,11 @@
         this.used[id.slice(8)] = false; this.restocksUsed++;
       } else {
         if (!RELICS[id] || (this.relics[id] || 0) >= this.levelCap) return false;
-        const passives = Object.keys(this.relics).filter(key => RELICS[key].kind === 'passive');
-        if (RELICS[id].kind === 'passive' && !this.relics[id] && passives.length >= PASSIVE_SLOTS) {
+        const passives = Object.keys(this.relics).filter(key => this.definitions[key].kind === 'passive');
+        if (this.definitions[id].kind === 'passive' && !this.relics[id] && passives.length >= PASSIVE_SLOTS) {
           if (!passives.includes(replace)) return false;
           delete this.relics[replace];
+          if (this.modernCompanions && replace === 'radar') { this.radarCharge = 0; this.radarUntil = 0; this.radarMark = null; }
           if (replace === 'feather') { this.featherCharge = 0; this.featherEnergy = 0; }
           if (replace === 'behemoth') this.blastCharge = 0;
           if (replace === 'resin') this.fuse = null;
@@ -567,16 +595,19 @@
         }
         const oldLevel = this.relics[id] || 0;
         // Each companion owns its level. Upgrading never spends another companion's levels.
-        if (RELICS[id].kind === 'active') {
+        if (this.definitions[id].kind === 'active') {
           const first = !this.equipment;
           if (this.equipment && this.equipment !== id) delete this.relics[this.equipment];
           this.equipment = id;
           if (first) { this.charge = 1; this.energy = 0; }
-          this.radarUntil = 0; this.radarMark = null;
+          if (this.modernCompanions) {
+            if (!oldLevel) this.shieldArmed = false;
+            this.featherCharge = 0; this.featherEnergy = 0;
+          } else { this.radarUntil = 0; this.radarMark = null; }
         }
         this.relics[id] = oldLevel + 1;
         if (id === 'seeker' || id === 'capacitor') this[id + 'Charge'] = Math.min(this[id + 'Charge'], chargeLimit(this.relics[id]));
-        if (id === 'feather' && !oldLevel) this.featherCharge = 1;
+        if (!this.modernCompanions && id === 'feather' && !oldLevel) this.featherCharge = 1;
         // Neither upgrades nor swapping the shield restore its once-per-stage block.
         this.charge = Math.min(this.capacity, this.charge);
         if (this.charge === this.capacity) this.energy = this.relics.cell >= 3 ? Math.min(2, this.energy) : 0;
@@ -588,6 +619,7 @@
       this.banked += this.cleared; this.bankedMoves += this.moves; this.stage++;
       const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
       for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
+      this.shieldArmed = false; this.radarCharge = 0;
       this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
       this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null; this.fuse = null;
       if (isBossStage(this.stage) && this.stage !== 10) {
@@ -630,8 +662,11 @@
   function normalizeSave(data) {
     if (!data || data.version !== VERSION) return data;
     const copy = JSON.parse(JSON.stringify(data));
+    if (copy.companionRules === undefined) copy.companionRules = 1;
     if (copy.pressure === undefined) copy.pressure = null;
     for (const state of [copy, copy.previous].filter(Boolean)) {
+      if (state.shieldArmed === undefined) state.shieldArmed = false;
+      if (state.radarCharge === undefined) state.radarCharge = 0;
       for (const key of ['seekerCharge', 'turbineCharge', 'capacitorCharge']) if (state[key] === undefined) state[key] = 0;
       if (state.fuse === undefined) state.fuse = null;
       if (state.environment === undefined) state.environment = null;
@@ -641,13 +676,13 @@
     }
     return copy;
   }
-  function validSeals(data, stage, count) {
+  function validSeals(data, stage, count, rules = 1) {
     if (!data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics) ||
       !data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed)) return false;
     if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 5))) return false;
     return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, levelCapAt(stage)) &&
       isBossStage(stage) && (stage === 10 || data.trial?.kind === BOSSES[stage].kind) && data.cleared < count && (data.relics[id] || 0) < target &&
-      !(RELICS[id].kind === 'active' && data.relics[id])) &&
+      !(relicsFor(rules)[id].kind === 'active' && data.relics[id])) &&
       (Object.keys(data.sealed).length > 0 || data.bossEnergy === 0);
   }
   function validSnapshot(data, count) {
@@ -677,14 +712,17 @@
     return counts.every(n => n % 3 === 0) && data.tiles.filter(t => t.zone === 'matched').length === data.cleared;
   }
   function validSave(data) {
-    if (!data || data.version !== VERSION || !integer(data.stage, 1, 1000000)) return false;
-    const count = stageSpec(data.stage).count;
+    if (!data || data.version !== VERSION || ![1,2].includes(data.companionRules) || !integer(data.stage, 1, 1000000)) return false;
+    const count = stageSpec(data.stage).count, definitions = relicsFor(data.companionRules);
     const pressure = data.pressure;
     if (pressure != null && (data.stage !== 70 || data.trial?.kind !== 'echo' || typeof pressure.started !== 'boolean' ||
       !integer(pressure.hearts, 0, 3) || !Number.isFinite(pressure.remaining) || pressure.remaining < 0 || pressure.remaining > 8000 ||
       (pressure.hearts === 0 ? (!data.finished || pressure.remaining !== 0) : pressure.remaining <= 0) ||
       (!pressure.started && (pressure.hearts !== 3 || pressure.remaining !== 8000)))) return false;
     for (const state of [data, data.previous].filter(Boolean)) {
+      if (typeof state.shieldArmed !== 'boolean' || !integer(state.radarCharge, 0, 4)) return false;
+      if (data.companionRules === 2 && ((state.shieldArmed && (state.equipment !== 'shield' || !state.relics?.shield)) ||
+        state.featherCharge || state.featherEnergy || state.capacitorCharge || (!state.relics?.radar && (state.radarCharge || state.radarUntil || state.radarMark !== null)))) return false;
       const env = state.environment;
       if (env != null && (!env || env.kind !== environmentAt(data.stage) || !['memory','mono'].includes(env.kind) ||
         typeof env.started !== 'boolean' || typeof env.bonusClaimed !== 'boolean' ||
@@ -707,12 +745,12 @@
       typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
       !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
       !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
-    if (!validSeals(data, data.stage, count) || (!(data.stage === 10 || data.trial) && (data.bossEnergy || data.bossStarted))) return false;
+    if (!validSeals(data, data.stage, count, data.companionRules) || (!(data.stage === 10 || data.trial) && (data.bossEnergy || data.bossStarted))) return false;
     const relics = Object.entries({ ...data.relics, ...data.sealed });
     if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, levelCapAt(data.stage))) ||
-      relics.filter(([id]) => RELICS[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
-    const actives = Object.entries(data.relics).filter(([id]) => RELICS[id].kind === 'active');
-    if (relics.filter(([id]) => RELICS[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
+      relics.filter(([id]) => definitions[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
+    const actives = Object.entries(data.relics).filter(([id]) => definitions[id].kind === 'active');
+    if (relics.filter(([id]) => definitions[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
     if (data.charge > 1 + (data.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.relics[id]).length >= 2) || (!data.equipment && (data.charge || data.energy)) ||
       (!data.relics.feather && (data.featherCharge || data.featherEnergy)) || data.manualMatches > (data.banked + data.cleared) / 3 ||
       data.stageMatches > data.cleared / 3 || data.stageMatches > data.manualMatches) return false;
@@ -721,16 +759,16 @@
     if (data.pendingReward !== null && (!Array.isArray(data.pendingReward) || data.pendingReward.length < 1 || data.pendingReward.length > 3 ||
       new Set(data.pendingReward).size !== data.pendingReward.length || data.pendingReward.some(id => !Object.hasOwn(RELICS, id) &&
         !['recharge', 'restore_remove', 'restore_undo', 'restore_shuffle'].includes(id)))) return false;
-    if (data.previous && (!validSeals(data.previous, data.stage, count) ||
+    if (data.previous && (!validSeals(data.previous, data.stage, count, data.companionRules) ||
       JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
       (!(data.stage === 10 || data.previous.trial) && (data.previous.bossEnergy || data.previous.bossStarted)) ||
-      (Object.keys(data.previous.relics).find(id => RELICS[id].kind === 'active') || null) !== data.previous.equipment)) return false;
+      (Object.keys(data.previous.relics).find(id => definitions[id].kind === 'active') || null) !== data.previous.equipment)) return false;
     if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.previous.relics[id]).length >= 2) ||
       (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
       (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
     return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
   }
-  const api = { Expedition, RELICS, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES, environmentAt };
+  const api = { Expedition, RELICS, LEGACY_RELICS, relicsFor, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES, environmentAt };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RainExpedition = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

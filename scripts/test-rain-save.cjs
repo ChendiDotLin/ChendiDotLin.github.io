@@ -13,7 +13,7 @@ function roundtrip(game) {
 }
 function choose(game) {
   // Keep the witness intact: these passives/actives do not automatically clear cards.
-  let id = game.pendingReward.find(id => ['feather','shield','cell','clover','blackhole','radar','turbine','recharge'].includes(id) && !id.startsWith('restore_'));
+  let id = game.pendingReward.find(id => ['feather','shield','cell','clover','blackhole','turbine','recharge'].includes(id) && !id.startsWith('restore_'));
   // A controlled recharge supply avoids changing the deal witness in this serialization test.
   if (!id) { game.pendingReward = ['recharge']; id = 'recharge'; }
   const replacement = Object.keys(game.relics).find(id => ['shield', 'cell', 'feather'].includes(id));
@@ -61,7 +61,7 @@ for (let n = 1; n <= 80; n++) {
 // automatic chains, shield rollback, rescue and equipment activation checkpoints.
 for (let n = 1; n <= 100; n++) {
   const { Game } = require('../critter-cascade/core.js');
-  const game = new Expedition(seed(n)); game.choose('feather'); game.stage = 6 + n % 4;
+  const game = new Expedition(seed(n)); game.companionRules = 1; game.choose('feather'); game.stage = 6 + n % 4;
   const spec = stageSpec(game.stage), board = new Game(spec.mode, seed(n * 19), spec);
   for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous']) game[key] = board[key];
   game.banked = bankedBefore(game.stage);
@@ -113,7 +113,7 @@ assert.equal(parse('{bad'), null); assert.equal(parse('x'.repeat(160001)), null)
   assert.equal(new Store(null).read().error, 'unavailable');
   game.end(); const frozen = record(); frozen.finalized = true;
   frozen.submissionPayload = { runId: frozen.runId, playerId: frozen.playerDraft, mode: 'expedition', cleared: game.recovered,
-    rules: 3, completedStages: game.completedStages, tenMs: null, elapsedMs: Math.round(frozen.elapsedMs), stage: game.stage, loadout: game.loadout() };
+    rules: 3, companionRules: game.companionRules, completedStages: game.completedStages, tenMs: null, elapsedMs: Math.round(frozen.elapsedMs), stage: game.stage, loadout: game.loadout() };
   assert.ok(valid(frozen)); assert.deepEqual(parse(JSON.stringify(frozen)), frozen);
   frozen.receipt = { ok: true, improved: true, rank: 1, playerId: frozen.playerDraft }; assert.ok(valid(frozen));
   frozen.submissionPayload.cleared += 3; assert.equal(valid(frozen), false);

@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');const {Expedition,stageSpec,bankedBefore,validSave}=require('../critter-cascade/expedition.js');const {Game}=require('../critter-cascade/core.js');const Save=require('../critter-cascade/expedition-save.js');
 const seed=n=>()=>{n=Math.imul(n,1664525)+1013904223|0;return(n>>>0)/4294967296};
-function stage(n,gear) {const g=new Expedition(seed(9)),b=new Game('rain',seed(19),stageSpec(n));g.choose('feather');for(const k of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[k]=b[k];g.stage=n;g.banked=bankedBefore(n);g.relics={...gear};g.equipment=Object.keys(gear).find(id=>['radar','blackhole'].includes(id))||null;g.featherCharge=gear.feather?1:0;g.charge=g.equipment?1:0;return g;}
+function stage(n,gear) {const g=new Expedition(seed(9)),b=new Game('rain',seed(19),stageSpec(n));g.companionRules=1;g.choose('feather');for(const k of ['tiles','rack','reserve','cleared','moves','status','previous','solution'])g[k]=b[k];g.stage=n;g.banked=bankedBefore(n);g.relics={...gear};g.equipment=Object.keys(gear).find(id=>['radar','blackhole'].includes(id))||null;g.featherCharge=gear.feather?1:0;g.charge=g.equipment?1:0;return g;}
 const gear={feather:2,shield:2,cell:2,clover:2,gasoline:2,behemoth:2,radar:2};
 {
  const g=stage(9,gear);g.tiles.forEach(t=>t.zone='matched');g.cleared=g.tiles.length;g.status='won';assert.ok(g.nextStage());
@@ -45,7 +45,7 @@ assert.ok(largest>=132,`largest burst ${largest}`);
 }
 // Migrate a real v2-shaped checkpoint in place; keep its board, tools and Undo.
 {
- const g=new Expedition(seed(12));g.choose('feather');g.pick(g.solution[0]);const data=g.toSave();data.version=2;delete data.competitive;delete data.sealed;delete data.blastCharge;
+ const g=new Expedition(seed(12));g.companionRules=1;g.choose('feather');g.pick(g.solution[0]);const data=g.toSave();data.version=2;delete data.competitive;delete data.sealed;delete data.blastCharge;
  for(const key of ['relics','equipment','sealed','blastCharge'])delete data.previous[key];
  const old={schema:2,savedAt:100,runId:'12345678-1234-4123-8123-123456789abc',elapsedMs:200,finalized:false,receipt:null,submissionPayload:null,stageRewardClaimed:false,playerDraft:'',game:data};
  const converted=Save.parse(JSON.stringify(old));assert.ok(converted);assert.equal(converted.game.competitive,false);assert.deepEqual(converted.game.tiles,data.tiles);assert.ok(Expedition.fromSave(converted.game).use('undo'));

@@ -31,7 +31,7 @@ const {chromium}=require(process.env.RAIN_PLAYWRIGHT||'playwright'),assert=requi
  if(width===390){
   await page.evaluate(()=>{delete document.getElementById('modal').close;});
   await page.locator('[data-mode=expedition]').click();await page.locator('[data-reward=feather]').click();await page.locator('#reward-confirm').click();
-  await page.evaluate(()=>{const g=restartProbe().game;g.relics={feather:1,ukulele:1,gasoline:1,behemoth:1,prism:1,clover:1,radar:1};g.equipment='radar';restartProbe().render();});
+  await page.evaluate(()=>{const g=restartProbe().game;g.relics={feather:1,ukulele:1,gasoline:1,behemoth:1,prism:1,clover:1,radar:1};g.equipment='feather';restartProbe().render();});
   await frameBoard();const boardY=await page.locator('#board').evaluate(el=>el.getBoundingClientRect().top);await tap('#restart');await page.locator('#restart-confirm').click();await page.locator('[data-reward=feather]').waitFor();
   assert.ok(Math.abs((await page.locator('#board').evaluate(el=>el.getBoundingClientRect().top))-boardY)<=2,'fresh shorter Expedition panel must keep the board in view');
  }
