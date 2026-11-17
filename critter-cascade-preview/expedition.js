@@ -1,0 +1,812 @@
+/* Run rules only: no DOM, clock, storage, or network dependencies. */
+(function (root) {
+  'use strict';
+  const core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.RainMatch;
+  const VERSION = 3;
+  const PASSIVE_SLOTS = 6;
+  const BOSSES = {
+    10: { kind: 'seal', symbol: '◇', color: '#ddb296' },
+    20: { kind: 'ward', symbol: '❖', color: '#8dd5b8' },
+    30: { kind: 'armor', symbol: '◈', color: '#9badff' },
+    40: { kind: 'mirror', symbol: '◐', color: '#9ce7ef' },
+    50: { kind: 'roots', symbol: '♧', color: '#a5d875' },
+    60: { kind: 'tide', symbol: '≈', color: '#72c7ec' },
+    70: { kind: 'echo', symbol: '◎', color: '#e5b5f6' },
+    80: { kind: 'migrate', symbol: '✧', color: '#f6c682' },
+    90: { kind: 'dream', symbol: '☾', color: '#bdadf1' },
+    100: { kind: 'crown', symbol: '♛', color: '#f3d78d' }
+  };
+  const isBossStage = stage => Object.hasOwn(BOSSES, stage);
+  const RELICS = {
+    feather: { kind: 'active', icon: 'module-grabber', symbol: '↟', rarity: 'uncommon', weight: 60 },
+    shield: { kind: 'active', icon: 'module-cushion', symbol: '◈', rarity: 'void', weight: 35 },
+    ukulele: { kind: 'passive', icon: 'module-coil', symbol: 'ϟ', rarity: 'uncommon', weight: 60 },
+    cell: { kind: 'passive', icon: 'module-flywheel', symbol: '▥', rarity: 'uncommon', weight: 60 },
+    gasoline: { kind: 'passive', icon: 'module-torch', symbol: '♨', rarity: 'common', weight: 100 },
+    behemoth: { kind: 'passive', icon: 'module-boiler', symbol: '✹', rarity: 'legendary', weight: 60 },
+    clover: { kind: 'passive', icon: 'module-calibrator', symbol: '⚙', rarity: 'legendary', weight: 40 },
+    blackhole: { kind: 'active', icon: 'module-vacuum', symbol: '◎', rarity: 'equipment', weight: 45 },
+    radar: { kind: 'passive', icon: 'module-scanner', symbol: '⌖', rarity: 'equipment', weight: 45 },
+    prism: { kind: 'passive', icon: 'module-prism', symbol: '◆', rarity: 'common', weight: 100 },
+    seeker: { kind: 'passive', icon: 'module-seeker', symbol: '➤', rarity: 'uncommon', weight: 60 },
+    resin: { kind: 'passive', icon: 'module-resin', symbol: '◷', rarity: 'common', weight: 100 },
+    turbine: { kind: 'passive', icon: 'module-turbine', symbol: '✣', rarity: 'uncommon', weight: 60 },
+    capacitor: { kind: 'active', icon: 'module-capacitor', symbol: '↯', rarity: 'uncommon', weight: 60 },
+    echo: { kind: 'passive', icon: 'module-echo', symbol: '◉', rarity: 'legendary', weight: 45 },
+    recycler: { kind: 'passive', icon: 'module-recycler', symbol: '⤓', rarity: 'uncommon', weight: 60 }
+  };
+  const FAMILIES = {
+    cats: ['prism', 'behemoth', 'clover', 'blackhole'],
+    dragons: ['ukulele', 'gasoline', 'capacitor', 'resin'],
+    birds: ['feather', 'seeker', 'radar', 'echo'],
+    shells: ['shield', 'cell', 'turbine', 'recycler']
+  };
+  for (const [family, ids] of Object.entries(FAMILIES)) ids.forEach((id, row) => Object.assign(RELICS[id], { family, row }));
+  const LEGACY_RELICS = Object.fromEntries(Object.entries(RELICS).map(([id, relic]) => [id, { ...relic, kind: ['blackhole', 'radar'].includes(id) ? 'active' : 'passive' }]));
+  const relicsFor = rules => rules === 1 ? LEGACY_RELICS : RELICS;
+  const rarityAt = level => ['common', 'uncommon', 'rare', 'void', 'legendary'][Math.max(0, Math.min(4, level - 1))];
+  const levelCapAt = stage => stage < 3 ? 1 : stage < 6 ? 2 : stage < 11 ? 3 : stage < 21 ? 4 : 5;
+  const chargeLimit = level => Math.max(2, 5 - level);
+  function weightedChoice(pool, random) {
+    const weight = id => RELICS[id]?.weight ?? 50;
+    let roll = random() * pool.reduce((total, id) => total + weight(id), 0);
+    for (const id of pool) { roll -= weight(id); if (roll < 0) return id; }
+    return pool[pool.length - 1];
+  }
+  function stageSpec(stage) {
+    if (stage === 1) return { mode: 'rain', layers: [6, 6], pileSize: 6, kinds: 6, target: 4, count: 36, theme: 'landing' };
+    const fog = stage >= 5 && stage % 3 === 2;
+    const ion = stage >= 6 && stage % 3 === 0;
+    const layers = Array(Math.min(18, 2 * stage + 2)).fill(6);
+    const pileSize = fog ? 18 : stage < 3 ? 6 : stage < 5 ? 9 : 12;
+    return { mode: 'rain', layers, pileSize, kinds: Math.min(12, 4 + 2 * stage),
+      target: stage < 3 ? 5 : 6, count: layers.length * 6 + 12 + pileSize * 2, theme: isBossStage(stage) ? 'boss' : fog ? 'fog' : ion ? 'ion' : 'storm' };
+  }
+  const environmentAt = stage => stage >= 15 && stage % 10 === 5 ? (Math.floor((stage - 15) / 10) % 2 ? 'mono' : 'memory') : null;
+  function bankedBefore(stage) {
+    let sum = 0;
+    for (let i = 1; i < Math.min(stage, 9); i++) sum += stageSpec(i).count;
+    if (stage > 9) sum += (stage - 9) * 144 + Math.floor((stage - 9) / 3) * 12;
+    return sum;
+  }
+  function bindRandom(game) {
+    game.random = () => { let n = game.rngState; n ^= n << 13; n ^= n >>> 17; n ^= n << 5;
+      game.rngState = n >>> 0; return game.rngState / 4294967296; };
+  }
+  const PICK_FIELDS = ['shieldArmed', 'radarCharge', 'charge', 'energy', 'featherCharge', 'featherEnergy', 'shieldSpent', 'manualMatches',
+    'stageMatches', 'radarUntil', 'radarMark', 'spark', 'lightningReady', 'rngState', 'bestChain', 'blastCharge', 'relics', 'equipment', 'sealed', 'bossEnergy', 'bossStarted', 'seekerCharge', 'fuse', 'turbineCharge', 'capacitorCharge', 'trial', 'environment'];
+  const RUN_FIELDS = ['companionRules', 'stage', 'banked', 'bankedMoves', 'competitive', 'finished', 'pendingReward', 'midRewardTaken', 'restocksUsed', 'pressure'];
+  class Expedition extends core.Game {
+    constructor(random = Math.random) {
+      const spec = stageSpec(1); super(spec.mode, random, spec);
+      // Saved runs retain their rules: 1 = original roster, 2 = Reach/guard, 3 = Flip/Stash.
+      this.companionRules = 3; this.shieldArmed = false; this.radarCharge = 0;
+      this.mode = 'expedition'; this.stage = 1; this.banked = 0; this.bankedMoves = 0;
+      this.relics = {}; this.sealed = {}; this.blastCharge = 0; this.competitive = true; this.equipment = null; this.charge = 0; this.energy = 0;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null;
+      this.featherCharge = 0; this.featherEnergy = 0; this.shieldSpent = false;
+      this.manualMatches = 0; this.stageMatches = 0; this.midRewardTaken = false; this.restocksUsed = 0;
+      this.radarUntil = 0; this.radarMark = null; this.spark = 0; this.lightningReady = false;
+      this.bestChain = 0; this.finished = false;
+      this.seekerCharge = 0; this.fuse = null; this.turbineCharge = 0; this.capacitorCharge = 0;
+      this.rngState = Math.floor(random() * 0xffffffff) || 1; bindRandom(this);
+      this.pendingReward = ['feather', 'ukulele', 'blackhole'];
+    }
+    get definitions() { return relicsFor(this.companionRules); }
+    get modernCompanions() { return this.companionRules >= 2; }
+    get tacticalCompanions() { return this.companionRules >= 3; }
+    get radarRecharge() { return Math.max(2, 5 - (this.relics.radar || 1)); }
+    get capacitorDepth() { return (this.relics.capacitor || 1) + Number(this.familyCount('dragons') >= 4); }
+    startPressure() {
+      if (!this.pressure || this.pressure.started) return false;
+      this.pressure.started = true; return true;
+    }
+    advancePressure(ms) {
+      const p = this.pressure;
+      if (!p?.started || this.finished || this.status !== 'playing' || this.pendingReward || !Number.isFinite(ms) || ms <= 0) return null;
+      const hearts = p.hearts;
+      while (ms >= p.remaining && p.hearts > 0) {
+        ms -= p.remaining; p.hearts--; p.remaining = p.hearts ? 8000 : 0;
+      }
+      if (p.hearts) p.remaining -= ms;
+      else { this.finished = true; this.status = 'lost'; this.previous = null; }
+      return p.hearts < hearts ? {lost: hearts - p.hearts, ended: !p.hearts} : null;
+    }
+    startEnvironment() {
+      if (!this.environment || this.environment.started) return false;
+      this.environment.started = true; this.refreshEnvironment(); return true;
+    }
+    refreshEnvironment() {
+      const env = this.environment;
+      if (env?.kind !== 'memory') return;
+      const available = this.available(), ids = new Set(available.map(tile => tile.id));
+      env.cards = env.cards.filter(card => ids.has(card.id));
+      for (const tile of available) {
+        if (env.cards.length >= 5) break;
+        if (!env.cards.some(card => card.id === tile.id)) env.cards.push({id: tile.id, remaining: 2000});
+      }
+    }
+    advanceEnvironment(ms) {
+      const env = this.environment;
+      if (env?.kind !== 'memory' || !env.started || this.status !== 'playing' || this.pendingReward || this.radarActive || !Number.isFinite(ms) || ms <= 0) return;
+      env.preview = Math.max(0, env.preview - ms);
+      env.cards.forEach(card => { card.remaining = Math.max(0, card.remaining - ms); });
+    }
+    memoryHidden(id) {
+      const env = this.environment;
+      return !!(env?.kind === 'memory' && env.started && !env.preview && !this.radarActive && env.cards.some(card => card.id === id && !card.remaining));
+    }
+    // Retained for older callers/checkpoints; special stages no longer add supplies.
+    claimEnvironmentBonus() { return false; }
+    // Existing midRewardTaken/bonusClaimed save fields remain readable for legacy runs.
+    get stageRewardDue() { return this.status === 'won' && this.stage % 2 === 0; }
+    get bossEncounter() { return this.stage === 10 || !!this.trial; }
+    get bossActive() { return this.bossEncounter && this.cleared < this.tiles.length; }
+    get bossKind() { return this.trial?.kind || 'seal'; }
+    familyCount(family) { return FAMILIES[family].filter(id => this.relics[id]).length; }
+    get armorPhase() { return Math.min(2, Math.floor(this.stageMatches / 3)); }
+    get normalBurstLimit() { return this.relics.clover >= 3 ? 52 : 16 + 2 * Object.keys(this.relics).length; }
+    get trialBurstLimit() {
+      if (!this.trial) return this.normalBurstLimit;
+      switch (this.bossKind) {
+        case 'armor': return this.armorPhase < 2 ? [3, 6][this.armorPhase] : this.normalBurstLimit;
+        case 'tide': return Math.floor(this.stageMatches / 2) % 2 === 0 ? 2 : this.normalBurstLimit;
+        case 'echo': return this.trial.open ? this.normalBurstLimit : 0;
+        case 'crown': return this.trial.broken.length < 3 ? 2 : this.stageMatches < 9 ? 3 : this.normalBurstLimit;
+        default: return this.normalBurstLimit;
+      }
+    }
+    get protectedTypes() {
+      if (!this.trial) return [];
+      if (['ward', 'crown'].includes(this.bossKind)) return this.trial.types.filter(type => !this.trial.broken.includes(type));
+      if (this.bossKind === 'migrate') {
+        const start = Math.floor(this.stageMatches / 2) * 2 % this.trial.types.length;
+        return [this.trial.types[start], this.trial.types[(start + 1) % this.trial.types.length]];
+      }
+      return [];
+    }
+    procAllowed(tile) {
+      if (this.protectedTypes.includes(tile.type)) return false;
+      if (this.bossKind === 'mirror' && this.trial) return tile.type === this.trial.lastType;
+      if (this.bossKind === 'roots' && this.trial.broken.length < 4 && tile.zone === 'board') return this.blockers(tile).length === 0;
+      return true;
+    }
+    advanceTrial(type, events) {
+      if (!this.trial) return;
+      const trial = this.trial, before = this.trialBurstLimit;
+      if (['ward', 'crown', 'roots'].includes(trial.kind) && trial.types.includes(type) && !trial.broken.includes(type)) {
+        trial.broken.push(type); events.push({ kind: 'wardBreak', type, ids: [] });
+      }
+      if (trial.kind === 'echo') trial.open = trial.lastType !== null && trial.lastType !== type;
+      if (['echo', 'mirror'].includes(trial.kind)) trial.lastType = type;
+      // Called before any automatic effects for this manual match. Every path uses this budget.
+      this.burstLeft = this.trialBurstLimit;
+      if (trial.kind === 'armor' && [3, 6].includes(this.stageMatches)) events.push({kind: 'armorBreak', phase: this.armorPhase, ids: []});
+      else if ((trial.kind === 'tide' && this.stageMatches % 2 === 0) ||
+        (trial.kind === 'echo' && before !== this.trialBurstLimit) ||
+        (trial.kind === 'crown' && (before !== this.trialBurstLimit || (trial.broken.length === 3 && this.stageMatches === 9))))
+        events.push({kind: 'trialShift', ids: []});
+    }
+    get sealedLevels() { return Object.entries(this.sealed).reduce((sum, [id, target]) => sum + (this.definitions[id].kind === 'active' ? 1 : target - (this.relics[id] || 0)), 0); }
+    get completedStages() { return this.stage - 1 + Number(this.cleared === this.tiles.length); }
+    ownedRelics() { return { ...this.relics, ...this.sealed }; }
+    get recovered() { return this.banked + this.cleared; }
+    get totalMoves() { return this.bankedMoves + this.moves; }
+    get capacity() { return 1 + (this.relics.cell || 0) + Number(this.familyCount('shells') >= 2); }
+    get recharge() { const base = this.modernCompanions && this.equipment === 'feather' ? this.featherRecharge : this.tacticalCompanions && this.equipment === 'shield' ? 9 - this.relics.shield : 8; return Math.max(2, base - (this.relics.cell || 0) + (stageSpec(this.stage).theme === 'ion' ? 2 : 0)); }
+    get featherRecharge() { return 9 - (this.relics.feather || 1) - Number(this.familyCount('birds') >= 4); }
+    get radarActive() { return this.radarUntil > this.moves; }
+    get legendaryChance() { return this.levelCap >= 5 ? .25 : 0; }
+    get levelCap() { return levelCapAt(this.stage); }
+    snapshot() {
+      return { ...super.snapshot(), ...JSON.parse(JSON.stringify(Object.fromEntries(PICK_FIELDS.map(key => [key, this[key]])))) };
+    }
+    blockers(tile) {
+      return this.tiles.filter(other => other.zone === 'board' && other.z > tile.z && core.overlap(tile, other));
+    }
+    // Exchange whole board positions, not pictures: tile identity, counts, fuse
+    // marks and the board's overlap geometry remain intact.
+    get flipRadius() { return 36 + 18 * ((this.relics.feather || 1) - 1); }
+    flipPlan(id, available = new Set(this.available().map(tile => tile.id))) {
+      const anchor = this.tiles[id];
+      if (!this.tacticalCompanions || !this.relics.feather || !anchor || !available.has(id)) return null;
+      const pile = ['left', 'right'].includes(anchor.pile);
+      const tiles = this.tiles.filter(tile => tile.zone === 'board' && tile.pile === anchor.pile &&
+        (pile || Math.hypot(tile.x - anchor.x, tile.y - anchor.y) <= this.flipRadius))
+        .sort((a, b) => a.z - b.z || a.id - b.id);
+      const positions = tiles.map((tile, i) => {
+        const destination = tiles[tiles.length - 1 - i];
+        return {id: tile.id, x: destination.x, y: destination.y, z: destination.z, pile: destination.pile};
+      });
+      const revealed = tiles.filter((tile, i) => !available.has(tile.id) && available.has(tiles[tiles.length - 1 - i].id)).map(tile => tile.id);
+      if (!revealed.length) return null;
+      return {positions, revealed, ids: tiles.map(tile => tile.id)};
+    }
+    flipTargets() {
+      if (!this.tacticalCompanions || this.equipment !== 'feather' || !this.charge) return [];
+      const available = this.available(), ids = new Set(available.map(tile => tile.id));
+      return available.filter(tile => this.flipPlan(tile.id, ids));
+    }
+    featherTargets() {
+      if (this.tacticalCompanions) return this.flipTargets();
+      const depth = Math.max(1, (this.relics.feather || 1) - 1);
+      return this.relics.feather && (this.modernCompanions ? this.equipment === 'feather' && this.charge : this.featherCharge) ? this.tiles.filter(t => t.zone === 'board' && this.blockers(t).length >= 1 && this.blockers(t).length <= depth) : [];
+    }
+    cubeTargets() {
+      const pairs = this.rack.map(id => this.tiles[id].type).filter((type, _, all) => all.filter(n => n === type).length === 2);
+      return this.tiles.filter(t => this.procAllowed(t) && t.zone === 'board' && pairs.includes(t.type) && this.blockers(t).length <= (this.relics.blackhole || 1));
+    }
+    previewIds() {
+      if (!this.radarActive) return [];
+      return ['left', 'right'].flatMap(pile => this.tiles.filter(t => t.zone === 'board' && t.pile === pile)
+        .sort((a, b) => b.z - a.z).slice(1, 3).map(t => t.id));
+    }
+    canUse(tool) { return !this.finished && !this.pendingReward && super.canUse(tool); }
+    use(tool) {
+      const ticks = this.fuse?.ticks, ok = super.use(tool);
+      // Shuffle changes types, so retarget the fuse while preserving its countdown.
+      if (ok && tool === 'shuffle' && ticks) {
+        const ids = this.findFuseTarget(Math.max(1, this.relics.resin - 2)); this.fuse = ids ? { ids, ticks } : null;
+      }
+      if (ok) {
+        this.refreshEnvironment();
+        if (tool === 'shuffle' && this.environment?.kind === 'memory') this.environment.preview = Math.max(2000, this.environment.preview);
+      }
+      return ok;
+    }
+    addEnergy(amount) {
+      if (!this.equipment) return;
+      if (this.charge === this.capacity) {
+        if (this.relics.cell >= 3) this.energy = Math.min(2, this.energy + amount);
+        return;
+      }
+      this.energy += amount;
+      while (this.energy >= this.recharge && this.charge < this.capacity) { this.charge++; this.energy -= this.recharge; }
+      if (this.charge === this.capacity) this.energy = this.relics.cell >= 3 ? Math.min(2, this.energy) : 0;
+    }
+    rollLightning() {
+      if (!this.relics.ukulele || this.lightningReady) return;
+      this.spark++;
+      if (this.spark >= this.lightningLimit) {
+        this.lightningReady = true; this.spark = 0;
+      }
+    }
+    findTriple(depth = 0) {
+      // Prefer freeing the tray; a proc no longer silently requires three board-only tiles.
+      const accessible = this.tiles.filter(t => this.procAllowed(t) && (t.zone === 'rack' || t.zone === 'reserve' ||
+        (t.zone === 'board' && this.blockers(t).length <= depth)));
+      const groups = core.ITEMS.map((_, type) => accessible.filter(t => t.type === type)
+        .sort((a, b) => Number(b.zone === 'rack') - Number(a.zone === 'rack'))).filter(group => group.length >= 3);
+      groups.sort((a, b) => b.filter(t => t.zone === 'rack').length - a.filter(t => t.zone === 'rack').length);
+      return groups[0]?.slice(0, 3).map(t => t.id) || null;
+    }
+    findProcTarget(kind, depth = 0, type = null) {
+      if (kind === 'seeker' || kind === 'blackhole') {
+        const tile = this.tiles.find(t => this.procAllowed(t) && t.zone === 'board' &&
+          (kind === 'seeker' || this.blockers(t).length <= depth) &&
+          this.rack.filter(id => this.tiles[id].type === t.type).length === 2);
+        return tile ? [...this.rack.filter(id => this.tiles[id].type === tile.type), tile.id] : null;
+      }
+      if (kind === 'resin') return this.findFuseTarget();
+      if (this.modernCompanions && kind === 'capacitor') kind = 'behemoth';
+      if (!['ukulele', 'gasoline', 'behemoth'].includes(kind)) return this.findTriple(depth);
+      // Each offensive item has a recognisable target. Never break a triple's
+      // type balance or borrow tray tiles for a board-clearing effect.
+      const candidates = this.tiles.filter(t => this.procAllowed(t) && t.zone === 'board' && (kind !== 'gasoline' || t.type === type));
+      const covers = new Map(candidates.map(t => [t.id, this.blockers(t).length]));
+      const eligible = candidates.filter(t => kind === 'gasoline' || covers.get(t.id) <= depth);
+      const groups = core.ITEMS.map((_, type) => eligible.filter(t => t.type === type)
+        .sort((a, b) => kind === 'behemoth' ? covers.get(b.id) - covers.get(a.id) : a.id - b.id)
+        .slice(0, 3)).filter(group => group.length === 3);
+      if (kind === 'behemoth') groups.sort((a, b) =>
+        b.reduce((sum, t) => sum + covers.get(t.id), 0) - a.reduce((sum, t) => sum + covers.get(t.id), 0));
+      return groups[0]?.map(t => t.id) || null;
+    }
+    clearTriple(ids) {
+      if (ids.length !== 3 || new Set(ids).size !== 3 || new Set(ids.map(id => this.tiles[id].type)).size !== 1 ||
+          ids.some(id => this.tiles[id].zone === 'matched')) throw Error('Invalid triple');
+      ids.forEach(id => { this.tiles[id].zone = 'matched'; });
+      this.rack = this.rack.filter(id => !ids.includes(id)); this.reserve = this.reserve.filter(id => !ids.includes(id));
+      this.cleared += 3;
+      if (this.fuse?.ids.some(id => ids.includes(id))) this.fuse = null;
+    }
+    findFuseTarget(groupsWanted = 1) {
+      const covered = new Map(this.tiles.filter(tile => tile.zone !== 'matched').map(tile => [tile.id, tile.zone === 'board' ? this.blockers(tile).length : 0]));
+      const groups = core.ITEMS.map((_, type) => this.tiles.filter(tile => this.procAllowed(tile) && tile.type === type && tile.zone !== 'matched')
+        .sort((a, b) => covered.get(b.id) - covered.get(a.id))).map(group => group.slice(0, Math.min(groupsWanted, Math.floor(group.length / 3)) * 3)).filter(group => group.length >= 3);
+      const depth = group => group.reduce((sum, tile) => sum + covered.get(tile.id), 0);
+      groups.sort((a, b) => depth(b) - depth(a));
+      return groups[0]?.map(tile => tile.id) || null;
+    }
+    beginBurst() {
+      this.comboQueue = [];
+      this.bossChainAwarded = false;
+      this.lightningFired = false; this.echoFired = false; this.capacitorFired = false;
+      this.burstLeft = this.trialBurstLimit;
+    }
+    get lightningLimit() { return this.familyCount('dragons') >= 2 ? 3 : 4; }
+    get lightningDepth() { return 0; }
+    get lightningTarget() { return this.relics.ukulele && this.lightningReady ? this.findProcTarget('ukulele') : null; }
+    releaseLightning(events) {
+      if (!this.relics.ukulele || !this.lightningReady || this.lightningFired || !this.lightningTarget || this.burstLeft <= 0) return;
+      // One discharge per action; levels increase its number of exposed triples.
+      this.lightningReady = false; this.lightningFired = true; this.spark = 0;
+      this.pulse(events, 'ukulele', this.relics.ukulele, this.lightningDepth);
+    }
+    advanceDevices(events) {
+      if (this.fuse && this.relics.resin) {
+        if (this.fuse.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
+        else if (--this.fuse.ticks <= 0) {
+          const targets = this.fuse.ids; this.fuse = null;
+          for (let i = 0; i < targets.length && this.burstLeft > 0; i += 3) {
+            const ids = targets.slice(i, i + 3);
+            if (ids.some(id => !this.procAllowed(this.tiles[id]))) continue;
+            this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'resin', ids }); this.onTriple(events, false, 'resin', this.tiles[ids[0]].type, 50);
+          }
+        }
+      }
+      if (this.relics.prism && this.random() < .1 + .1 * this.relics.prism + .05 * (this.relics.clover || 0) + (this.familyCount('cats') >= 2 ? .05 : 0))
+        for (let n = 0; n < (this.familyCount('cats') >= 4 ? 2 : 1); n++) this.comboQueue.push({ kind: 'prism', depth: this.relics.prism });
+      if (this.relics.seeker) {
+        const limit = chargeLimit(this.relics.seeker);
+        this.seekerCharge = Math.min(limit, this.seekerCharge + 1);
+        if (this.seekerCharge >= limit) {
+          let fired = false;
+          for (let n = 0; n < this.relics.seeker && this.burstLeft > 0; n++) {
+            const target = this.tiles.find(tile => this.procAllowed(tile) && tile.zone === 'board' && this.rack.filter(id => this.tiles[id].type === tile.type).length === 2);
+            if (!target) break;
+            const ids = [...this.rack.filter(id => this.tiles[id].type === target.type), target.id];
+            this.clearTriple(ids); fired = true; this.burstLeft--; events.push({ kind: 'seeker', ids }); this.onTriple(events, false, 'seeker', target.type, 50);
+          }
+          if (fired) this.seekerCharge = 0;
+        }
+      }
+    }
+    reclaim(events, full = false) {
+      const ids = Object.keys(this.sealed); if (!ids.length) return;
+      const unopened = ids.filter(id => !this.relics[id]);
+      const pool = unopened.length ? unopened : ids;
+      const id = pool[Math.floor(this.random() * pool.length)], target = this.sealed[id], oldLevel = this.relics[id] || 0;
+      this.relics[id] = full || this.definitions[id].kind === 'active' ? target : oldLevel + 1;
+      if (this.relics[id] === target) delete this.sealed[id];
+      if (this.definitions[id].kind === 'active') { this.equipment = id; this.charge = 1; this.energy = 0; }
+      if (!this.modernCompanions && id === 'feather' && !oldLevel) { this.featherCharge = 1; this.featherEnergy = 0; }
+      events.push({ kind: 'reclaim', relic: id, level: this.relics[id], target, ids: [] });
+      if (!Object.keys(this.sealed).length) this.bossEnergy = 0;
+    }
+    chargeSeal(events, manual) {
+      if (!isBossStage(this.stage) || !Object.keys(this.sealed).length) return;
+      if (manual && !this.bossStarted) {
+        this.bossStarted = true; this.reclaim(events); return;
+      }
+      // A whole action's procs share one point, regardless of burst size.
+      if (!manual && this.bossChainAwarded) return;
+      if (!manual) this.bossChainAwarded = true;
+      const amount = manual && this.bossKind !== 'dream' ? 2 : 1;
+      this.bossEnergy += amount;
+      events.push({ kind: 'sealEnergy', amount, ids: [] });
+      if (this.bossEnergy >= 3) { this.bossEnergy -= 3; this.reclaim(events); }
+    }
+    onTriple(events, manual = false, source = null, type = null, depth = 0) {
+      this.chargeSeal(events, manual);
+      if (manual) this.advanceTrial(type, events);
+      if (!manual && source) {
+        if (this.relics.turbine && ++this.turbineCharge >= (this.familyCount('shells') >= 4 ? 2 : 3)) {
+          const activeBefore = this.charge * this.recharge + this.energy;
+          const grabBefore = this.featherCharge ? this.featherRecharge : this.featherEnergy;
+          this.turbineCharge = 0; this.addEnergy(this.relics.turbine);
+          if (!this.modernCompanions && this.relics.feather && !this.featherCharge) {
+            this.featherEnergy += this.relics.turbine;
+            if (this.featherEnergy >= this.featherRecharge) { this.featherEnergy = 0; this.featherCharge = 1; }
+          }
+          const amount = this.charge * this.recharge + this.energy - activeBefore +
+            (this.featherCharge ? this.featherRecharge : this.featherEnergy) - grabBefore;
+          if (amount > 0) events.push({ kind: 'turbine', ids: [], amount });
+        }
+        if (!this.modernCompanions && this.relics.capacitor) {
+          const limit = chargeLimit(this.relics.capacitor);
+          this.capacitorCharge = Math.min(limit, this.capacitorCharge + 1);
+          if (this.capacitorCharge >= limit && !this.capacitorFired) {
+            this.capacitorCharge = 0; this.capacitorFired = true;
+            this.comboQueue.push({ kind: 'capacitor', depth: Math.max(1, this.relics.capacitor - 2) + Number(this.familyCount('dragons') >= 4) });
+          }
+        }
+        if (this.relics.echo && !this.echoFired && source !== 'echo' && source !== 'recycler') {
+          this.echoFired = true;
+          for (let n = 0; n < this.relics.echo; n++) this.comboQueue.push({ kind: 'echo', targetKind: source, type, depth });
+        }
+      }
+      if (this.relics.behemoth) {
+        this.blastCharge = Math.min(chargeLimit(this.relics.behemoth), this.blastCharge + 1);
+        if (this.blastCharge >= chargeLimit(this.relics.behemoth) && this.findProcTarget('behemoth', this.relics.behemoth)) {
+          this.blastCharge = 0;
+          this.comboQueue.push({ kind: 'behemoth', depth: this.relics.behemoth });
+        }
+      }
+      if (type !== null && this.relics.gasoline && this.random() < .15 + .1 * this.relics.gasoline + .05 * (this.relics.clover || 0))
+        this.comboQueue.push({ kind: 'gasoline', type, depth: 50 });
+    }
+    drainBurst(events) {
+      while (this.comboQueue.length && this.burstLeft > 0) {
+        const proc = this.comboQueue.shift(); this.pulse(events, proc.kind, 1, proc.depth, proc);
+        this.releaseLightning(events);
+      }
+      this.comboQueue = [];
+      // Winning must restore gear even if the final burst skipped the return phase.
+      if (this.cleared === this.tiles.length && this.bossEncounter && !events.some(event => event.kind === 'bossBreak')) {
+        while (Object.keys(this.sealed).length) this.reclaim(events, true);
+        this.bossEnergy = 0;
+        events.push({ kind: 'bossBreak', ids: [] });
+      }
+    }
+    pulse(events, kind, count, depth = 0, target = {}) {
+      if (!this.comboQueue) this.beginBurst();
+      let recovered = 0;
+      for (let i = 0; i < count && this.burstLeft > 0; i++) {
+        const ids = this.findProcTarget(target.targetKind || kind, depth, target.type); if (!ids) break;
+        this.clearTriple(ids); this.burstLeft--; events.push({ kind, ids, ...(target.targetKind ? { source: target.targetKind } : {}) });
+        recovered += 3; this.onTriple(events, false, kind, this.tiles[ids[0]].type, depth);
+        // Fractional Cell recovery cannot pay for the cast that created the chain.
+        if (this.relics.cell) this.addEnergy(.25);
+      }
+      return recovered;
+    }
+    resolveCombos(events, { type, jumping = false, scanned = false, manual = false } = {}) {
+      if (!this.comboQueue) this.beginBurst();
+      const before = this.cleared;
+      let retarget = false;
+      if (scanned && type === this.radarMark) {
+        this.addEnergy(2);
+        this.pulse(events, 'radar', jumping || this.relics.radar >= 3 ? 2 : 1);
+        if (this.relics.radar >= 3) retarget = true;
+        else { this.radarUntil = 0; this.radarMark = null; }
+      }
+      if (jumping) {
+        if (this.relics.feather >= 3) this.addEnergy(2);
+      }
+      this.releaseLightning(events);
+      this.drainBurst(events);
+      if (this.relics.recycler && this.tiles.length - this.cleared <= 6 + 3 * this.relics.recycler) {
+        // The finisher promises to sweep the remainder, even after a capped chain.
+        // Its separate allowance is bounded by five triples and cannot loop.
+        if (this.trialBurstLimit === this.normalBurstLimit) this.burstLeft = Math.max(this.burstLeft, (this.tiles.length - this.cleared) / 3);
+        this.pulse(events, 'recycler', Math.ceil((6 + 3 * this.relics.recycler) / 3), 50); this.drainBurst(events);
+      }
+      if (this.fuse?.ids.some(id => this.tiles[id].zone === 'matched')) this.fuse = null;
+      if (manual && this.relics.resin && !this.fuse) {
+        const ids = this.findFuseTarget(Math.max(1, this.relics.resin - 2));
+        if (ids) this.fuse = { ids, ticks: Math.max(1, 4 - this.relics.resin) };
+      }
+      // Choose the next bounty after lightning, so it cannot mark a vanished type.
+      if (retarget) this.markRadar();
+      const recovered = this.cleared - before;
+      this.bestChain = Math.max(this.bestChain, recovered + 3);
+      this.check(); return recovered;
+    }
+    pick(id, leap = false) {
+      if (this.finished || this.pendingReward || this.status !== 'playing') return { ok: false };
+      const tile = this.tiles[id]; if (!tile) return { ok: false };
+      const jumping = !this.tacticalCompanions && leap && this.featherTargets().some(t => t.id === id);
+      if (leap && !jumping) return { ok: false };
+      this.beginBurst();
+      const before = this.snapshot(), scanned = this.radarActive;
+      if (jumping) tile.zone = 'reserve';
+      const result = super.pick(id);
+      if (!result.ok) { Object.assign(this, before); this.check(); return result; }
+      this.previous = before;
+      const events = [];
+      if (jumping) { if (this.modernCompanions) this.charge--; else this.featherCharge--; events.push({ kind: 'feather', ids: [id] }); }
+      if (!this.tacticalCompanions && this.status === 'lost' && this.relics.shield && (this.modernCompanions ? this.shieldArmed : !this.shieldSpent)) {
+        Object.assign(this, before); this.shieldArmed = false; this.shieldSpent = true; this.previous = null;
+        events.length = 0; events.push({ kind: 'shield', ids: [id] });
+        if (this.relics.shield >= 2) this.addEnergy(2);
+        if (this.relics.shield >= 3) this.pulse(events, 'shield', this.relics.shield - 1);
+        this.drainBurst(events);
+        this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
+        this.check(); this.refreshEnvironment(); return { ok: true, matched: false, type: tile.type, events, recovered: this.cleared - before.cleared };
+      }
+      if (result.matched) {
+        if (this.environment?.kind === 'memory') this.environment.preview = Math.max(2000, this.environment.preview);
+        this.manualMatches++; this.stageMatches++; this.onTriple(events, true, null, result.type); this.addEnergy(this.familyCount('birds') >= 2 ? 1.25 : 1);
+        if (!this.modernCompanions && this.relics.feather && this.featherCharge === 0 && ++this.featherEnergy >= this.featherRecharge) {
+          this.featherCharge = 1; this.featherEnergy = 0;
+        }
+        this.advanceDevices(events);
+        this.rollLightning(); this.resolveCombos(events, { type: result.type, jumping, scanned, manual: true });
+        if (this.modernCompanions && this.relics.radar && this.status === 'playing' && ++this.radarCharge >= this.radarRecharge) {
+          this.radarCharge = 0; this.radarUntil = this.moves + 3 + this.relics.radar + (this.familyCount('birds') >= 4 ? 2 : 0);
+          this.markRadar(); events.push({kind: 'radar', ids: []});
+        }
+        this.bestChain = Math.max(this.bestChain, this.cleared - before.cleared);
+      }
+      if (this.pressure?.started && this.moves > before.moves) this.pressure.remaining = 8000;
+      this.refreshEnvironment();
+      return { ...result, events, recovered: this.cleared - before.cleared };
+    }
+    canActivate() {
+      if (this.finished || this.pendingReward || this.status !== 'playing' || !this.charge) return false;
+      if (this.equipment === 'blackhole') return this.trialBurstLimit > 0 && this.cubeTargets().length > 0;
+      if (!this.modernCompanions) return this.equipment === 'radar' && !this.radarActive;
+      if (this.equipment === 'feather') return this.featherTargets().length > 0;
+      if (this.equipment === 'capacitor') return this.trialBurstLimit > 0 && !!this.findProcTarget('capacitor', this.capacitorDepth);
+      return this.equipment === 'shield' && (this.tacticalCompanions ? this.rack.length > 0 && this.reserve.length < 3 : !this.shieldArmed);
+    }
+    markRadar() {
+      const types = [...new Set(this.tiles.filter(t => t.zone === 'board').map(t => t.type))];
+      types.sort((a, b) => this.rack.filter(id => this.tiles[id].type === b).length - this.rack.filter(id => this.tiles[id].type === a).length);
+      this.radarMark = types[0] ?? null;
+    }
+    activate(id) {
+      if (!this.canActivate()) return { ok: false };
+      if (this.tacticalCompanions && this.equipment === 'feather') {
+        const plan = this.flipPlan(id); if (!plan) return {ok: false};
+        this.charge--; this.previous = null;
+        for (const position of plan.positions) Object.assign(this.tiles[position.id], position);
+        this.refreshEnvironment();
+        return {ok: true, events: [{kind: 'feather', action: 'flip', ids: plan.ids, revealed: plan.revealed}], recovered: 0};
+      }
+      if (this.modernCompanions && this.equipment === 'feather') return this.pick(id, true);
+      this.beginBurst();
+      const events = [], before = this.cleared;
+      if (this.equipment === 'blackhole') {
+        const tile = this.cubeTargets().find(t => t.id === id); if (!tile) return { ok: false };
+        this.charge--; this.previous = null;
+        const ids = [...this.rack.filter(n => this.tiles[n].type === tile.type), id];
+        this.clearTriple(ids); this.burstLeft--; events.push({ kind: 'blackhole', ids }); this.onTriple(events, false, 'blackhole', tile.type, this.relics.blackhole);
+        if (this.relics.cell) this.addEnergy(.25);
+        if (this.relics.blackhole >= 3) {
+          for (let i = 0; i < 2 && this.burstLeft > 0; i++) {
+            const next = this.cubeTargets()[0]; if (!next) break;
+            const more = [...this.rack.filter(n => this.tiles[n].type === next.type), next.id];
+            this.clearTriple(more); this.burstLeft--; events.push({ kind: 'blackhole', ids: more }); this.onTriple(events, false, 'blackhole', next.type, this.relics.blackhole);
+            if (this.relics.cell) this.addEnergy(.25);
+          }
+        }
+        this.resolveCombos(events);
+      } else if (this.modernCompanions && this.equipment === 'capacitor') {
+        this.charge--; this.previous = null;
+        this.pulse(events, 'capacitor', 1, this.capacitorDepth); this.resolveCombos(events);
+      } else if (this.modernCompanions && this.equipment === 'shield') {
+        this.charge--; this.previous = null;
+        if (this.tacticalCompanions) {
+          const ids = this.rack.splice(0, 3 - this.reserve.length);
+          ids.forEach(id => { this.tiles[id].zone = 'reserve'; }); this.reserve.push(...ids);
+          events.push({kind: 'shield', action: 'stash', ids});
+        } else { this.shieldArmed = true; events.push({kind: 'shield', ids: []}); }
+      } else {
+        this.charge--; this.previous = null; this.radarUntil = this.moves + 3 + (this.relics.radar || 1) + (this.familyCount('birds') >= 4 ? 2 : 0);
+        this.markRadar(); events.push({ kind: 'radar', ids: [] });
+      }
+      this.check(); this.bestChain = Math.max(this.bestChain, this.cleared - before);
+      this.refreshEnvironment();
+      return { ok: true, events, recovered: this.cleared - before };
+    }
+    offerReward(companionsOnly = false) {
+      if (this.finished || this.pendingReward || this.bossActive) return;
+      const pool = Object.keys(RELICS).filter(id => (this.relics[id] || 0) < this.levelCap && (id !== 'cell' || this.equipment) && (id !== 'turbine' || this.equipment || this.relics.feather));
+      if (!companionsOnly && this.restocksUsed < 2) for (const tool of ['remove', 'undo', 'shuffle']) if (this.used[tool]) pool.push('restore_' + tool);
+      const choices = [];
+      // Roll the red slot separately so capped common gear cannot force red drops.
+      // Newly obtained companions are white; only level-four upgrades enter the red slot.
+      const legendary = pool.filter(id => RELICS[id] && (this.relics[id] || 0) === 4);
+      if (legendary.length && this.random() < this.legendaryChance) choices.push(weightedChoice(legendary, this.random));
+      if (!this.equipment) {
+        const actives = pool.filter(id => this.definitions[id]?.kind === 'active' && !choices.includes(id));
+        if (this.modernCompanions && actives.length) choices.push(weightedChoice(actives, this.random));
+        else if (!this.modernCompanions) choices.push('blackhole', 'radar');
+      }
+      const ordinary = pool.filter(id => !RELICS[id] || (this.relics[id] || 0) < 4);
+      while (choices.length < 3 && ordinary.some(id => !choices.includes(id))) {
+        const available = ordinary.filter(id => !choices.includes(id));
+        choices.push(weightedChoice(available, this.random));
+      }
+      if (choices.length < 3) choices.push('recharge');
+      this.pendingReward = choices; this.previous = null;
+    }
+    get canSkipReward() { return !this.finished && !!this.pendingReward && this.loadout().length > 0; }
+    skipReward() {
+      if (!this.canSkipReward) return false;
+      this.pendingReward = null; this.previous = null;
+      return true;
+    }
+    choose(id, replace) {
+      if (!this.pendingReward?.includes(id)) return false;
+      if (id === 'recharge') {
+        if (this.equipment) this.charge = Math.min(this.capacity, this.charge + 1);
+        else if (this.relics.feather) { this.featherCharge = 1; this.featherEnergy = 0; }
+      } else if (id.startsWith('restore_')) {
+        if (this.restocksUsed >= 2) return false;
+        this.used[id.slice(8)] = false; this.restocksUsed++;
+      } else {
+        if (!RELICS[id] || (this.relics[id] || 0) >= this.levelCap) return false;
+        const passives = Object.keys(this.relics).filter(key => this.definitions[key].kind === 'passive');
+        if (this.definitions[id].kind === 'passive' && !this.relics[id] && passives.length >= PASSIVE_SLOTS) {
+          if (!passives.includes(replace)) return false;
+          delete this.relics[replace];
+          if (this.modernCompanions && replace === 'radar') { this.radarCharge = 0; this.radarUntil = 0; this.radarMark = null; }
+          if (replace === 'feather') { this.featherCharge = 0; this.featherEnergy = 0; }
+          if (replace === 'behemoth') this.blastCharge = 0;
+          if (replace === 'resin') this.fuse = null;
+          for (const key of ['seeker', 'turbine', 'capacitor']) if (replace === key) this[key + 'Charge'] = 0;
+          if (replace === 'ukulele') { this.spark = 0; this.lightningReady = false; }
+        }
+        const oldLevel = this.relics[id] || 0;
+        // Each companion owns its level. Upgrading never spends another companion's levels.
+        if (this.definitions[id].kind === 'active') {
+          const first = !this.equipment;
+          if (this.equipment && this.equipment !== id) delete this.relics[this.equipment];
+          this.equipment = id;
+          if (first) { this.charge = 1; this.energy = 0; }
+          if (this.modernCompanions) {
+            if (!oldLevel) this.shieldArmed = false;
+            this.featherCharge = 0; this.featherEnergy = 0;
+          } else { this.radarUntil = 0; this.radarMark = null; }
+        }
+        this.relics[id] = oldLevel + 1;
+        if (id === 'seeker' || id === 'capacitor') this[id + 'Charge'] = Math.min(this[id + 'Charge'], chargeLimit(this.relics[id]));
+        if (!this.modernCompanions && id === 'feather' && !oldLevel) this.featherCharge = 1;
+        // Neither upgrades nor swapping the shield restore its once-per-stage block.
+        this.charge = Math.min(this.capacity, this.charge);
+        if (this.charge === this.capacity) this.energy = this.relics.cell >= 3 ? Math.min(2, this.energy) : 0;
+      }
+      this.pendingReward = null; this.previous = null; return true;
+    }
+    nextStage() {
+      if (this.status !== 'won' || this.pendingReward || this.finished) return false;
+      this.banked += this.cleared; this.bankedMoves += this.moves; this.stage++;
+      const spec = stageSpec(this.stage), next = new core.Game(spec.mode, this.random, spec);
+      for (const key of ['tiles', 'rack', 'reserve', 'cleared', 'moves', 'status', 'previous', 'solution']) this[key] = next[key];
+      this.shieldArmed = false; this.radarCharge = 0;
+      this.radarUntil = 0; this.radarMark = null; this.stageMatches = 0; this.midRewardTaken = false; this.shieldSpent = false;
+      this.bossEnergy = 0; this.bossStarted = false; this.trial = null; this.environment = null; this.pressure = null; this.fuse = null;
+      if (isBossStage(this.stage) && this.stage !== 10) {
+        const kind = BOSSES[this.stage].kind, types = [...new Set(this.tiles.map(tile => tile.type))].sort((a,b) => a-b);
+        this.trial = { kind, types: ['ward','crown'].includes(kind) ? types.slice(0,3) : ['roots','migrate'].includes(kind) ? types : [], broken: [] };
+        if (['mirror','echo'].includes(kind)) Object.assign(this.trial, {lastType: null, open: false});
+      }
+      if (isBossStage(this.stage)) {
+        this.sealed = { ...this.relics }; this.relics = {}; this.equipment = null;
+        this.charge = 0; this.energy = 0; this.featherCharge = 0; this.featherEnergy = 0;
+        this.lightningReady = false; this.spark = 0; this.blastCharge = 0; this.midRewardTaken = true;
+        this.seekerCharge = 0; this.turbineCharge = 0; this.capacitorCharge = 0;
+      }
+      if (this.stage === 70) this.pressure = {started: false, hearts: 3, remaining: 8000};
+      const environmentKind = environmentAt(this.stage);
+      this.environment = environmentKind ? {kind: environmentKind, started: false, preview: environmentKind === 'memory' ? 5000 : 0, cards: [], bonusClaimed: false} : null;
+      this.refreshEnvironment();
+      return true;
+    }
+    end() {
+      if (this.finished || this.pendingReward) return false;
+      this.finished = true; this.status = 'lost'; this.previous = null; return true;
+    }
+    loadout() { return Object.entries(this.ownedRelics()).map(([id, level]) => ({ id, level })); }
+    toSave() {
+      return JSON.parse(JSON.stringify({ version: VERSION, ...this.snapshot(),
+        ...Object.fromEntries(RUN_FIELDS.map(key => [key, this[key]])), used: this.used, status: this.status, previous: this.previous }));
+    }
+    static fromSave(data) {
+      data = normalizeSave(data);
+      if (!validSave(data)) throw Error('invalidSave');
+      const game = Object.create(Expedition.prototype);
+      for (const key of [...RUN_FIELDS, ...PICK_FIELDS, 'tiles', 'rack', 'reserve', 'cleared', 'moves', 'used', 'status', 'previous'])
+        game[key] = JSON.parse(JSON.stringify(data[key]));
+      game.mode = 'expedition'; game.solution = []; bindRandom(game); return game;
+    }
+  }
+  const integer = (n, min = 0, max = 1e9) => Number.isSafeInteger(n) && n >= min && n <= max;
+  // Additive v3 checkpoint upgrade: retain already-returned gear and the old Undo state.
+  function normalizeSave(data) {
+    if (!data || data.version !== VERSION) return data;
+    const copy = JSON.parse(JSON.stringify(data));
+    if (copy.companionRules === undefined) copy.companionRules = 1;
+    if (copy.pressure === undefined) copy.pressure = null;
+    for (const state of [copy, copy.previous].filter(Boolean)) {
+      if (state.shieldArmed === undefined) state.shieldArmed = false;
+      if (state.radarCharge === undefined) state.radarCharge = 0;
+      for (const key of ['seekerCharge', 'turbineCharge', 'capacitorCharge']) if (state[key] === undefined) state[key] = 0;
+      if (state.fuse === undefined) state.fuse = null;
+      if (state.environment === undefined) state.environment = null;
+      if (state.trial === undefined) state.trial = null;
+      if (state.bossEnergy === undefined) state.bossEnergy = 0;
+      if (state.bossStarted === undefined) state.bossStarted = copy.stage === 10 && state.stageMatches > 0;
+    }
+    return copy;
+  }
+  function validSeals(data, stage, count, rules = 1) {
+    if (!data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics) ||
+      !data.sealed || typeof data.sealed !== 'object' || Array.isArray(data.sealed)) return false;
+    if (Object.entries(data.relics).some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, 5))) return false;
+    return Object.entries(data.sealed).every(([id, target]) => Object.hasOwn(RELICS, id) && integer(target, 1, levelCapAt(stage)) &&
+      isBossStage(stage) && (stage === 10 || data.trial?.kind === BOSSES[stage].kind) && data.cleared < count && (data.relics[id] || 0) < target &&
+      !(relicsFor(rules)[id].kind === 'active' && data.relics[id])) &&
+      (Object.keys(data.sealed).length > 0 || data.bossEnergy === 0);
+  }
+  function validSnapshot(data, count) {
+    if (!data || !Array.isArray(data.tiles) || data.tiles.length !== count || !Array.isArray(data.rack) || !Array.isArray(data.reserve) ||
+      data.rack.length > 7 || data.reserve.length > 3 || !integer(data.cleared, 0, count) || !integer(data.moves) ||
+      !integer(data.charge, 0, 7) || !Number.isFinite(data.energy) || data.energy < 0 || data.energy > 12 ||
+      !integer(data.featherCharge, 0, 1) || !integer(data.featherEnergy, 0, 8) || typeof data.shieldSpent !== 'boolean' ||
+      !integer(data.manualMatches) || !integer(data.stageMatches, 0, count / 3) || !integer(data.radarUntil) ||
+      !(data.radarMark === null || integer(data.radarMark, 0, core.ITEMS.length - 1)) || !integer(data.spark, 0, 4) ||
+      typeof data.lightningReady !== 'boolean' || !integer(data.rngState, 1, 0xffffffff) || !integer(data.bestChain, 0, 156) || !integer(data.blastCharge, 0, 4) ||
+      !integer(data.bossEnergy, 0, 2) || typeof data.bossStarted !== 'boolean' ||
+      !integer(data.seekerCharge, 0, 4) || !integer(data.turbineCharge, 0, 2) || !integer(data.capacitorCharge, 0, 4)) return false;
+    if (data.fuse !== null && (!data.fuse || !data.relics.resin || !integer(data.fuse.ticks, 1, 3) ||
+      !Array.isArray(data.fuse.ids) || ![3, 6, 9].includes(data.fuse.ids.length) || new Set(data.fuse.ids).size !== data.fuse.ids.length ||
+      data.fuse.ids.some(id => !integer(id, 0, count - 1) || data.tiles[id]?.zone === 'matched') ||
+      new Set(data.fuse.ids.map(id => data.tiles[id]?.type)).size !== 1)) return false;
+    const ids = [...data.rack, ...data.reserve], counts = Array(core.ITEMS.length).fill(0);
+    if (new Set(ids).size !== ids.length || ids.some(id => !integer(id, 0, count - 1))) return false;
+    if (!data.tiles.every((t, id) => {
+      if (!t || t.id !== id || !integer(t.type, 0, core.ITEMS.length - 1) ||
+        !Number.isFinite(t.x) || t.x < 0 || t.x > 528 || !Number.isFinite(t.y) || t.y < 0 || t.y > 518 ||
+        !integer(t.z, 0, 50) || !['main', 'shelf', 'left', 'right'].includes(t.pile) ||
+        !['board', 'rack', 'reserve', 'matched'].includes(t.zone)) return false;
+      if (t.zone !== 'matched') counts[t.type]++;
+      return (t.zone === 'rack') === data.rack.includes(id) && (t.zone === 'reserve') === data.reserve.includes(id);
+    })) return false;
+    return counts.every(n => n % 3 === 0) && data.tiles.filter(t => t.zone === 'matched').length === data.cleared;
+  }
+  function validSave(data) {
+    if (!data || data.version !== VERSION || ![1,2,3].includes(data.companionRules) || !integer(data.stage, 1, 1000000)) return false;
+    const count = stageSpec(data.stage).count, definitions = relicsFor(data.companionRules);
+    const pressure = data.pressure;
+    if (pressure != null && (data.stage !== 70 || data.trial?.kind !== 'echo' || typeof pressure.started !== 'boolean' ||
+      !integer(pressure.hearts, 0, 3) || !Number.isFinite(pressure.remaining) || pressure.remaining < 0 || pressure.remaining > 8000 ||
+      (pressure.hearts === 0 ? (!data.finished || pressure.remaining !== 0) : pressure.remaining <= 0) ||
+      (!pressure.started && (pressure.hearts !== 3 || pressure.remaining !== 8000)))) return false;
+    for (const state of [data, data.previous].filter(Boolean)) {
+      if (typeof state.shieldArmed !== 'boolean' || !integer(state.radarCharge, 0, 4)) return false;
+      if (data.companionRules >= 3 && state.shieldArmed) return false;
+      if (data.companionRules >= 2 && ((state.shieldArmed && (state.equipment !== 'shield' || !state.relics?.shield)) ||
+        state.featherCharge || state.featherEnergy || state.capacitorCharge || (!state.relics?.radar && (state.radarCharge || state.radarUntil || state.radarMark !== null)))) return false;
+      const env = state.environment;
+      if (env != null && (!env || env.kind !== environmentAt(data.stage) || !['memory','mono'].includes(env.kind) ||
+        typeof env.started !== 'boolean' || typeof env.bonusClaimed !== 'boolean' ||
+        !Number.isFinite(env.preview) || env.preview < 0 || env.preview > 5000 ||
+        !Array.isArray(env.cards) || env.cards.length > 5 || new Set(env.cards.map(c => c?.id)).size !== env.cards.length ||
+        env.cards.some(c => !c || !integer(c.id, 0, count-1) || !Number.isFinite(c.remaining) || c.remaining < 0 || c.remaining > 2000) ||
+        (env.kind === 'mono' && (env.preview || env.cards.length)) || (env.bonusClaimed && state.cleared !== count))) return false;
+      if (state.trial !== null && state.trial !== undefined) {
+        const trial = state.trial;
+        if (!trial || !isBossStage(data.stage) || data.stage === 10 || BOSSES[data.stage].kind !== trial.kind ||
+          !Array.isArray(trial.types) || !Array.isArray(trial.broken) ||
+          trial.types.length !== (['ward','crown'].includes(trial.kind) ? 3 : ['roots','migrate'].includes(trial.kind) ? core.ITEMS.length : 0) ||
+          new Set(trial.types).size !== trial.types.length || trial.types.some(type => !integer(type, 0, core.ITEMS.length - 1)) ||
+          new Set(trial.broken).size !== trial.broken.length || trial.broken.some(type => !trial.types.includes(type)) ||
+          (trial.kind === 'migrate' && trial.broken.length) ||
+          (['mirror','echo'].includes(trial.kind) && (!(trial.lastType === null || integer(trial.lastType, 0, core.ITEMS.length-1)) || typeof trial.open !== 'boolean'))) return false;
+      }
+    }
+    if (!validSnapshot(data, count) || data.banked !== bankedBefore(data.stage) || !integer(data.bankedMoves) ||
+      typeof data.competitive !== 'boolean' || typeof data.finished !== 'boolean' || typeof data.midRewardTaken !== 'boolean' || !integer(data.restocksUsed, 0, 2) ||
+      !data.used || !['remove', 'undo', 'shuffle'].every(id => typeof data.used[id] === 'boolean') ||
+      !data.relics || typeof data.relics !== 'object' || Array.isArray(data.relics)) return false;
+    if (!validSeals(data, data.stage, count, data.companionRules) || (!(data.stage === 10 || data.trial) && (data.bossEnergy || data.bossStarted))) return false;
+    const relics = Object.entries({ ...data.relics, ...data.sealed });
+    if (relics.length > 7 || relics.some(([id, level]) => !Object.hasOwn(RELICS, id) || !integer(level, 1, levelCapAt(data.stage))) ||
+      relics.filter(([id]) => definitions[id].kind === 'passive').length > PASSIVE_SLOTS) return false;
+    const actives = Object.entries(data.relics).filter(([id]) => definitions[id].kind === 'active');
+    if (relics.filter(([id]) => definitions[id].kind === 'active').length > 1 || actives.length > 1 || (actives[0]?.[0] || null) !== data.equipment) return false;
+    if (data.charge > 1 + (data.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.relics[id]).length >= 2) || (!data.equipment && (data.charge || data.energy)) ||
+      (!data.relics.feather && (data.featherCharge || data.featherEnergy)) || data.manualMatches > (data.banked + data.cleared) / 3 ||
+      data.stageMatches > data.cleared / 3 || data.stageMatches > data.manualMatches) return false;
+    const status = data.finished ? 'lost' : data.cleared === count ? 'won' : data.rack.length >= 7 ? 'lost' : 'playing';
+    if (data.status !== status) return false;
+    if (data.pendingReward !== null && (!Array.isArray(data.pendingReward) || data.pendingReward.length < 1 || data.pendingReward.length > 3 ||
+      new Set(data.pendingReward).size !== data.pendingReward.length || data.pendingReward.some(id => !Object.hasOwn(RELICS, id) &&
+        !['recharge', 'restore_remove', 'restore_undo', 'restore_shuffle'].includes(id)))) return false;
+    if (data.previous && (!validSeals(data.previous, data.stage, count, data.companionRules) ||
+      JSON.stringify(Object.entries({ ...data.previous.relics, ...data.previous.sealed }).sort()) !== JSON.stringify(relics.sort()) ||
+      (!(data.stage === 10 || data.previous.trial) && (data.previous.bossEnergy || data.previous.bossStarted)) ||
+      (Object.keys(data.previous.relics).find(id => definitions[id].kind === 'active') || null) !== data.previous.equipment)) return false;
+    if (data.previous && (data.previous.charge > 1 + (data.previous.relics.cell || 0) + Number(FAMILIES.shells.filter(id => data.previous.relics[id]).length >= 2) ||
+      (!data.previous.equipment && (data.previous.charge || data.previous.energy)) ||
+      (!data.previous.relics.feather && (data.previous.featherCharge || data.previous.featherEnergy)))) return false;
+    return data.previous === null || (validSnapshot(data.previous, count) && data.previous.rack.length < 7 && data.previous.cleared <= data.cleared);
+  }
+  const api = { Expedition, RELICS, LEGACY_RELICS, relicsFor, PASSIVE_SLOTS, stageSpec, VERSION, validSave, bankedBefore, normalizeSave, FAMILIES, rarityAt, levelCapAt, chargeLimit, isBossStage, BOSSES, environmentAt };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.RainExpedition = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
